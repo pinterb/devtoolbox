@@ -1,0 +1,9 @@
+# Nitrous environments by default have a $HOME/code dir
+if [ -d "$HOME/code" ]; then
+  GOPROJECTS_HOME="$HOME/code/goprojects"
+else
+  GOPROJECTS_HOME="$HOME/goprojects"
+fi
+
+export GOPATH=$GOPROJECTS_HOME
+export PATH=$PATH:$GOPATH/bin
