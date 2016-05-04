@@ -14,24 +14,30 @@ source "${PROGDIR}/utils.sh"
 # cli arguments
 DEV_USER=
 FORCE_OVERWRITE=
-OUTPUT_FILE="id_rsa"
+OUTPUT_FILE="google_compute_engine"
+GCLOUD_USERNAME=
+REMOTE_SSH_USER=
+EXPIRE_DAYS="45"
 
 
 usage() {
   cat <<- EOF
   usage: $PROGNAME options
 
-  $PROGNAME creates a valid ssh key pair for a new, non-privileged user.
+  $PROGNAME creates a google cloud ssh key pair for a new, non-privileged user.
 
   OPTIONS:
     -u --user                non-privileged user account that gets bootstrapped (default: current user)
-    -o --output-file         name of key pair (default is $OUTPUT_FILE).  NOTE: all keys are written in user's $HOME/.ssh directory.
+    -a --account-name        google cloud account user name (e.g. brad.pinter@gmail.com).
+    -r --remote-user-name    remote ssh user name that will be associated with the key (e.g. galactus).
+    -o --output-file         name of key pair (default: $OUTPUT_FILE).  NOTE: all keys are written in user's $HOME/.ssh directory.
+    -e --expire-days         number of days the ssh key is valid with google cloud (default: 30).
     -f --force               force overwrite key pair if it already exists (USE WITH CAUTION!!!)
     -h --help                show this help
 
 
   Examples:
-    $PROGNAME --user pinterb --output-file google_compute_engine
+    $PROGNAME --user pinterb --account-name brad.pinter@gmail.com --remote-user-name galactus --expire-days $EXPIRE_DAYS --output-file $OUTPUT_FILE
 EOF
 }
 
@@ -46,10 +52,13 @@ cmdline() {
     local delim=""
     case "$arg" in
       #translate --gnu-long-options to -g (short options)
-      --user)           args="${args}-u ";;
-      --output-file)    args="${args}-o ";;
-      --force)          args="${args}-f ";;
-      --help)           args="${args}-h ";;
+      --user)              args="${args}-u ";;
+      --account-name)      args="${args}-a ";;
+      --remote-user-name)  args="${args}-r ";;
+      --output-file)       args="${args}-o ";;
+      --expire-days)       args="${args}-e ";;
+      --force)             args="${args}-f ";;
+      --help)              args="${args}-h ";;
       #pass through anything else
       *) [[ "${arg:0:1}" == "-" ]] || delim="\""
           args="${args}${delim}${arg}${delim} ";;
@@ -59,14 +68,23 @@ cmdline() {
   #Reset the positional parameters to the short options
   eval set -- $args
 
-  while getopts ":u:o:fh" OPTION
+  while getopts ":u:a:r:o:e:fh" OPTION
   do
      case $OPTION in
      u)
          DEV_USER=$OPTARG
          ;;
+     a)
+         GCLOUD_USERNAME=$OPTARG
+         ;;
+     r)
+         REMOTE_SSH_USER=$OPTARG
+         ;;
      o)
          OUTPUT_FILE=$OPTARG
+         ;;
+     e)
+         EXPIRE_DAYS=$OPTARG
          ;;
      f)
          readonly FORCE_OVERWRITE=1
@@ -146,6 +164,17 @@ prerequisites() {
 
 base_setup()
 {
+  local expir_date=$(date -d "+$EXPIRE_DAYS days" --utc --iso-8601='seconds')
+#  su -c "ssh-keygen -b 2048 -t rsa -f ~/.ssh/google_compute_engine -C $DEV_USER -q -N \"\"" $DEV_USER
+#  sed -i -e 's@pinterb@google-ssh {"userName":"pinterb","expireOn":"###EXPIRDT###"}@' ~/.ssh/google_compute_engine.pub
+#  sed -i -e "s@###EXPIRDT###@${EXPIR_DT}@"  ~/.ssh/google_compute_engine.pub
+#  sed -i -e "s@ssh-rsa@pinterb:ssh-rsa@" ~/.ssh/google_compute_engine.pub
+#  su -c "chmod 400 ~/.ssh/google_compute_engine" pinterb
+
+
+
+
+
   su -c "mkdir -p /home/$DEV_USER/.ssh" "$DEV_USER"
   su -c "chmod 0700 /home/$DEV_USER/.ssh" "$DEV_USER"
 
@@ -155,12 +184,22 @@ base_setup()
     # overwrite
     if [ -n "$FORCE_OVERWRITE" ]; then
       inf "forced overwrite of ssh key (type rsa) for $DEV_USER"
-      su -c "ssh-keygen -b 2048 -t rsa -f /home/$DEV_USER/.ssh/$OUTPUT_FILE -q -N \"\"" "$DEV_USER"
+      su -c "ssh-keygen -b 2048 -t rsa -f /home/$DEV_USER/.ssh/$OUTPUT_FILE -C GCLOUDUSER -q -N \"\"" $DEV_USER
     fi
   else
     inf "creating a ssh key (type rsa) for $DEV_USER"
-    su -c "ssh-keygen -b 2048 -t rsa -f /home/$DEV_USER/.ssh/$OUTPUT_FILE -q -N \"\"" "$DEV_USER"
+    su -c "ssh-keygen -b 2048 -t rsa -f /home/$DEV_USER/.ssh/$OUTPUT_FILE -C GCLOUDUSER -q -N \"\"" $DEV_USER
   fi
+
+  su -c "cp /home/$DEV_USER/.ssh/${OUTPUT_FILE}.pub /home/$DEV_USER/.ssh/${OUTPUT_FILE}.pub.gcloudupload" "$DEV_USER"
+  sed -i -e 's@GCLOUDUSER@###GUSER###@' "/home/$DEV_USER/.ssh/${OUTPUT_FILE}.pub"
+  sed -i -e 's@GCLOUDUSER@google-ssh {"userName":"###GUSER###","expireOn":"###EXPIRDT###"}@' "/home/$DEV_USER/.ssh/${OUTPUT_FILE}.pub.gcloudupload"
+
+  sed -i "s/###GUSER###/${GCLOUD_USERNAME}/" "/home/$DEV_USER/.ssh/${OUTPUT_FILE}.pub.gcloudupload"
+  sed -i -e "s@###EXPIRDT###@${expir_date}@" "/home/$DEV_USER/.ssh/${OUTPUT_FILE}.pub.gcloudupload"
+  sed -i -e "s@ssh-rsa@$REMOTE_SSH_USER:ssh-rsa@" "/home/$DEV_USER/.ssh/${OUTPUT_FILE}.pub.gcloudupload"
+
+  sed -i "s/###GUSER###/${REMOTE_SSH_USER}/" "/home/$DEV_USER/.ssh/${OUTPUT_FILE}.pub"
 
   su -c "chmod 0600 /home/$DEV_USER/.ssh/${OUTPUT_FILE}" "$DEV_USER"
   su -c "chmod 0600 /home/$DEV_USER/.ssh/${OUTPUT_FILE}.pub" "$DEV_USER"

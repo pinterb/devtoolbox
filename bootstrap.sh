@@ -147,7 +147,7 @@ prerequisites() {
     error "Please run as root"
     exit 1
   fi
-  
+
   # for now, let's assume someone else has already created our non-privileged user.
   ret=false
   getent passwd "$DEV_USER" >/dev/null 2>&1 && ret=true
@@ -155,7 +155,7 @@ prerequisites() {
   if ! $ret; then
     error "$DEV_USER user does not exist"
   fi
-  
+
   if [ ! -d "/home/$DEV_USER" ]; then
     error "By convention, expecting /home/$DEV_USER to exist. Please create a user with /home directory."
   fi
@@ -164,7 +164,7 @@ prerequisites() {
 
 base_setup()
 {
-  su -c "mkdir -p /home/$DEV_USER/.bootstrap" "$DEV_USER" 
+  su -c "mkdir -p /home/$DEV_USER/.bootstrap" "$DEV_USER"
 }
 
 
@@ -173,15 +173,15 @@ enable_golang()
   local inst_dir="/home/$DEV_USER/.bootstrap/golang"
   inf ""
   inf "enabling golang..."
- 
+
   rm -rf "$inst_dir"
   cp -R "$PROGDIR/golang" "$inst_dir"
   chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
-  
+
   cp "$inst_dir/golang_profile" "/home/$DEV_USER/.golang_profile"
   cp "$inst_dir/golang_verify" "/home/$DEV_USER/.golang_verify"
   sed -i -e "s@###MY_PROJECT_DIR###@/home/${DEV_USER}/.bootstrap/golang@" /home/$DEV_USER/.golang_verify
-  
+
   if [ -f "/home/$DEV_USER/.bash_profile" ]; then
     inf "Setting up .bash_profile"
     grep -q -F 'source "$HOME/.golang_profile"' "/home/$DEV_USER/.bash_profile" || echo 'source "$HOME/.golang_profile"' >> "/home/$DEV_USER/.bash_profile"
@@ -199,14 +199,14 @@ enable_terraform()
   local inst_dir="/home/$DEV_USER/.bootstrap/terraform"
   inf ""
   inf "enabling terraform..."
- 
+
   rm -rf "$inst_dir"
   cp -R "$PROGDIR/terraform" "$inst_dir"
   chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
-  
+
   cp "$inst_dir/terraform_verify" "/home/$DEV_USER/.terraform_verify"
   sed -i -e "s@###MY_PROJECT_DIR###@/home/${DEV_USER}/.bootstrap/terraform@" /home/$DEV_USER/.terraform_verify
-  
+
   if [ -f "/home/$DEV_USER/.bash_profile" ]; then
     inf "Setting up .bash_profile"
     grep -q -F 'source "$HOME/.terraform_verify"' "/home/$DEV_USER/.bash_profile" || echo 'source "$HOME/.terraform_verify"' >> "/home/$DEV_USER/.bash_profile"
@@ -217,6 +217,33 @@ enable_terraform()
 }
 
 
+### google cloud platform cli
+# https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
+###
+enable_gcloud()
+{
+  local cloud_sdk_repo="cloud-sdk-$(lsb_release -c -s)"
+  echo "deb http://packages.cloud.google.com/apt $cloud_sdk_repo main" | tee /etc/apt/sources.list.d/google-cloud-sdk.list
+  curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+  apt-get update && apt-get install google-cloud-sdk
+
+}
+
+
+### ssh key generation for gce
+# https://cloud.google.com/compute/docs/instances/adding-removing-ssh-keys#project-wide
+###
+#create_gcloud_creds()
+#{
+#  local expir_date=$(date -d "+30 days" --utc --iso-8601='seconds')
+#  su -c "ssh-keygen -b 2048 -t rsa -f ~/.ssh/google_compute_engine -C $DEV_USER -q -N \"\"" $DEV_USER
+#  sed -i -e 's@pinterb@google-ssh {"userName":"pinterb","expireOn":"###EXPIRDT###"}@' ~/.ssh/google_compute_engine.pub
+#  sed -i -e "s@###EXPIRDT###@${EXPIR_DT}@"  ~/.ssh/google_compute_engine.pub
+#  sed -i -e "s@ssh-rsa@pinterb:ssh-rsa@" ~/.ssh/google_compute_engine.pub
+#  su -c "chmod 400 ~/.ssh/google_compute_engine" pinterb
+#}
+
+
 main() {
   # Be unforgiving about errors
   set -euo pipefail
@@ -225,15 +252,20 @@ main() {
   valid_args
   prerequisites
   base_setup
-  
+
   # golang handler
   if [ -n "$ENABLE_GOLANG" ]; then
     enable_golang
   fi
-  
+
   # terraform handler
   if [ -n "$ENABLE_TERRAFORM" ]; then
     enable_terraform
+  fi
+
+  # gcloud handler
+  if [ -n "$ENABLE_GCLOUD" ]; then
+    enable_gcloud
   fi
 }
 
