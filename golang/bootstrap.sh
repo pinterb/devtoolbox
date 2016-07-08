@@ -16,8 +16,8 @@ source "${PROGDIR}/utils.sh"
 source "$PROGDIR/golang_profile"
 
 # third-party go
-readonly GLIDE_VERSION="0.9.0"
-readonly GODEP_VERSION="53"
+readonly GLIDE_VERSION="0.11.0"
+readonly GODEP_VERSION="74"
 
 # cli arguments
 INSTALL_GOLANG=
@@ -151,7 +151,7 @@ install_golang()
 
 
 install_glide() {
-  readonly glide_url="https://github.com/Masterminds/glide/releases/download/$GLIDE_VERSION/glide-$GLIDE_VERSION-linux-amd64.tar.gz"
+  readonly glide_url="https://github.com/Masterminds/glide/releases/download/v$GLIDE_VERSION/glide-v$GLIDE_VERSION-linux-amd64.tar.gz"
 
   echo ""
   inf "Installing Glide"
