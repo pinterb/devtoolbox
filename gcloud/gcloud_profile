@@ -1,0 +1,2 @@
+GCLOUD_HOME="$HOME/bin/google-cloud-sdk"
+export PATH=$GCLOUD_HOME/bin:$PATH

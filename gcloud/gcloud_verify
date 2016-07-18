@@ -1,0 +1,19 @@
+# Check for local gcloud installation and install if not found
+which gcloud | grep -q "###MY_BIN_DIR###/google-cloud-sdk/bin/gcloud"
+if [ $? -eq 0 ]; then
+  echo ""
+else
+  echo "No version of gcloud was found.  Will attempt to install..."
+  echo ""
+  ###MY_PROJECT_DIR###/bootstrap.sh --install
+fi
+#
+#if [ -z "$GOPATH" ]; then
+#  echo "No GOPATH environment variable set.  Will attempt to bootstrap our 'standard' golang setup..."
+#  echo ""
+#  ###MY_PROJECT_DIR###/bootstrap.sh
+#elif [ ! -d "$GOPATH" ]; then
+#  echo "The GOPATH does not exist.  Will attempt to bootstrap our 'standard' golang setup..."
+#  echo ""
+#  ###MY_PROJECT_DIR###/bootstrap.sh
+#fi

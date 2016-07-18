@@ -135,10 +135,17 @@ valid_args()
 
 # Make sure we have all the right stuff
 prerequisites() {
-  local git_cmd=`which git`
+  local git_cmd=$(which git)
 
   if [ -z "$git_cmd" ]; then
     error "git does not appear to be installed. Please install and re-run this script."
+    exit 1
+  fi
+
+  local pip_cmd=$(which pip)
+
+  if [ -z "$pip_cmd" ]; then
+    error "pip does not appear to be installed. Please install and re-run this script."
     exit 1
   fi
 
@@ -165,6 +172,7 @@ prerequisites() {
 base_setup()
 {
   su -c "mkdir -p /home/$DEV_USER/.bootstrap" "$DEV_USER"
+  su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
 }
 
 
@@ -220,13 +228,52 @@ enable_terraform()
 ### google cloud platform cli
 # https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
 ###
-enable_gcloud()
+enable_gcloud_old()
 {
   local cloud_sdk_repo="cloud-sdk-$(lsb_release -c -s)"
   echo "deb http://packages.cloud.google.com/apt $cloud_sdk_repo main" | tee /etc/apt/sources.list.d/google-cloud-sdk.list
   curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
   apt-get update && apt-get install google-cloud-sdk
 
+}
+
+
+enable_gcloud()
+{
+  local inst_dir="/home/$DEV_USER/.bootstrap/gcloud"
+  inf ""
+  inf "enabling gcloud..."
+
+  rm -rf "$inst_dir"
+  cp -R "$PROGDIR/gcloud" "$inst_dir"
+  chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
+
+  cp "$inst_dir/gcloud_profile" "/home/$DEV_USER/.gcloud_profile"
+  cp "$inst_dir/gcloud_verify" "/home/$DEV_USER/.gcloud_verify"
+  sed -i -e "s@###MY_PROJECT_DIR###@/home/${DEV_USER}/.bootstrap/gcloud@" /home/$DEV_USER/.gcloud_verify
+  sed -i -e "s@###MY_BIN_DIR###@/home/${DEV_USER}/bin@" /home/$DEV_USER/.gcloud_verify
+
+  chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_profile"
+  chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_verify"
+
+  if [ -f "/home/$DEV_USER/.bash_profile" ]; then
+    inf "Setting up .bash_profile"
+    grep -q -F 'source "$HOME/.gcloud_profile"' "/home/$DEV_USER/.bash_profile" || echo 'source "$HOME/.gcloud_profile"' >> "/home/$DEV_USER/.bash_profile"
+    grep -q -F 'source "$HOME/.gcloud_verify"' "/home/$DEV_USER/.bash_profile" || echo 'source "$HOME/.gcloud_verify"' >> "/home/$DEV_USER/.bash_profile"
+  else
+    inf "Setting up .profile"
+    grep -q -F 'source "$HOME/.gcloud_profile"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.gcloud_profile"' >> "/home/$DEV_USER/.profile"
+    grep -q -F 'source "$HOME/.gcloud_verify"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.gcloud_verify"' >> "/home/$DEV_USER/.profile"
+  fi
+}
+
+
+### ansible
+# http://docs.ansible.com/ansible/intro_installation.html#latest-releases-via-pip 
+###
+enable_ansible()
+{
+  pip install git+git://github.com/ansible/ansible.git@devel
 }
 
 
@@ -266,6 +313,11 @@ main() {
   # gcloud handler
   if [ -n "$ENABLE_GCLOUD" ]; then
     enable_gcloud
+  fi
+
+  # ansible handler
+  if [ -n "$ENABLE_ANSIBLE" ]; then
+    enable_ansible
   fi
 }
 
