@@ -173,6 +173,9 @@ base_setup()
 {
   su -c "mkdir -p /home/$DEV_USER/.bootstrap" "$DEV_USER"
   su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
+
+  apt-get -y update
+  apt-get install -yq git mercurial subversion wget curl jq unzip vim make ssh gcc openssh-client python-dev libssl-dev libffi-dev
 }
 
 
@@ -269,11 +272,55 @@ enable_gcloud()
 
 
 ### ansible
-# http://docs.ansible.com/ansible/intro_installation.html#latest-releases-via-pip 
+# http://docs.ansible.com/ansible/intro_installation.html#latest-releases-via-pip
 ###
 enable_ansible()
 {
   pip install git+git://github.com/ansible/ansible.git@devel
+}
+
+
+### docker
+# https://docs.docker.com/engine/installation/linux/
+###
+enable_docker()
+{
+  apt-get install -y apt-transport-https ca-certificates
+  apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+  apt-get -y update
+  if [ "$DISTRO_ID" == "Debian" ]; then
+    if [ "$DISTRO_VER" == "8.5" ]; then
+        echo "deb https://apt.dockerproject.org/repo debian-jessie main" > /etc/apt/sources.list.d/docker.list
+    else
+        echo "deb http://http.debian.net/debian wheezy-backports main" > /etc/apt/sources.list.d/backports.list
+        echo "deb https://apt.dockerproject.org/repo debian-wheezy main" > /etc/apt/sources.list.d/docker.list
+    fi
+  elif [ "$DISTRO_ID" == "Ubuntu" ]; then
+    apt-get install -y "linux-image-extra-$(uname -r)"
+    if [ "$DISTRO_VER" == "16.04" ]; then
+        echo "deb https://apt.dockerproject.org/repo ubuntu-xenial main" > /etc/apt/sources.list.d/docker.list
+    elif [ "$DISTRO_VER" == "15.10" ]; then
+        echo "deb https://apt.dockerproject.org/repo ubuntu-wily main" > /etc/apt/sources.list.d/docker.list
+    elif [ "$DISTRO_VER" == "14.04" ]; then
+        echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" > /etc/apt/sources.list.d/docker.list
+    fi
+  fi
+
+  apt-get -y update
+  apt-get install -yq docker-engine
+
+  ## Start Docker
+  local systemctl_cmd=$(which systemctl)
+  if [ -z "$systemctl_cmd" ]; then
+    service docker start
+    chkconfig docker on
+  else
+    systemctl start docker
+    systemctl enable docker
+  fi
+
+  groupadd -f docker
+  usermod -aG docker $DEV_USER
 }
 
 
@@ -318,6 +365,16 @@ main() {
   # ansible handler
   if [ -n "$ENABLE_ANSIBLE" ]; then
     enable_ansible
+  fi
+
+  # docker handler
+  if [ -n "$ENABLE_DOCKER" ]; then
+    local docker_cmd=$(which docker)
+    if [ -z "$docker_cmd" ]; then
+      enable_docker
+    else
+      inf "Docker appears to be installed"
+    fi
   fi
 }
 

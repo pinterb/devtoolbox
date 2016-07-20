@@ -1,8 +1,26 @@
 #!/bin/bash -
 
 # Get distro data from /etc/os-release
-readonly DISTRO_VER=$(awk -F'=' '/VERSION_ID/ {print $2}' /etc/os-release | tr -d '"')
-readonly DISTRO_ID=$(awk -F'=' '/ID/ {print $2; exit}' /etc/os-release | tr '[:upper:]' '[:lower:]')
+if [ -f /etc/lsb-release ]; then
+    . /etc/lsb-release
+    DISTRO_ID=$DISTRIB_ID
+    DISTRO_VER=$DISTRIB_RELEASE
+elif [ -f /etc/debian_version ]; then
+    DISTRO_ID=Debian
+    DISTRO_VER=$(cat /etc/debian_version)
+elif [ -f /etc/centos-release ]; then
+    DISTRO_ID=$(awk '{print $1}' /etc/centos-release)
+    DISTRO_VER=$(awk '{print $4}' /etc/centos-release)
+elif [ -f /etc/redhat-release ]; then
+    DISTRO_ID=RHEL
+    DISTRO_VER=$(awk '{print $7}' /etc/redhat-release)
+elif [ -f /etc/os-release ]; then
+    DISTRO_ID=$(awk -F'=' '/NAME/ {print $2; exit}' /etc/os-release)
+    DISTRO_VER=$(awk -F'=' '/VERSION_ID/ {print $2}' /etc/os-release | tr -d '"')
+else
+    DISTRO_ID=$(uname -s)
+    DISTRO_VER=$(uname -r)
+fi
 
 readonly TRUE=0
 readonly FALSE=1
