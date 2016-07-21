@@ -176,13 +176,13 @@ base_setup()
 
   apt-get -y update
   apt-get install -yq git mercurial subversion wget curl jq unzip vim make ssh gcc openssh-client python-dev libssl-dev libffi-dev
-  
+
   if ! command_exists pip; then
     apt-get remove -y python-pip
     apt-get install -y python-setuptools
     easy_install pip
   fi
- 
+
   apt-get -y autoremove
 }
 
@@ -210,9 +210,9 @@ enable_golang()
     grep -q -F 'source "$HOME/.golang_profile"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.golang_profile"' >> "/home/$DEV_USER/.profile"
     grep -q -F 'source "$HOME/.golang_verify"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.golang_verify"' >> "/home/$DEV_USER/.profile"
   fi
-  
-  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.golang_profile" 
-  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.golang_verify" 
+
+  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.golang_profile"
+  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.golang_verify"
 }
 
 
@@ -236,8 +236,8 @@ enable_terraform()
     inf "Setting up .profile"
     grep -q -F 'source "$HOME/.terraform_verify"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.terraform_verify"' >> "/home/$DEV_USER/.profile"
   fi
-  
-  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.terraform_verify" 
+
+  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.terraform_verify"
 }
 
 
@@ -281,9 +281,9 @@ enable_gcloud()
     grep -q -F 'source "$HOME/.gcloud_profile"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.gcloud_profile"' >> "/home/$DEV_USER/.profile"
     grep -q -F 'source "$HOME/.gcloud_verify"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.gcloud_verify"' >> "/home/$DEV_USER/.profile"
   fi
-  
-  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_profile" 
-  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_verify" 
+
+  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_profile"
+  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_verify"
 }
 
 
