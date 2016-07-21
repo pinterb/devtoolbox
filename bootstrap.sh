@@ -176,6 +176,7 @@ base_setup()
 
   apt-get -y update
   apt-get install -yq git mercurial subversion wget curl jq unzip vim make ssh gcc openssh-client python-dev libssl-dev libffi-dev
+  apt-get -y autoremove
 }
 
 
@@ -276,6 +277,13 @@ enable_gcloud()
 ###
 enable_ansible()
 {
+  if command_exists ansible; then
+    local version="$(ansible --version | awk '{ print $2; exit }')"
+    semverParse $version
+    warn "Ansible $version is already installed...skipping installation"
+    return 0
+  fi
+
   pip install git+git://github.com/ansible/ansible.git@devel
 }
 
@@ -285,42 +293,53 @@ enable_ansible()
 ###
 enable_docker()
 {
-  apt-get install -y apt-transport-https ca-certificates
-  apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
-  apt-get -y update
-  if [ "$DISTRO_ID" == "Debian" ]; then
-    if [ "$DISTRO_VER" == "8.5" ]; then
+
+  if command_exists docker; then
+    local version="$(docker -v | awk -F '[ ,]+' '{ print $3 }')"
+    local MAJOR_W=1
+    local MINOR_W=10
+    semverParse $version
+    warn "Docker $version is already installed...skipping installation"
+  else
+    apt-get install -y apt-transport-https ca-certificates
+    apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+    apt-get -y update
+    if [ "$DISTRO_ID" == "Debian" ]; then
+      if [ "$DISTRO_VER" == "8.5" ]; then
         echo "deb https://apt.dockerproject.org/repo debian-jessie main" > /etc/apt/sources.list.d/docker.list
-    else
+      else
         echo "deb http://http.debian.net/debian wheezy-backports main" > /etc/apt/sources.list.d/backports.list
         echo "deb https://apt.dockerproject.org/repo debian-wheezy main" > /etc/apt/sources.list.d/docker.list
-    fi
-  elif [ "$DISTRO_ID" == "Ubuntu" ]; then
-    apt-get install -y "linux-image-extra-$(uname -r)"
-    if [ "$DISTRO_VER" == "16.04" ]; then
+      fi
+    elif [ "$DISTRO_ID" == "Ubuntu" ]; then
+      apt-get install -y "linux-image-extra-$(uname -r)"
+      if [ "$DISTRO_VER" == "16.04" ]; then
         echo "deb https://apt.dockerproject.org/repo ubuntu-xenial main" > /etc/apt/sources.list.d/docker.list
-    elif [ "$DISTRO_VER" == "15.10" ]; then
+      elif [ "$DISTRO_VER" == "15.10" ]; then
         echo "deb https://apt.dockerproject.org/repo ubuntu-wily main" > /etc/apt/sources.list.d/docker.list
-    elif [ "$DISTRO_VER" == "14.04" ]; then
+      elif [ "$DISTRO_VER" == "14.04" ]; then
         echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" > /etc/apt/sources.list.d/docker.list
+      fi
     fi
-  fi
 
-  apt-get -y update
-  apt-get install -yq docker-engine
-
-  ## Start Docker
-  local systemctl_cmd=$(which systemctl)
-  if [ -z "$systemctl_cmd" ]; then
-    service docker start
-    chkconfig docker on
-  else
-    systemctl start docker
-    systemctl enable docker
+    apt-get -y update
+    apt-get install -yq docker-engine
   fi
 
   groupadd -f docker
   usermod -aG docker $DEV_USER
+
+  ## Start Docker
+  if command_exists systemctl; then
+    systemctl enable docker
+    if [ ! -f "/var/run/docker.pid" ]; then
+      systemctl start docker
+    fi
+  else
+    if [ ! -f "/var/run/docker.pid" ]; then
+      service docker start
+    fi
+  fi
 }
 
 
@@ -369,12 +388,7 @@ main() {
 
   # docker handler
   if [ -n "$ENABLE_DOCKER" ]; then
-    local docker_cmd=$(which docker)
-    if [ -z "$docker_cmd" ]; then
       enable_docker
-    else
-      inf "Docker appears to be installed"
-    fi
   fi
 }
 

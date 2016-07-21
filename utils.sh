@@ -25,24 +25,24 @@ fi
 readonly TRUE=0
 readonly FALSE=1
 
-function warn() {
+warn() {
   echo -e "\033[1;33mWARNING: $1\033[0m"
 }
 
-function error() {
+error() {
   echo -e "\033[0;31mERROR: $1\033[0m"
 }
 
-function inf() {
+inf() {
   echo -e "\033[0;32m$1\033[0m"
 }
 
-function follow() {
+follow() {
   inf "Following docker logs now. Ctrl-C to cancel."
   docker logs --follow $1
 }
 
-function run_command() {
+run_command() {
   inf "Running:\n $1"
   eval $1 &> /dev/null
 }
@@ -53,4 +53,16 @@ absolute_path() {
   local abspath="$(pwd -P)"
   popd > /dev/null
   echo "$abspath/$(basename $1)"
+}
+
+command_exists() {
+  command -v "$@" > /dev/null 2>&1
+}
+
+semverParse() {
+  major="${1%%.*}"
+  minor="${1#$major.}"
+  minor="${minor%%.*}"
+  patch="${1#$major.$minor.}"
+  patch="${patch%%[-.]*}"
 }
