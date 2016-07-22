@@ -13,7 +13,7 @@ readonly ARGS="$@"
 source "${PROGDIR}/utils.sh"
 
 # pull in new gcloud profile
-source "$PROGDIR/gcloud_profile"
+source "${PROGDIR}/gcloud_profile"
 
 # cli arguments
 INSTALL_GCLOUD=
@@ -90,8 +90,8 @@ cmdline() {
 
 # Make sure we have all the right stuff
 prerequisites() {
-  local git_cmd=`which git`
-  local curl_cmd=`which curl`
+  local git_cmd=$(which git)
+  local curl_cmd=$(which curl)
   
   if [ -z "$git_cmd" ]; then
     error "git does not appear to be installed. Please install and re-run this script."
