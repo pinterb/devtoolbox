@@ -12,7 +12,7 @@ readonly ARGS="$@"
 # pull in utils
 source "${PROGDIR}/utils.sh"
 
-# pull in new golang profile
+# pull in new gcloud profile
 source "$PROGDIR/gcloud_profile"
 
 # cli arguments
