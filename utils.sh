@@ -25,6 +25,9 @@ fi
 readonly TRUE=0
 readonly FALSE=1
 
+# For non-privileged users, this may be our default user
+DEFAULT_USER="$(id -un 2>/dev/null || true)"
+
 warn() {
   echo -e "\033[1;33mWARNING: $1\033[0m"
 }
@@ -66,3 +69,18 @@ semverParse() {
   patch="${1#$major.$minor.}"
   patch="${patch%%[-.]*}"
 }
+
+SH_C='sh -c'
+if [ "$DEFAULT_USER" != 'root' ]; then
+  if command_exists sudo; then
+    SH_C='sudo -E sh -c'
+  elif command_exists su; then
+    SH_C='su -c'
+  else
+    cat >&2 <<-'EOF'
+    Error: this installer needs the ability to run commands as root.
+    We are unable to find either "sudo" or "su" available to make this happen.
+EOF
+    exit 1
+  fi
+fi

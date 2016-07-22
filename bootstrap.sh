@@ -123,13 +123,14 @@ cmdline() {
 
 valid_args()
 {
-  # Check for required params
-  if [[ -z "$DEV_USER" ]]; then
-    error "a non-privileged user is required"
-    echo  ""
-    usage
-    exit 1
-  fi
+  ## Check for required params
+  #if [[ -z "$DEV_USER" ]]; then
+  #  error "a non-privileged user is required"
+  #  echo  ""
+  #  usage
+  #  exit 1
+  #fi
+  inf "no arg validation currently taking place"
 }
 
 
@@ -143,9 +144,16 @@ prerequisites() {
   fi
 
   # we want to be root to bootstrap
-  if [ "$EUID" -ne 0 ]; then
-    error "Please run as root"
-    exit 1
+#  if [ "$EUID" -ne 0 ]; then
+#    error "Please run as root"
+#    exit 1
+#  fi
+  
+  if [ "$DEFAULT_USER" != 'root' ]; then
+    if [[ -z "$DEV_USER" ]]; then
+      warn "Defaulting non-privileged user to $DEFAULT_USER"
+      DEV_USER=$DEFAULT_USER
+    fi
   fi
 
   # for now, let's assume someone else has already created our non-privileged user.
@@ -164,31 +172,34 @@ prerequisites() {
 
 base_setup()
 {
-  su -c "mkdir -p /home/$DEV_USER/.bootstrap" "$DEV_USER"
-  su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    su -c "mkdir -p /home/$DEV_USER/.bootstrap" "$DEV_USER"
+    su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
+  else
+    mkdir -p "/home/$DEV_USER/.bootstrap"
+    mkdir -p "/home/$DEV_USER/bin"
+  fi
 
   # in case a previous update failed
   if [ -d "/var/lib/dpkg/updates" ]; then
-    cd /var/lib/dpkg/updates
-    rm -f *
-    cd -
+    $SH_C 'cd /var/lib/dpkg/updates; rm -f *'
   fi
   
   # for asciinema support  
   if [ "$DISTRO_ID" == "Ubuntu" ]; then
-    apt-add-repository -y ppa:zanchey/asciinema
+    $SH_C 'apt-add-repository -y ppa:zanchey/asciinema'
   fi
 
-  apt-get -y update
-  apt-get install -yq git mercurial subversion wget curl jq unzip vim make ssh gcc openssh-client python-dev libssl-dev libffi-dev asciinema
+  $SH_C 'apt-get -y update'
+  $SH_C 'apt-get install -yq git mercurial subversion wget curl jq unzip vim make ssh gcc openssh-client python-dev libssl-dev libffi-dev asciinema'
 
   if ! command_exists pip; then
-    apt-get remove -y python-pip
-    apt-get install -y python-setuptools
-    easy_install pip
+    $SH_C 'apt-get remove -y python-pip'
+    $SH_C 'apt-get install -y python-setuptools'
+    $SH_C 'easy_install pip'
   fi
 
-  apt-get -y autoremove
+  $SH_C 'apt-get -y autoremove'
 }
 
 
@@ -200,7 +211,6 @@ enable_golang()
 
   rm -rf "$inst_dir"
   cp -R "$PROGDIR/golang" "$inst_dir"
-  chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
 
   cp "$inst_dir/golang_profile" "/home/$DEV_USER/.golang_profile"
   cp "$inst_dir/golang_verify" "/home/$DEV_USER/.golang_verify"
@@ -216,8 +226,11 @@ enable_golang()
     grep -q -F 'source "$HOME/.golang_verify"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.golang_verify"' >> "/home/$DEV_USER/.profile"
   fi
 
-  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.golang_profile"
-  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.golang_verify"
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
+    chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.golang_profile"
+    chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.golang_verify"
+  fi
 }
 
 
@@ -242,23 +255,16 @@ enable_terraform()
     grep -q -F 'source "$HOME/.terraform_verify"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.terraform_verify"' >> "/home/$DEV_USER/.profile"
   fi
 
-  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.terraform_verify"
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
+    chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.terraform_verify"
+  fi
 }
 
 
 ### google cloud platform cli
 # https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
 ###
-enable_gcloud_old()
-{
-  local cloud_sdk_repo="cloud-sdk-$(lsb_release -c -s)"
-  echo "deb http://packages.cloud.google.com/apt $cloud_sdk_repo main" | tee /etc/apt/sources.list.d/google-cloud-sdk.list
-  curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-  apt-get update && apt-get install google-cloud-sdk
-
-}
-
-
 enable_gcloud()
 {
   local inst_dir="/home/$DEV_USER/.bootstrap/gcloud"
@@ -267,15 +273,11 @@ enable_gcloud()
 
   rm -rf "$inst_dir"
   cp -R "$PROGDIR/gcloud" "$inst_dir"
-  chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
 
   cp "$inst_dir/gcloud_profile" "/home/$DEV_USER/.gcloud_profile"
   cp "$inst_dir/gcloud_verify" "/home/$DEV_USER/.gcloud_verify"
   sed -i -e "s@###MY_PROJECT_DIR###@/home/${DEV_USER}/.bootstrap/gcloud@" /home/$DEV_USER/.gcloud_verify
   sed -i -e "s@###MY_BIN_DIR###@/home/${DEV_USER}/bin@" /home/$DEV_USER/.gcloud_verify
-
-  chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_profile"
-  chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_verify"
 
   if [ -f "/home/$DEV_USER/.bash_profile" ]; then
     inf "Setting up .bash_profile"
@@ -287,8 +289,11 @@ enable_gcloud()
     grep -q -F 'source "$HOME/.gcloud_verify"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.gcloud_verify"' >> "/home/$DEV_USER/.profile"
   fi
 
-  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_profile"
-  chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_verify"
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
+    chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_profile"
+    chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_verify"
+  fi
 }
 
 
@@ -297,14 +302,14 @@ enable_gcloud()
 ###
 enable_ansible()
 {
-  if command_exists ansible; then
+ if command_exists ansible; then
     local version="$(ansible --version | awk '{ print $2; exit }')"
     semverParse $version
     warn "Ansible $version is already installed...skipping installation"
     return 0
   fi
-
-  pip install git+git://github.com/ansible/ansible.git@devel
+  
+  $SH_C 'pip install git+git://github.com/ansible/ansible.git@devel'
 }
 
 
