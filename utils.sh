@@ -69,18 +69,3 @@ semverParse() {
   patch="${1#$major.$minor.}"
   patch="${patch%%[-.]*}"
 }
-
-SH_C='sh -c'
-if [ "$DEFAULT_USER" != 'root' ]; then
-  if command_exists sudo; then
-    SH_C='sudo -E sh -c'
-  elif command_exists su; then
-    SH_C='su -c'
-  else
-    cat >&2 <<-'EOF'
-    Error: this installer needs the ability to run commands as root.
-    We are unable to find either "sudo" or "su" available to make this happen.
-EOF
-    exit 1
-  fi
-fi
