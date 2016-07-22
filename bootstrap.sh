@@ -46,7 +46,7 @@ usage() {
   to install specified development tools.
 
   OPTIONS:
-    -u --user                non-privileged user account that gets bootstrapped (default: current user)
+    -u --user                non-privileged user account to be bootstrapped (NOTE: invalid option when running as non-privileged user)
     -a --ansible             enable ansible
     -d --docker              enable docker
     -g --golang              enable golang (incl. third-party utilities)
@@ -139,14 +139,22 @@ cmdline() {
 
 valid_args()
 {
-  ## Check for required params
-  #if [[ -z "$DEV_USER" ]]; then
-  #  error "a non-privileged user is required"
-  #  echo  ""
-  #  usage
-  #  exit 1
-  #fi
-  inf "no arg validation currently taking place"
+  if [ "$DEFAULT_USER" != 'root' ]; then
+    if [[ -z "$DEV_USER" ]]; then
+      warn "Defaulting non-privileged user to $DEFAULT_USER"
+      DEV_USER=$DEFAULT_USER
+    elif [ "$DEFAULT_USER" != "$DEV_USER" ]; then
+      error "When executing as a non-privileged user, --user option is not permitted"
+      echo ""
+      usage
+      exit 1
+    fi
+  elif [[ -z "$DEV_USER" ]]; then
+    error "a non-privileged user is required"
+    echo  ""
+    usage
+    exit 1
+  fi
 }
 
 
@@ -164,14 +172,7 @@ prerequisites() {
 #    error "Please run as root"
 #    exit 1
 #  fi
-  
-  if [ "$DEFAULT_USER" != 'root' ]; then
-    if [[ -z "$DEV_USER" ]]; then
-      warn "Defaulting non-privileged user to $DEFAULT_USER"
-      DEV_USER=$DEFAULT_USER
-    fi
-  fi
-
+    
   # for now, let's assume someone else has already created our non-privileged user.
   ret=false
   getent passwd "$DEV_USER" >/dev/null 2>&1 && ret=true
@@ -188,6 +189,10 @@ prerequisites() {
 
 base_setup()
 {
+  echo ""
+  inf "Performing base setup..."
+  echo ""
+
   if [ "$DEFAULT_USER" == 'root' ]; then
     su -c "mkdir -p /home/$DEV_USER/.bootstrap" "$DEV_USER"
     su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
@@ -221,9 +226,11 @@ base_setup()
 
 enable_golang()
 {
+  echo ""
+  inf "Enabling Golang..."
+  echo ""
+  
   local inst_dir="/home/$DEV_USER/.bootstrap/golang"
-  inf ""
-  inf "enabling golang..."
 
   rm -rf "$inst_dir"
   cp -R "$PROGDIR/golang" "$inst_dir"
@@ -246,15 +253,22 @@ enable_golang()
     chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
     chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.golang_profile"
     chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.golang_verify"
+  else
+    echo ""
+    inf "Okay...Verifying Golang..."
+    echo ""
+    sh "$HOME/.golang_verify"
   fi
 }
 
 
 enable_terraform()
 {
+  echo ""
+  inf "Enabling Terraform..."
+  echo ""
+  
   local inst_dir="/home/$DEV_USER/.bootstrap/terraform"
-  inf ""
-  inf "enabling terraform..."
 
   rm -rf "$inst_dir"
   cp -R "$PROGDIR/terraform" "$inst_dir"
@@ -274,6 +288,11 @@ enable_terraform()
   if [ "$DEFAULT_USER" == 'root' ]; then
     chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
     chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.terraform_verify"
+  else
+    echo ""
+    inf "Okay...Verifying Terraform..."
+    echo ""
+    sh "$HOME/.terraform_verify"
   fi
 }
 
@@ -283,9 +302,11 @@ enable_terraform()
 ###
 enable_gcloud()
 {
+  echo ""
+  inf "Enabling Google Cloud SDK..."
+  echo ""
+  
   local inst_dir="/home/$DEV_USER/.bootstrap/gcloud"
-  inf ""
-  inf "enabling gcloud..."
 
   rm -rf "$inst_dir"
   cp -R "$PROGDIR/gcloud" "$inst_dir"
@@ -309,6 +330,11 @@ enable_gcloud()
     chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
     chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_profile"
     chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_verify"
+  else
+    echo ""
+    inf "Okay...Verifying Google Cloud SDK..."
+    echo ""
+    sh "$HOME/.gcloud_verify"
   fi
 }
 
@@ -316,8 +342,12 @@ enable_gcloud()
 ### ansible
 # http://docs.ansible.com/ansible/intro_installation.html#latest-releases-via-pip
 ###
-enable_ansible()
+install_ansible()
 {
+  echo ""
+  inf "Installing Ansible..."
+  echo ""
+  
  if command_exists ansible; then
     local version="$(ansible --version | awk '{ print $2; exit }')"
     semverParse $version
@@ -332,8 +362,11 @@ enable_ansible()
 ### docker
 # https://docs.docker.com/engine/installation/linux/
 ###
-enable_docker()
+install_docker()
 {
+  echo ""
+  inf "Installing Docker..."
+  echo ""
 
   if command_exists docker; then
     local version="$(docker -v | awk -F '[ ,]+' '{ print $3 }')"
@@ -342,9 +375,9 @@ enable_docker()
     semverParse $version
     warn "Docker $version is already installed...skipping installation"
   else
-    apt-get install -y apt-transport-https ca-certificates
-    apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
-    apt-get -y update
+    $SH_C 'apt-get install -y apt-transport-https ca-certificates'
+    $SH_C 'apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D'
+    $SH_C 'apt-get -y update'
     if [ "$DISTRO_ID" == "Debian" ]; then
       if [ "$DISTRO_VER" == "8.5" ]; then
         echo "deb https://apt.dockerproject.org/repo debian-jessie main" > /etc/apt/sources.list.d/docker.list
@@ -353,37 +386,40 @@ enable_docker()
         echo "deb https://apt.dockerproject.org/repo debian-wheezy main" > /etc/apt/sources.list.d/docker.list
       fi
     elif [ "$DISTRO_ID" == "Ubuntu" ]; then
-      apt-get install -y "linux-image-extra-$(uname -r)"
+      $SH_C 'apt-get install -y "linux-image-extra-$(uname -r)"'
       if [ "$DISTRO_VER" == "16.04" ]; then
-        echo "deb https://apt.dockerproject.org/repo ubuntu-xenial main" > /etc/apt/sources.list.d/docker.list
+        $SH_C 'echo "deb https://apt.dockerproject.org/repo ubuntu-xenial main" > /etc/apt/sources.list.d/docker.list'
       elif [ "$DISTRO_VER" == "15.10" ]; then
-        echo "deb https://apt.dockerproject.org/repo ubuntu-wily main" > /etc/apt/sources.list.d/docker.list
+        $SH_C 'echo "deb https://apt.dockerproject.org/repo ubuntu-wily main" > /etc/apt/sources.list.d/docker.list'
       elif [ "$DISTRO_VER" == "14.04" ]; then
-        echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" > /etc/apt/sources.list.d/docker.list
+        $SH_C 'echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" > /etc/apt/sources.list.d/docker.list'
       fi
     fi
 
-    apt-get -y update
-    apt-get install -yq docker-engine
+    $SH_C 'apt-get -y update'
+    $SH_C 'apt-get install -yq docker-engine'
   fi
 
-  groupadd -f docker
+  $SH_C 'groupadd -f docker'
   inf "added docker group"
-  usermod -aG docker $DEV_USER
+ 
+  echo "$DEV_USER" > /tmp/bootstrap_usermod_feh || exit 1
+  $SH_C 'usermod -aG docker $(cat /tmp/bootstrap_usermod_feh)'
+  rm -f /tmp/bootstrap_usermod_feh || exit 1
   inf "added $DEV_USER to group docker"
 
   ## Start Docker
   if command_exists systemctl; then
-    systemctl enable docker
+    $SH_C 'systemctl enable docker'
     if [ ! -f "/var/run/docker.pid" ]; then
-      systemctl start docker
+      $SH_C 'systemctl start docker'
     else
       inf "Docker appears to already be running"
     fi
   else
     inf "no systemctl found...assuming this OS is not using systemd (yet)"
     if [ ! -f "/var/run/docker.pid" ]; then
-      service docker start
+      $SH_C 'service docker start'
     else
       inf "Docker appears to already be running"
     fi
@@ -431,12 +467,12 @@ main() {
 
   # ansible handler
   if [ -n "$ENABLE_ANSIBLE" ]; then
-    enable_ansible
+    install_ansible
   fi
 
   # docker handler
   if [ -n "$ENABLE_DOCKER" ]; then
-      enable_docker
+    install_docker
   fi
 }
 
