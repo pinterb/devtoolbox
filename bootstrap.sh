@@ -173,9 +173,14 @@ base_setup()
     rm -f *
     cd -
   fi
+  
+  # for asciinema support  
+  if [ "$DISTRO_ID" == "Ubuntu" ]; then
+    apt-add-repository -y ppa:zanchey/asciinema
+  fi
 
   apt-get -y update
-  apt-get install -yq git mercurial subversion wget curl jq unzip vim make ssh gcc openssh-client python-dev libssl-dev libffi-dev
+  apt-get install -yq git mercurial subversion wget curl jq unzip vim make ssh gcc openssh-client python-dev libssl-dev libffi-dev asciinema
 
   if ! command_exists pip; then
     apt-get remove -y python-pip
@@ -342,17 +347,24 @@ enable_docker()
   fi
 
   groupadd -f docker
+  inf "added docker group"
   usermod -aG docker $DEV_USER
+  inf "added $DEV_USER to group docker"
 
   ## Start Docker
   if command_exists systemctl; then
     systemctl enable docker
     if [ ! -f "/var/run/docker.pid" ]; then
       systemctl start docker
+    else
+      inf "Docker appears to already be running"
     fi
   else
+    inf "no systemctl found...assuming this OS is not using systemd (yet)"
     if [ ! -f "/var/run/docker.pid" ]; then
       service docker start
+    else
+      inf "Docker appears to already be running"
     fi
   fi
 }
