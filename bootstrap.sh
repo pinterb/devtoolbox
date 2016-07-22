@@ -172,7 +172,7 @@ prerequisites() {
 #    error "Please run as root"
 #    exit 1
 #  fi
-    
+
   # for now, let's assume someone else has already created our non-privileged user.
   ret=false
   getent passwd "$DEV_USER" >/dev/null 2>&1 && ret=true
@@ -205,8 +205,8 @@ base_setup()
   if [ -d "/var/lib/dpkg/updates" ]; then
     $SH_C 'cd /var/lib/dpkg/updates; rm -f *'
   fi
-  
-  # for asciinema support  
+
+  # for asciinema support
   if [ "$DISTRO_ID" == "Ubuntu" ]; then
     $SH_C 'apt-add-repository -y ppa:zanchey/asciinema'
   fi
@@ -229,7 +229,7 @@ enable_golang()
   echo ""
   inf "Enabling Golang..."
   echo ""
-  
+
   local inst_dir="/home/$DEV_USER/.bootstrap/golang"
 
   rm -rf "$inst_dir"
@@ -267,7 +267,7 @@ enable_terraform()
   echo ""
   inf "Enabling Terraform..."
   echo ""
-  
+
   local inst_dir="/home/$DEV_USER/.bootstrap/terraform"
 
   rm -rf "$inst_dir"
@@ -305,7 +305,7 @@ enable_gcloud()
   echo ""
   inf "Enabling Google Cloud SDK..."
   echo ""
-  
+
   local inst_dir="/home/$DEV_USER/.bootstrap/gcloud"
 
   rm -rf "$inst_dir"
@@ -347,14 +347,14 @@ install_ansible()
   echo ""
   inf "Installing Ansible..."
   echo ""
-  
+
  if command_exists ansible; then
     local version="$(ansible --version | awk '{ print $2; exit }')"
     semverParse $version
     warn "Ansible $version is already installed...skipping installation"
     return 0
   fi
-  
+
   $SH_C 'pip install git+git://github.com/ansible/ansible.git@devel'
 }
 
@@ -402,7 +402,7 @@ install_docker()
 
   $SH_C 'groupadd -f docker'
   inf "added docker group"
- 
+
   echo "$DEV_USER" > /tmp/bootstrap_usermod_feh || exit 1
   $SH_C 'usermod -aG docker $(cat /tmp/bootstrap_usermod_feh)'
   rm -f /tmp/bootstrap_usermod_feh || exit 1
