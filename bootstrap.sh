@@ -243,19 +243,32 @@ enable_vim()
     $SH_C "mkdir -p $inst_dir/colors"
   fi
 
-  $SH_C "git clone https://github.com/fatih/molokai /home/$DEV_USER/projects/vim-colors-molokai"
+  # some vim colors
+  if [ -d "/home/$DEV_USER/projects/vim-colors-molokai" ]; then
+    $SH_C "cd /home/$DEV_USER/projects/vim-colors-molokai; git pull"
+  else
+    $SH_C "git clone https://github.com/fatih/molokai /home/$DEV_USER/projects/vim-colors-molokai"
+  fi
+
   if [ -f "/home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim" ]; then
     $SH_C "cp /home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim $inst_dir/colors/molokai.vim"
   fi
 
-  $SH_C "git clone https://github.com/fatih/dotfiles /home/$DEV_USER/projects/dotfiles"
+  # some dot files
+  if [ -d "/home/$DEV_USER/projects/dotfiles" ]; then
+    $SH_C "cd /home/$DEV_USER/projects/dotfiles; git pull"
+  else
+    $SH_C "git clone https://github.com/fatih/dotfiles /home/$DEV_USER/projects/dotfiles"
+  fi
 
+  # backup .bashrc
   if [ -f "/home/$DEV_USER/.bashrc" ]; then
     $SH_C "mv /home/$DEV_USER/.bashrc /home/$DEV_USER/bashrc_orig"
   fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
     chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER"
+    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
   fi
 }
 
