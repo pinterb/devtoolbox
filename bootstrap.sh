@@ -35,6 +35,7 @@ ENABLE_DOCKER=
 ENABLE_GOLANG=
 ENABLE_GCLOUD=
 ENABLE_TERRAFORM=
+ENABLE_VIM=
 
 
 usage() {
@@ -53,6 +54,7 @@ usage() {
     -y --gcloud              enable gcloud cli
     -t --terraform           enable terraform
     -y --gcloud              enable gcloud cli
+    -v --vim                 enable vim-plug & choice plugins (e.g. vim-go)
     -z --aws                 enable aws cli
     -h --help                show this help
 
@@ -80,6 +82,7 @@ cmdline() {
       --golang)         args="${args}-g ";;
       --gcloud)         args="${args}-y ";;
       --terraform)      args="${args}-t ";;
+      --vim)            args="${args}-v ";;
       --help)           args="${args}-h ";;
       #pass through anything else
       *) [[ "${arg:0:1}" == "-" ]] || delim="\""
@@ -90,7 +93,7 @@ cmdline() {
   #Reset the positional parameters to the short options
   eval set -- $args
 
-  while getopts ":u:adgytzh" OPTION
+  while getopts ":u:adgytvzh" OPTION
   do
      case $OPTION in
      u)
@@ -110,6 +113,9 @@ cmdline() {
          ;;
      t)
          readonly ENABLE_TERRAFORM=1
+         ;;
+     v)
+         readonly ENABLE_VIM=1
          ;;
      z)
          readonly ENABLE_AWS=1
@@ -221,6 +227,26 @@ base_setup()
   fi
 
   $SH_C 'apt-get -y autoremove'
+}
+
+
+enable_vim()
+{
+  echo ""
+  inf "Enabling vim & vim-plug..."
+  echo ""
+
+  local inst_dir="/home/$DEV_USER/.vim"
+  $SH_C "curl -fLo $inst_dir/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+  $SH_C "git clone https://github.com/fatih/dotfiles /home/$DEV_USER/projects/dotfiles"
+  
+  if [ -f "/home/$DEV_USER/.bashrc" ]; then
+    $SH_C "mv /home/$DEV_USER/.bashrc /home/$DEV_USER/bashrc_orig" 
+  fi
+  
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER"
+  fi
 }
 
 
@@ -463,6 +489,11 @@ main() {
   # gcloud handler
   if [ -n "$ENABLE_GCLOUD" ]; then
     enable_gcloud
+  fi
+
+  # vim handler
+  if [ -n "$ENABLE_VIM" ]; then
+    enable_vim
   fi
 
   # ansible handler
