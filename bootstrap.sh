@@ -7,6 +7,7 @@
 readonly PROGNAME=$(basename $0)
 readonly PROGDIR="$( cd "$(dirname "$0")" ; pwd -P )"
 readonly ARGS="$@"
+readonly TODAY=$(date +%Y%m%d%H%M%S)
 
 # pull in utils
 source "${PROGDIR}/utils.sh"
@@ -218,7 +219,8 @@ base_setup()
   fi
 
   $SH_C 'apt-get -y update'
-  $SH_C 'apt-get install -yq git mercurial subversion wget curl jq unzip vim make ssh gcc openssh-client python-dev libssl-dev libffi-dev asciinema'
+  $SH_C 'apt-get install -yq git mercurial subversion wget curl jq unzip vim
+  make ssh gcc openssh-client python-dev libssl-dev libffi-dev asciinema tree'
 
   if ! command_exists pip; then
     $SH_C 'apt-get remove -y python-pip'
@@ -230,40 +232,100 @@ base_setup()
 }
 
 
+dotfiles()
+{
+  echo ""
+  inf "Copying dotfiles..."
+  echo ""
+ 
+  # handle .bashrc 
+  if [ -f "/home/$DEV_USER/.bashrc" ]; then
+    inf "Backing up .bashrc file"
+    cp "/home/$DEV_USER/.bashrc" "/home/$DEV_USER/.bashrc-$TODAY"
+  fi
+  
+  if [ -f "$PROGDIR/dotfiles/bashrc" ]; then
+    inf "Copying new Debian-based .bashrc file"
+    cp "$PROGDIR/dotfiles/bashrc" "/home/$DEV_USER/.bashrc"
+  fi
+  
+  # handle .profile 
+  if [ -f "/home/$DEV_USER/.profile" ]; then
+    inf "Backing up .profile file"
+    cp "/home/$DEV_USER/.profile" "/home/$DEV_USER/.profile-$TODAY"
+  fi
+  
+  if [ -f "$PROGDIR/dotfiles/profile" ]; then
+    inf "Copying new .profile file"
+    cp "$PROGDIR/dotfiles/profile" "/home/$DEV_USER/.profile"
+  fi
+  
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER"
+  fi
+}
+
+
 enable_vim()
 {
   echo ""
-  inf "Enabling vim & vim-plug..."
+  inf "Enabling vim & pathogen..."
   echo ""
 
   local inst_dir="/home/$DEV_USER/.vim"
-  $SH_C "curl -fLo $inst_dir/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
-
-  if [ ! -d "$inst_dir/colors" ]; then
-    $SH_C "mkdir -p $inst_dir/colors"
-  fi
+  mkdir -p "$inst_dir/autoload" "$inst_dir/colors"
+ 
+  ## not quite sure yet which vim plugin manager to use 
+#  $SH_C "curl -fLo $inst_dir/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+  curl -LSso "$inst_dir/autoload/pathogen.vim" https://tpo.pe/pathogen.vim
 
   # some vim colors
   if [ -d "/home/$DEV_USER/projects/vim-colors-molokai" ]; then
-    $SH_C "cd /home/$DEV_USER/projects/vim-colors-molokai; git pull"
+    cd /home/$DEV_USER/projects/vim-colors-molokai; git pull
   else
-    $SH_C "git clone https://github.com/fatih/molokai /home/$DEV_USER/projects/vim-colors-molokai"
+    git clone https://github.com/fatih/molokai "/home/$DEV_USER/projects/vim-colors-molokai"
   fi
 
   if [ -f "/home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim" ]; then
-    $SH_C "cp /home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim $inst_dir/colors/molokai.vim"
+    cp "/home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim" "$inst_dir/colors/molokai.vim"
   fi
 
   # some dot files
-  if [ -d "/home/$DEV_USER/projects/dotfiles" ]; then
-    $SH_C "cd /home/$DEV_USER/projects/dotfiles; git pull"
-  else
-    $SH_C "git clone https://github.com/fatih/dotfiles /home/$DEV_USER/projects/dotfiles"
-  fi
+#  if [ -d "/home/$DEV_USER/projects/dotfiles" ]; then
+#    $SH_C "cd /home/$DEV_USER/projects/dotfiles; git pull"
+#  else
+#    $SH_C "git clone https://github.com/fatih/dotfiles /home/$DEV_USER/projects/dotfiles"
+#  fi
 
-  # backup .bashrc
-  if [ -f "/home/$DEV_USER/.bashrc" ]; then
-    $SH_C "mv /home/$DEV_USER/.bashrc /home/$DEV_USER/bashrc_orig"
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER"
+#    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
+  fi
+}
+
+
+enable_pathogen_bundles()
+{
+  echo ""
+  inf "Enabling vim & pathogen bundles..."
+  echo ""
+
+  local inst_dir="/home/$DEV_USER/.vim/bundle"
+  rm -rf "$inst_dir"; mkdir -p "$inst_dir"
+
+  inf "Re-populating pathogen bundles..."
+  git clone git://github.com/altercation/vim-colors-solarized.git "$inst_dir/vim-colors-solarized"
+  git clone https://github.com/fatih/vim-go.git "$inst_dir/vim-go"
+ 
+  # handle .vimrc 
+  if [ -f "/home/$DEV_USER/.vimrc" ]; then
+    inf "Backing up .vimrc file"
+    cp "/home/$DEV_USER/.vimrc" "/home/$DEV_USER/.vimrc-$TODAY"
+  fi
+  
+  if [ -f "$PROGDIR/dotfiles/vimrc" ]; then
+    inf "Copying new .vimrc file"
+    cp "$PROGDIR/dotfiles/vimrc" "/home/$DEV_USER/.vimrc"
   fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
@@ -498,6 +560,7 @@ main() {
   valid_args
   prerequisites
   base_setup
+  dotfiles
 
   # golang handler
   if [ -n "$ENABLE_GOLANG" ]; then
@@ -517,6 +580,7 @@ main() {
   # vim handler
   if [ -n "$ENABLE_VIM" ]; then
     enable_vim
+    enable_pathogen_bundles
   fi
 
   # ansible handler
