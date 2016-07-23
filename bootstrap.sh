@@ -238,12 +238,22 @@ enable_vim()
 
   local inst_dir="/home/$DEV_USER/.vim"
   $SH_C "curl -fLo $inst_dir/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
-  $SH_C "git clone https://github.com/fatih/dotfiles /home/$DEV_USER/projects/dotfiles"
-  
-  if [ -f "/home/$DEV_USER/.bashrc" ]; then
-    $SH_C "mv /home/$DEV_USER/.bashrc /home/$DEV_USER/bashrc_orig" 
+
+  if [ ! -d "$inst_dir/colors" ]; then
+    $SH_C "mkdir -p $inst_dir/colors"
   fi
-  
+
+  $SH_C "git clone https://github.com/fatih/molokai /home/$DEV_USER/projects/vim-colors-molokai"
+  if [ -f "/home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim" ]; then
+    $SH_C "cp /home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim $inst_dir/colors/molokai.vim"
+  fi
+
+  $SH_C "git clone https://github.com/fatih/dotfiles /home/$DEV_USER/projects/dotfiles"
+
+  if [ -f "/home/$DEV_USER/.bashrc" ]; then
+    $SH_C "mv /home/$DEV_USER/.bashrc /home/$DEV_USER/bashrc_orig"
+  fi
+
   if [ "$DEFAULT_USER" == 'root' ]; then
     chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER"
   fi
