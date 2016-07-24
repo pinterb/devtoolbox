@@ -6,6 +6,7 @@ filetype off
 
 " Load plugins here (for now, pathogen)
 execute pathogen#infect()
+execute pathogen#helptags()
 
 " Turn on syntax highlighting
 syntax on

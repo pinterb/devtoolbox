@@ -219,8 +219,8 @@ base_setup()
   fi
 
   $SH_C 'apt-get -y update'
-  $SH_C 'apt-get install -yq git mercurial subversion wget curl jq unzip vim
-  make ssh gcc openssh-client python-dev libssl-dev libffi-dev asciinema tree'
+  $SH_C 'apt-get install -yq git mercurial subversion wget curl jq unzip vim \
+  build-essential cmake make ssh gcc openssh-client python-dev python3-dev libssl-dev libffi-dev asciinema tree'
 
   if ! command_exists pip; then
     $SH_C 'apt-get remove -y python-pip'
@@ -237,29 +237,29 @@ dotfiles()
   echo ""
   inf "Copying dotfiles..."
   echo ""
- 
-  # handle .bashrc 
+
+  # handle .bashrc
   if [ -f "/home/$DEV_USER/.bashrc" ]; then
     inf "Backing up .bashrc file"
     cp "/home/$DEV_USER/.bashrc" "/home/$DEV_USER/.bashrc-$TODAY"
   fi
-  
+
   if [ -f "$PROGDIR/dotfiles/bashrc" ]; then
     inf "Copying new Debian-based .bashrc file"
     cp "$PROGDIR/dotfiles/bashrc" "/home/$DEV_USER/.bashrc"
   fi
-  
-  # handle .profile 
+
+  # handle .profile
   if [ -f "/home/$DEV_USER/.profile" ]; then
     inf "Backing up .profile file"
     cp "/home/$DEV_USER/.profile" "/home/$DEV_USER/.profile-$TODAY"
   fi
-  
+
   if [ -f "$PROGDIR/dotfiles/profile" ]; then
     inf "Copying new .profile file"
     cp "$PROGDIR/dotfiles/profile" "/home/$DEV_USER/.profile"
   fi
-  
+
   if [ "$DEFAULT_USER" == 'root' ]; then
     chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER"
   fi
@@ -274,8 +274,8 @@ enable_vim()
 
   local inst_dir="/home/$DEV_USER/.vim"
   mkdir -p "$inst_dir/autoload" "$inst_dir/colors"
- 
-  ## not quite sure yet which vim plugin manager to use 
+
+  ## not quite sure yet which vim plugin manager to use
 #  $SH_C "curl -fLo $inst_dir/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
   curl -LSso "$inst_dir/autoload/pathogen.vim" https://tpo.pe/pathogen.vim
 
@@ -312,17 +312,60 @@ enable_pathogen_bundles()
 
   local inst_dir="/home/$DEV_USER/.vim/bundle"
   rm -rf "$inst_dir"; mkdir -p "$inst_dir"
+  cd "$inst_dir"
 
   inf "Re-populating pathogen bundles..."
-  git clone git://github.com/altercation/vim-colors-solarized.git "$inst_dir/vim-colors-solarized"
-  git clone https://github.com/fatih/vim-go.git "$inst_dir/vim-go"
- 
-  # handle .vimrc 
+
+  ## colors
+  git clone git://github.com/altercation/vim-colors-solarized.git
+
+  ## golang
+  git clone https://github.com/fatih/vim-go.git
+
+  ## json
+  git clone https://github.com/elzr/vim-json.git
+
+  ## yaml
+  git clone https://github.com/avakhov/vim-yaml
+
+  ## Ansible
+  git clone https://github.com/pearofducks/ansible-vim
+
+  ## Dockerfile
+  git clone https://github.com/ekalinin/Dockerfile.vim.git \
+  "$inst_dir/Dockerfile"
+
+  ## Nerdtree
+  git clone https://github.com/scrooloose/nerdtree.git
+
+  ## Ruby
+  git clone git://github.com/vim-ruby/vim-ruby.git
+
+  ## Python
+  git clone https://github.com/klen/python-mode.git
+
+  ## Whitespace (hint: to see whitespace just :ToggleWhitespace)
+  git clone git://github.com/ntpeters/vim-better-whitespace.git
+
+  ## YouCompleteMe
+  git clone https://github.com/valloric/youcompleteme
+  cd "$inst_dir/youcompleteme"
+  git submodule update --init --recursive
+  local ycm_opts=
+
+  if command_exists go; then
+    ycm_opts="--gocode-completer"
+  fi
+
+  sh -c "$inst_dir/youcompleteme/install.py $ycm_opts"
+  cd "$inst_dir"
+
+  # handle .vimrc
   if [ -f "/home/$DEV_USER/.vimrc" ]; then
     inf "Backing up .vimrc file"
     cp "/home/$DEV_USER/.vimrc" "/home/$DEV_USER/.vimrc-$TODAY"
   fi
-  
+
   if [ -f "$PROGDIR/dotfiles/vimrc" ]; then
     inf "Copying new .vimrc file"
     cp "$PROGDIR/dotfiles/vimrc" "/home/$DEV_USER/.vimrc"
@@ -467,6 +510,7 @@ install_ansible()
   fi
 
   $SH_C 'pip install git+git://github.com/ansible/ansible.git@devel'
+  $SH_C 'pip install ansible-lint'
 }
 
 
