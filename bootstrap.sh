@@ -12,6 +12,40 @@ readonly TODAY=$(date +%Y%m%d%H%M%S)
 # pull in utils
 source "${PROGDIR}/utils.sh"
 
+case "$DISTRO_ID" in
+  Ubuntu)
+    inf "Configuring $DISTRO_ID $DISTRO_VER..."
+    inf ""
+    sleep 4
+  ;;
+
+  Debian)
+    warn "Configuring $DISTRO_ID $DISTRO_VER..."
+    warn "Support for this distro is spotty.  Your mileage will vary."
+    warn ""
+    warn "You may press Ctrl+C now to abort this script."
+    sleep 10
+  ;;
+
+  RHEL)
+    error "Configuring $DISTRO_ID $DISTRO_VER..."
+    error "Unfortunately, this is an unsupported distro"
+    error ""
+    sleep 4
+    exit 1
+  ;;
+
+  *)
+    error "Configuring $DISTRO_ID $DISTRO_VER..."
+    error "Unfortunately, this is an unsupported distro"
+    error ""
+    sleep 4
+    exit 1
+  ;;
+
+esac
+
+
 # based on user, determine how commands will be executed
 SH_C='sh -c'
 if [ "$DEFAULT_USER" != 'root' ]; then
