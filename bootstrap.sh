@@ -222,7 +222,7 @@ base_setup()
   fi
 
   $SH_C 'apt-get -y update'
-  $SH_C 'apt-get install -yq git mercurial subversion wget curl jq unzip vim \
+  $SH_C 'apt-get install -yq git mercurial subversion wget curl jq unzip vim gnupg2 \
   build-essential cmake make ssh gcc openssh-client python-dev python3-dev libssl-dev libffi-dev asciinema tree'
 
   if ! command_exists pip; then
