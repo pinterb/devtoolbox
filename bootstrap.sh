@@ -12,39 +12,22 @@ readonly TODAY=$(date +%Y%m%d%H%M%S)
 # pull in utils
 source "${PROGDIR}/utils.sh"
 
-case "$DISTRO_ID" in
-  Ubuntu)
-    inf "Configuring $DISTRO_ID $DISTRO_VER..."
-    inf ""
-    sleep 4
-  ;;
+# pull in distro-specific functions
+source "${PROGDIR}/$(echo $DISTRO_ID | tr '[:upper:]' '[:lower:]').sh"
 
-  Debian)
-    warn "Configuring $DISTRO_ID $DISTRO_VER..."
-    warn "Support for this distro is spotty.  Your mileage will vary."
-    warn ""
-    warn "You may press Ctrl+C now to abort this script."
-    sleep 10
-  ;;
+# cli arguments
+DEV_USER=
+ENABLE_ANSIBLE=
+ENABLE_AWS=
+ENABLE_DOCKER=
+ENABLE_GOLANG=
+ENABLE_GCLOUD=
+ENABLE_TERRAFORM=
+ENABLE_VIM=
 
-  RHEL)
-    error "Configuring $DISTRO_ID $DISTRO_VER..."
-    error "Unfortunately, this is an unsupported distro"
-    error ""
-    sleep 4
-    exit 1
-  ;;
-
-  *)
-    error "Configuring $DISTRO_ID $DISTRO_VER..."
-    error "Unfortunately, this is an unsupported distro"
-    error ""
-    sleep 4
-    exit 1
-  ;;
-
-esac
-
+# misc. flags
+SHOULD_WARM=0
+LOGOFF_REQ=0
 
 # based on user, determine how commands will be executed
 SH_C='sh -c'
@@ -62,19 +45,6 @@ EOF
   fi
 fi
 
-# cli arguments
-DEV_USER=
-ENABLE_ANSIBLE=
-ENABLE_AWS=
-ENABLE_DOCKER=
-ENABLE_GOLANG=
-ENABLE_GCLOUD=
-ENABLE_TERRAFORM=
-ENABLE_VIM=
-
-# misc. flags
-SHOULD_WARM=0
-LOGOFF_REQ=0
 
 usage() {
   cat <<- EOF
@@ -181,6 +151,43 @@ cmdline() {
 }
 
 
+distro_check()
+{
+  case "$DISTRO_ID" in
+    Ubuntu)
+      inf "Configuring $DISTRO_ID $DISTRO_VER..."
+      inf ""
+      sleep 4
+    ;;
+
+    Debian)
+      warn "Configuring $DISTRO_ID $DISTRO_VER..."
+      warn "Support for this distro is spotty.  Your mileage will vary."
+      warn ""
+      warn "You may press Ctrl+C now to abort this script."
+      sleep 10
+    ;;
+
+    RHEL)
+      error "Configuring $DISTRO_ID $DISTRO_VER..."
+      error "Unfortunately, this is an unsupported distro"
+      error ""
+      sleep 4
+      exit 1
+    ;;
+
+    *)
+      error "Configuring $DISTRO_ID $DISTRO_VER..."
+      error "Unfortunately, this is an unsupported distro"
+      error ""
+      sleep 4
+      exit 1
+    ;;
+
+  esac
+}
+
+
 valid_args()
 {
   if [ "$DEFAULT_USER" != 'root' ]; then
@@ -211,12 +218,6 @@ prerequisites() {
     exit 1
   fi
 
-  # we want to be root to bootstrap
-#  if [ "$EUID" -ne 0 ]; then
-#    error "Please run as root"
-#    exit 1
-#  fi
-
   # for now, let's assume someone else has already created our non-privileged user.
   ret=false
   getent passwd "$DEV_USER" >/dev/null 2>&1 && ret=true
@@ -228,44 +229,6 @@ prerequisites() {
   if [ ! -d "/home/$DEV_USER" ]; then
     error "By convention, expecting /home/$DEV_USER to exist. Please create a user with /home directory."
   fi
-}
-
-
-base_setup()
-{
-  echo ""
-  inf "Performing base setup..."
-  echo ""
-
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    su -c "mkdir -p /home/$DEV_USER/.bootstrap" "$DEV_USER"
-    su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
-  else
-    mkdir -p "/home/$DEV_USER/.bootstrap"
-    mkdir -p "/home/$DEV_USER/bin"
-  fi
-
-  # in case a previous update failed
-  if [ -d "/var/lib/dpkg/updates" ]; then
-    $SH_C 'cd /var/lib/dpkg/updates; rm -f *'
-  fi
-
-  # for asciinema support
-  if [ "$DISTRO_ID" == "Ubuntu" ]; then
-    $SH_C 'apt-add-repository -y ppa:zanchey/asciinema'
-  fi
-
-  $SH_C 'apt-get -y update'
-  $SH_C 'apt-get install -yq git mercurial subversion wget curl jq unzip vim gnupg2 \
-  build-essential cmake make ssh gcc openssh-client python-dev python3-dev libssl-dev libffi-dev asciinema tree'
-
-  if ! command_exists pip; then
-    $SH_C 'apt-get remove -y python-pip'
-    $SH_C 'apt-get install -y python-setuptools'
-    $SH_C 'easy_install pip'
-  fi
-
-  $SH_C 'apt-get -y autoremove'
 }
 
 
@@ -574,74 +537,24 @@ install_ansible()
 }
 
 
-### docker
-# https://docs.docker.com/engine/installation/linux/
+### aws cli
+# http://docs.aws.amazon.com/cli/latest/userguide/installing.html
 ###
-install_docker()
+install_aws()
 {
   echo ""
-  inf "Installing Docker..."
+  inf "Installing AWS CLI..."
   echo ""
 
-  if command_exists docker; then
-    local version="$(docker -v | awk -F '[ ,]+' '{ print $3 }')"
-    local MAJOR_W=1
-    local MINOR_W=10
-    semverParse $version
-    warn "Docker $version is already installed...skipping installation"
-  else
-    $SH_C 'apt-get install -y apt-transport-https ca-certificates'
-    $SH_C 'apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D'
-    $SH_C 'apt-get -y update'
-    if [ "$DISTRO_ID" == "Debian" ]; then
-      if [ "$DISTRO_VER" == "8.5" ]; then
-        echo "deb https://apt.dockerproject.org/repo debian-jessie main" > /etc/apt/sources.list.d/docker.list
-      else
-        echo "deb http://http.debian.net/debian wheezy-backports main" > /etc/apt/sources.list.d/backports.list
-        echo "deb https://apt.dockerproject.org/repo debian-wheezy main" > /etc/apt/sources.list.d/docker.list
-      fi
-    elif [ "$DISTRO_ID" == "Ubuntu" ]; then
-      $SH_C 'apt-get install -y "linux-image-extra-$(uname -r)"'
-      if [ "$DISTRO_VER" == "16.04" ]; then
-        $SH_C 'echo "deb https://apt.dockerproject.org/repo ubuntu-xenial main" > /etc/apt/sources.list.d/docker.list'
-      elif [ "$DISTRO_VER" == "15.10" ]; then
-        $SH_C 'echo "deb https://apt.dockerproject.org/repo ubuntu-wily main" > /etc/apt/sources.list.d/docker.list'
-      elif [ "$DISTRO_VER" == "14.04" ]; then
-        $SH_C 'echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" > /etc/apt/sources.list.d/docker.list'
-      fi
-    fi
-
-    $SH_C 'apt-get -y update'
-    $SH_C 'apt-get install -yq docker-engine'
+ if command_exists aws; then
+    #local version="$(aws --version | awk '{ print $2; exit }')"
+    local version="$(aws --version)"
+    warn "aws cli is already installed...attempting upgrade"
+    $SH_C 'pip install --upgrade awscli'
+    return 0
   fi
 
-  $SH_C 'groupadd -f docker'
-  inf "added docker group"
-
-  echo "$DEV_USER" > /tmp/bootstrap_usermod_feh || exit 1
-  $SH_C 'usermod -aG docker $(cat /tmp/bootstrap_usermod_feh)'
-  rm -f /tmp/bootstrap_usermod_feh || exit 1
-  inf "added $DEV_USER to group docker"
-
-  ## Start Docker
-  if command_exists systemctl; then
-    $SH_C 'systemctl enable docker'
-    if [ ! -f "/var/run/docker.pid" ]; then
-      $SH_C 'systemctl start docker'
-    else
-      inf "Docker appears to already be running"
-    fi
-  else
-    inf "no systemctl found...assuming this OS is not using systemd (yet)"
-    if [ ! -f "/var/run/docker.pid" ]; then
-      $SH_C 'service docker start'
-    else
-      inf "Docker appears to already be running"
-    fi
-  fi
-
-  # User must log off for these changes to take effect
-  LOGOFF_REQ=1
+  $SH_C 'pip install awscli'
 }
 
 
@@ -664,6 +577,7 @@ main() {
   set -euo pipefail
   readonly SELF="$(absolute_path $0)"
   cmdline $ARGS
+  distro_check
   valid_args
   prerequisites
   base_setup
@@ -682,6 +596,11 @@ main() {
   # gcloud handler
   if [ -n "$ENABLE_GCLOUD" ]; then
     enable_gcloud
+  fi
+
+  # aws handler
+  if [ -n "$ENABLE_AWS" ]; then
+    install_aws
   fi
 
   # vim handler
