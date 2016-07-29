@@ -38,6 +38,9 @@ ENABLE_GCLOUD=
 ENABLE_TERRAFORM=
 ENABLE_VIM=
 
+# misc. flags
+SHOULD_WARM=0
+LOGOFF_REQ=0
 
 usage() {
   cat <<- EOF
@@ -347,18 +350,13 @@ enable_pathogen_bundles()
   ## Whitespace (hint: to see whitespace just :ToggleWhitespace)
   git clone git://github.com/ntpeters/vim-better-whitespace.git
 
-  ## YouCompleteMe
-  git clone https://github.com/valloric/youcompleteme
-  cd "$inst_dir/youcompleteme"
-  git submodule update --init --recursive
-  local ycm_opts=
-
-  if command_exists go; then
-    ycm_opts="--gocode-completer"
+  if [ $MEM_TOTAL_KB -ge 1500000 ]; then
+    enable_vim_ycm
+    cd "$inst_dir"
+  else
+    warn "Your system requires at least 1.5 GB of memory to "
+    warn "install the YouCompleteMe vim plugin. Skipping... "
   fi
-
-  sh -c "$inst_dir/youcompleteme/install.py $ycm_opts"
-  cd "$inst_dir"
 
   # handle .vimrc
   if [ -f "/home/$DEV_USER/.vimrc" ]; then
@@ -375,6 +373,28 @@ enable_pathogen_bundles()
     chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER"
     chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
   fi
+}
+
+
+enable_vim_ycm()
+{
+  echo ""
+  inf "Installing the YouCompleteMe vim plugin..."
+  echo ""
+
+  local inst_dir="/home/$DEV_USER/.vim/bundle"
+
+  ## YouCompleteMe
+  git clone https://github.com/valloric/youcompleteme
+  cd "$inst_dir/youcompleteme"
+  git submodule update --init --recursive
+  local ycm_opts=
+
+  if command_exists go; then
+    ycm_opts="--gocode-completer"
+  fi
+
+  sh -c "$inst_dir/youcompleteme/install.py $ycm_opts"
 }
 
 
@@ -413,6 +433,9 @@ enable_golang()
     echo ""
     sh "$HOME/.golang_verify"
   fi
+
+  # User must log off for these changes to take effect
+  LOGOFF_REQ=1
 }
 
 
@@ -448,6 +471,9 @@ enable_terraform()
     echo ""
     sh "$HOME/.terraform_verify"
   fi
+
+  # User must log off for these changes to take effect
+  LOGOFF_REQ=1
 }
 
 
@@ -579,6 +605,9 @@ install_docker()
       inf "Docker appears to already be running"
     fi
   fi
+
+  # User must log off for these changes to take effect
+  LOGOFF_REQ=1
 }
 
 
@@ -636,6 +665,18 @@ main() {
   if [ -n "$ENABLE_DOCKER" ]; then
     install_docker
   fi
+
+  # always the last step, notify use to logoff for changes to take affect
+  if [ $LOGOFF_REQ -eq 1 ]; then
+    echo ""
+    echo ""
+    warn "*******************************"
+    warn "* For changes to take effect, *"
+    warn "* you must first log off!     *"
+    warn "*******************************"
+    echo ""
+  fi
+
 }
 
 [[ "$0" == "$BASH_SOURCE" ]] && main

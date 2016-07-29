@@ -25,6 +25,9 @@ fi
 readonly TRUE=0
 readonly FALSE=1
 
+# physical memory
+readonly MEM_TOTAL_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+
 # For non-privileged users, this may be our default user
 DEFAULT_USER="$(id -un 2>/dev/null || true)"
 
