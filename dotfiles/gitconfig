@@ -19,7 +19,7 @@
     shoot = push origin --delete
     unstage = reset HEAD --
     prev = checkout -
-    discard = checkout -- 
+    discard = checkout --
 
 [color]
     ui = auto
