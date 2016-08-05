@@ -59,10 +59,9 @@ usage() {
     -a --ansible             enable ansible
     -d --docker              enable docker
     -g --golang              enable golang (incl. third-party utilities)
-    -y --gcloud              enable gcloud cli
     -t --terraform           enable terraform
-    -y --gcloud              enable gcloud cli
     -v --vim                 enable vim-plug & choice plugins (e.g. vim-go)
+    -y --gcloud              enable gcloud cli
     -z --aws                 enable aws cli
     -h --help                show this help
 
