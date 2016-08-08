@@ -239,24 +239,32 @@ dotfiles()
 
   # handle .bashrc
   if [ -f "/home/$DEV_USER/.bashrc" ]; then
-    inf "Backing up .bashrc file"
-    cp "/home/$DEV_USER/.bashrc" "/home/$DEV_USER/.bashrc-$TODAY"
-  fi
+    if [ ! -f "/home/$DEV_USER/.bashrc-orig" ]; then
+      inf "Backing up .bashrc file"
+      cp "/home/$DEV_USER/.bashrc" "/home/$DEV_USER/.bashrc-orig"
 
-  if [ -f "$PROGDIR/dotfiles/bashrc" ]; then
-    inf "Copying new Debian-based .bashrc file"
-    cp "$PROGDIR/dotfiles/bashrc" "/home/$DEV_USER/.bashrc"
+      if [ -f "$PROGDIR/dotfiles/bashrc" ]; then
+        inf "Copying new Debian-based .bashrc file"
+        cp "$PROGDIR/dotfiles/bashrc" "/home/$DEV_USER/.bashrc"
+      fi
+    else
+      cp "/home/$DEV_USER/.bashrc" "/home/$DEV_USER/.bashrc-$TODAY"
+    fi
   fi
 
   # handle .profile
   if [ -f "/home/$DEV_USER/.profile" ]; then
-    inf "Backing up .profile file"
-    cp "/home/$DEV_USER/.profile" "/home/$DEV_USER/.profile-$TODAY"
-  fi
+    if [ ! -f "/home/$DEV_USER/.profile-orig" ]; then
+      inf "Backing up .profile file"
+      cp "/home/$DEV_USER/.profile" "/home/$DEV_USER/.profile-orig"
 
-  if [ -f "$PROGDIR/dotfiles/profile" ]; then
-    inf "Copying new .profile file"
-    cp "$PROGDIR/dotfiles/profile" "/home/$DEV_USER/.profile"
+      if [ -f "$PROGDIR/dotfiles/profile" ]; then
+        inf "Copying new .profile file"
+        cp "$PROGDIR/dotfiles/profile" "/home/$DEV_USER/.profile"
+      fi
+    else
+      cp "/home/$DEV_USER/.bashrc" "/home/$DEV_USER/.profile-$TODAY"
+    fi
   fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
