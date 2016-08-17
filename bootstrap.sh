@@ -354,6 +354,9 @@ enable_pathogen_bundles()
   ## Whitespace (hint: to see whitespace just :ToggleWhitespace)
   git clone git://github.com/ntpeters/vim-better-whitespace.git
 
+  ## Git
+  git clone http://github.com/tpope/vim-git
+
   if [ $MEM_TOTAL_KB -ge 1500000 ]; then
     enable_vim_ycm
     cd "$inst_dir"

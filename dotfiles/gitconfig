@@ -13,6 +13,9 @@
     lol = log --graph --decorate --pretty=oneline --abbrev-commit
     lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
     ls = ls-files
+    bclean = "!f() { git branch --merged ${1-master} | grep -v \
+" ${1-master}$" | xargs -r git branch -d; }; f"
+
 # Show files ignored by git:
     ign = ls-files -o -i --exclude-standard
 
