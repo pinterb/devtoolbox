@@ -83,6 +83,8 @@ install_docker()
 
   ## Start Docker
   if command_exists systemctl; then
+#    $SH_C "$PROGDIR/docker/userns.sh $DEV_USER"
+    $SH_C 'systemctl daemon-reload'
     $SH_C 'systemctl enable docker'
     if [ ! -f "/var/run/docker.pid" ]; then
       $SH_C 'systemctl start docker'
@@ -101,4 +103,3 @@ install_docker()
   # User must log off for these changes to take effect
   LOGOFF_REQ=1
 }
-
