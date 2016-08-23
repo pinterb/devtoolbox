@@ -405,6 +405,29 @@ enable_vim_ycm()
 }
 
 
+installing_git_subrepo()
+{
+  echo ""
+  inf "Installing git-subrepo..."
+  echo ""
+
+  # pull down git-subrepo
+  if [ -d "/home/$DEV_USER/projects/git-subrepo" ]; then
+    cd /home/$DEV_USER/projects/git-subrepo; git pull
+  else
+    git clone https://github.com/ingydotnet/git-subrepo "/home/$DEV_USER/projects/git-subrepo"
+  fi
+
+  if [ -f "/home/$DEV_USER/.bash_profile" ]; then
+    inf "Setting up .bash_profile"
+    grep -q -F 'git-subrepo' "/home/$DEV_USER/.bash_profile" || echo 'source "$HOME/projects/git-subrepo/.rc"' >> "/home/$DEV_USER/.bash_profile"
+  else
+    inf "Setting up .profile"
+    grep -q -F 'git-subrepo' "/home/$DEV_USER/.profile" || echo 'source "$HOME/projects/git-subrepo/.rc"' >> "/home/$DEV_USER/.profile"
+  fi
+}
+
+
 enable_golang()
 {
   echo ""
@@ -592,6 +615,7 @@ main() {
   prerequisites
   base_setup
   dotfiles
+  installing_git_subrepo
 
   # golang handler
   if [ -n "$ENABLE_GOLANG" ]; then
