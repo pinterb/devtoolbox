@@ -231,6 +231,16 @@ prerequisites() {
 }
 
 
+binfiles()
+{
+  echo ""
+  inf "Copying binfiles..."
+  echo ""
+  mkdir -p "/home/$DEV_USER/bin"
+  cp -R "$PROGDIR/binfiles/." "/home/$DEV_USER/bin"
+}
+
+
 dotfiles()
 {
   echo ""
@@ -614,6 +624,7 @@ main() {
   valid_args
   prerequisites
   base_setup
+  binfiles
   dotfiles
   installing_git_subrepo
 
