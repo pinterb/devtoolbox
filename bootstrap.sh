@@ -589,15 +589,24 @@ install_aws()
   inf "Installing AWS CLI..."
   echo ""
 
- if command_exists aws; then
+  local inst_dir="/home/$DEV_USER/.aws"
+
+  mkdir -p "$inst_dir"
+  cp "$PROGDIR/aws/config.tpl" "$inst_dir/"
+  cp "$PROGDIR/aws/credentials.tpl" "$inst_dir/"
+
+  if command_exists aws; then
     #local version="$(aws --version | awk '{ print $2; exit }')"
     local version="$(aws --version)"
     warn "aws cli is already installed...attempting upgrade"
     $SH_C 'pip install --upgrade awscli'
-    return 0
+  else
+    $SH_C 'pip install awscli'
   fi
 
-  $SH_C 'pip install awscli'
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
+  fi
 }
 
 
