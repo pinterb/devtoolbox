@@ -36,6 +36,8 @@ base_setup()
     $SH_C 'easy_install pip'
   fi
 
+  $SH_C 'pip install --upgrade pyyaml'
+
   $SH_C 'apt-get -y autoremove'
 }
 
