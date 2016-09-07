@@ -24,6 +24,7 @@ ENABLE_GOLANG=
 ENABLE_GCLOUD=
 ENABLE_TERRAFORM=
 ENABLE_VIM=
+ENABLE_KUBE_UTILS=
 
 # misc. flags
 SHOULD_WARM=0
@@ -59,6 +60,7 @@ usage() {
     -a --ansible             enable ansible
     -d --docker              enable docker
     -g --golang              enable golang (incl. third-party utilities)
+    -k --kubectl             enable kubectl and helm
     -t --terraform           enable terraform
     -v --vim                 enable vim-plug & choice plugins (e.g. vim-go)
     -y --gcloud              enable gcloud cli
@@ -87,6 +89,7 @@ cmdline() {
       --aws)            args="${args}-z ";;
       --docker)         args="${args}-d ";;
       --golang)         args="${args}-g ";;
+      --kubectl)        args="${args}-k ";;
       --gcloud)         args="${args}-y ";;
       --terraform)      args="${args}-t ";;
       --vim)            args="${args}-v ";;
@@ -100,7 +103,7 @@ cmdline() {
   #Reset the positional parameters to the short options
   eval set -- $args
 
-  while getopts ":u:adgytvzh" OPTION
+  while getopts ":u:adkgytvzh" OPTION
   do
      case $OPTION in
      u)
@@ -114,6 +117,9 @@ cmdline() {
          ;;
      g)
          readonly ENABLE_GOLANG=1
+         ;;
+     k)
+         readonly ENABLE_KUBE_UTILS=1
          ;;
      y)
          readonly ENABLE_GCLOUD=1
@@ -610,6 +616,53 @@ install_aws()
 }
 
 
+### kubectl cli
+# http://kubernetes.io/docs/user-guide/prereqs/
+###
+install_kubectl()
+{
+  echo ""
+  inf "Installing kubectl CLI..."
+  echo ""
+
+  local inst_dir="/usr/local/bin"
+
+  if command_exists kubectl; then
+    warn "kubectl is already installed."
+  else
+    wget -O /tmp/kubernetes.tar.gz "https://github.com/kubernetes/kubernetes/releases/download/v${KUBE_VER}/kubernetes.tar.gz"
+    tar -zxvf /tmp/kubernetes.tar.gz -C /tmp
+    $SH_C 'cp /tmp/kubernetes/platforms/linux/amd64/kubectl /usr/local/bin/kubectl'
+    rm /tmp/kubernetes.tar.gz
+    rm -rf /tmp/kubernetes
+  fi
+}
+
+
+### helm cli
+# https://github.com/kubernetes/helm
+###
+install_helm()
+{
+  echo ""
+  inf "Installing helm CLI..."
+  echo ""
+
+  local inst_dir="/usr/local/bin"
+
+  if command_exists helm; then
+    warn "helm is already installed."
+  else
+    wget -O /tmp/helm.tar.gz "https://github.com/kubernetes/helm/releases/download/v${HELM_VER}/helm-v${HELM_VER}-linux-amd64.tar.gz"
+    tar -zxvf /tmp/helm.tar.gz -C /tmp
+    $SH_C 'cp /tmp/linux-amd64/helm /usr/local/bin/'
+    $SH_C 'cp /tmp/linux-amd64/tiller /usr/local/bin/'
+    rm /tmp/helm.tar.gz
+    rm -rf "/tmp/linux-amd64"
+  fi
+}
+
+
 ### ssh key generation for gce
 # https://cloud.google.com/compute/docs/instances/adding-removing-ssh-keys#project-wide
 ###
@@ -671,6 +724,12 @@ main() {
   # docker handler
   if [ -n "$ENABLE_DOCKER" ]; then
     install_docker
+  fi
+
+  # kubectl & helm handler
+  if [ -n "$ENABLE_KUBE_UTILS" ]; then
+    install_kubectl
+    install_helm
   fi
 
   # always the last step, notify use to logoff for changes to take affect
