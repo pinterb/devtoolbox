@@ -175,6 +175,15 @@ install_godep() {
 }
 
 
+install_go_swagger() {
+  echo ""
+  inf "Installing go-swagger"
+  latestv=$(curl -s https://api.github.com/repos/go-swagger/go-swagger/releases/latest | jq -r .tag_name)
+  curl -o $HOME/bin/swagger -L'#' https://github.com/go-swagger/go-swagger/releases/download/$latestv/swagger_$(echo `uname`|tr '[:upper:]' '[:lower:]')_amd64
+  chmod +x $HOME/bin/swagger
+}
+
+
 install_go_gettables() {
   local go_root="/usr/local/go"
   ###
@@ -211,6 +220,51 @@ install_go_gettables() {
   echo ""
   inf "Installing gosimple"
   $go_root/bin/go get -u "$gosimple_url"
+  
+
+  ###
+  # sqlboiler
+  ###
+  readonly sqlboiler_url="github.com/vattle/sqlboiler"
+  echo ""
+  inf "Installing sqlboiler"
+  $go_root/bin/go get -u -t "$sqlboiler_url"
+  
+  
+  ###
+  # go-interface-fuzzer
+  ###
+  readonly interface_fuzzer_url="github.com/pusher/go-interface-fuzzer"
+  echo ""
+  inf "Installing interface-fuzzer"
+  $go_root/bin/go get -u -t "$interface_fuzzer_url"
+  
+  
+  ###
+  # openapi2proto
+  ###
+  readonly openapi2proto_url="github.com/NYTimes/openapi2proto/cmd/openapi2proto"
+  echo ""
+  inf "Installing openapi2proto"
+  $go_root/bin/go get -u "$openapi2proto_url"
+
+  
+  ###
+  # grpc
+  ###
+  readonly grpc_url="google.golang.org/grpc"
+  echo ""
+  inf "Installing grpc"
+  $go_root/bin/go get -u "$grpc_url"
+
+  
+  ###
+  # protobuf
+  ###
+  readonly protobuf_url="github.com/golang/protobuf/{proto,protoc-gen-go}"
+  echo ""
+  inf "Installing protobuf"
+  $go_root/bin/go get -u "$protobuf_url"
 }
 
 
