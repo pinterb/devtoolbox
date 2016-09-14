@@ -28,6 +28,8 @@ fi
 readonly TRUE=0
 readonly FALSE=1
 
+readonly CLOUD_PROVIDER=$([ -f /sys/class/dmi/id/bios_vendor ] && cat /sys/class/dmi/id/bios_vendor)
+
 # physical memory
 readonly MEM_TOTAL_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
 
