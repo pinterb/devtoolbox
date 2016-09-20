@@ -421,7 +421,7 @@ enable_vim_ycm()
 }
 
 
-installing_git_subrepo()
+install_git_subrepo()
 {
   echo ""
   inf "Installing git-subrepo..."
@@ -663,6 +663,33 @@ install_helm()
 }
 
 
+### cfssl cli
+# https://cfssl.org/
+###
+install_cfssl()
+{
+  echo ""
+  inf "Installing CloudFlare's PKI toolkit..."
+  echo ""
+
+  if command_exists cfssl; then
+    warn "cfssl is already installed."
+  else
+    wget -O /tmp/cfssl_linux-amd64 "https://pkg.cfssl.org/R${CFSSL_VER}/cfssl_linux-amd64"
+    chmod +x /tmp/cfssl_linux-amd64
+    $SH_C 'mv /tmp/cfssl_linux-amd64 /usr/local/bin/cfssl'
+  fi
+
+  if command_exists cfssljson; then
+    warn "cfssljson is already installed."
+  else
+    wget -O /tmp/cfssljson_linux-amd64 "https://pkg.cfssl.org/R${CFSSL_VER}/cfssljson_linux-amd64"
+    chmod +x /tmp/cfssljson_linux-amd64
+    $SH_C 'mv /tmp/cfssljson_linux-amd64 /usr/local/bin/cfssljson'
+  fi
+}
+
+
 ### ssh key generation for gce
 # https://cloud.google.com/compute/docs/instances/adding-removing-ssh-keys#project-wide
 ###
@@ -688,7 +715,8 @@ main() {
   base_setup
   binfiles
   dotfiles
-  installing_git_subrepo
+  install_git_subrepo
+  install_cfssl
 
   # golang handler
   if [ -n "$ENABLE_GOLANG" ]; then
