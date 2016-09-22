@@ -265,6 +265,15 @@ install_go_gettables() {
   echo ""
   inf "Installing protobuf"
   $go_root/bin/go get -u "$protobuf_url"
+
+  
+  ###
+  # lego 
+  ###
+  readonly lego_url="github.com/xenolf/lego"
+  echo ""
+  inf "Installing lego"
+  $go_root/bin/go get -u "$lego_url"
 }
 
 
