@@ -274,6 +274,15 @@ install_go_gettables() {
   echo ""
   inf "Installing lego"
   $go_root/bin/go get -u "$lego_url"
+
+
+  ###
+  # lint
+  ###
+  readonly lint_url="github.com/golang/lint/golint"
+  echo ""
+  inf "Installing lint"
+  $go_root/bin/go get -u "$lint_url"
 }
 
 
