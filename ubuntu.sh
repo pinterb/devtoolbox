@@ -28,7 +28,7 @@ base_setup()
 
   $SH_C 'apt-get -y update'
   $SH_C 'apt-get install -yq git mercurial subversion wget curl jq unzip vim gnupg2 \
-  build-essential cmake make ssh gcc openssh-client python-dev python3-dev libssl-dev libffi-dev asciinema tree'
+  build-essential autoconf automake libtool make g++ cmake make ssh gcc openssh-client python-dev python3-dev libssl-dev libffi-dev asciinema tree'
 
   if ! command_exists pip; then
     $SH_C 'apt-get remove -y python-pip'
