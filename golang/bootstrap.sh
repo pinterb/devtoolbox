@@ -259,14 +259,70 @@ install_go_gettables() {
 
   
   ###
-  # protobuf
+  # grpc-gateway
   ###
-  readonly protobuf_url="github.com/golang/protobuf/{proto,protoc-gen-go}"
+  readonly grpc_gateway_url="github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway"
   echo ""
-  inf "Installing protobuf"
-  $go_root/bin/go get -u "$protobuf_url"
+  inf "Installing grpc gateway"
+  $go_root/bin/go get -u "$grpc_gateway_url"
 
   
+  ###
+  # grpc-gateway swagger
+  ###
+  readonly grpc_gw_swagger_url="github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger"
+  echo ""
+  inf "Installing grpc gateway swagger gen"
+  $go_root/bin/go get -u "$grpc_gw_swagger_url"
+
+
+#  ###
+#  # gogo/protobuf
+#  ###
+#  #readonly gogo_protobuf_url="github.com/gogo/protobuf"
+#  readonly gogo_protoc_gen_url="github.com/gogo/protobuf/protoc-gen-gofast"
+#  readonly gogo_proto_url="github.com/gogo/protobuf/proto"
+#  readonly gogo_proto_json_url="github.com/gogo/protobuf/jsonpb"
+#  readonly gogo_proto_bin_url="github.com/gogo/protobuf/{binary}"
+#  readonly gogo_protoc_gen_gogo_url="github.com/gogo/protobuf/protoc-gen-gogo"
+#  readonly gogo_proto_gogo_url="github.com/gogo/protobuf/gogoproto"
+#  echo ""
+#  inf "Installing gogo/protobuf"
+#  $go_root/bin/go get -u "$gogo_protoc_gen_url"
+#  $go_root/bin/go get -u "$gogo_proto_url"
+#  $go_root/bin/go get -u "$gogo_proto_json_url"
+#  $go_root/bin/go get -u "$gogo_proto_bin_url"
+#  $go_root/bin/go get -u "$gogo_protoc_gen_gogo_url"
+#  $go_root/bin/go get -u "$gogo_proto_gogo_url"
+
+
+  ###
+  # protobuf proto
+  ###
+  readonly protobuf_proto_url="github.com/golang/protobuf/proto"
+  echo ""
+  inf "Installing protobuf proto"
+  $go_root/bin/go get -u "$protobuf_proto_url"
+
+
+  ###
+  # protobuf gen-go
+  ###
+  readonly protobuf_gengo_url="github.com/golang/protobuf/protoc-gen-go"
+  echo ""
+  inf "Installing protobuf protoc-gen-go"
+  $go_root/bin/go get -u "$protobuf_gengo_url"
+
+
+  ###
+  # protoeasy
+  ###
+  readonly protoeasy_url="go.pedge.io/protoeasy/cmd/protoeasy"
+  echo ""
+  inf "Installing protoeasy"
+  $go_root/bin/go get -u "$protoeasy_url"
+
+
   ###
   # lego 
   ###
