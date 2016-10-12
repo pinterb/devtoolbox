@@ -42,6 +42,24 @@ base_setup()
 }
 
 
+### node.js
+# http://tecadmin.net/install-latest-nodejs-npm-on-ubuntu/#
+###
+install_node()
+{
+  echo ""
+  inf "Installing Node.js..."
+  echo ""
+
+  $SH_C 'apt-get install -y python-software-properties'
+  curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+  $SH_C 'apt-get install -y nodejs'
+  $SH_C 'npm install -g serverless'
+  $SH_C 'npm install -g yarn'
+}
+
+
+
 ### docker
 # https://docs.docker.com/engine/installation/linux/
 ###

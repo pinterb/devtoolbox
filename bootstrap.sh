@@ -26,6 +26,7 @@ ENABLE_TERRAFORM=
 ENABLE_VIM=
 ENABLE_KUBE_UTILS=
 ENABLE_PROTO_BUF=
+ENABLE_NODE=
 
 # misc. flags
 SHOULD_WARM=0
@@ -62,6 +63,7 @@ usage() {
     -d --docker              enable docker
     -g --golang              enable golang (incl. third-party utilities)
     -k --kubectl             enable kubectl and helm
+    -n --node                enable node.js and serverless
     -p --proto-buf           enable protocol buffers (i.e. protoc)
     -t --terraform           enable terraform
     -v --vim                 enable vim-plug & choice plugins (e.g. vim-go)
@@ -93,6 +95,7 @@ cmdline() {
       --golang)         args="${args}-g ";;
       --kubectl)        args="${args}-k ";;
       --proto-buf)      args="${args}-p ";;
+      --node)           args="${args}-n ";;
       --gcloud)         args="${args}-y ";;
       --terraform)      args="${args}-t ";;
       --vim)            args="${args}-v ";;
@@ -106,7 +109,7 @@ cmdline() {
   #Reset the positional parameters to the short options
   eval set -- $args
 
-  while getopts ":u:adkpgytvzh" OPTION
+  while getopts ":u:adkpgnytvzh" OPTION
   do
      case $OPTION in
      u)
@@ -126,6 +129,9 @@ cmdline() {
          ;;
      p)
          readonly ENABLE_PROTO_BUF=1
+         ;;
+     n)
+         readonly ENABLE_NODE=1
          ;;
      y)
          readonly ENABLE_GCLOUD=1
@@ -813,6 +819,11 @@ main() {
   if [ -n "$ENABLE_PROTO_BUF" ]; then
     install_protobuf
   fi
+
+  if [ -n "$ENABLE_NODE" ]; then
+    install_node
+  fi
+
 
   # always the last step, notify use to logoff for changes to take affect
   if [ $LOGOFF_REQ -eq 1 ]; then
