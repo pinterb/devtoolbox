@@ -37,6 +37,7 @@ base_setup()
   fi
 
   $SH_C 'pip install --upgrade pyyaml'
+  $SH_C 'pip install --upgrade cookiecutter'
 
   $SH_C 'apt-get -y autoremove'
 }

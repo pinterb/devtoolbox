@@ -16,7 +16,7 @@ source "${PROGDIR}/utils.sh"
 source "$PROGDIR/golang_profile"
 
 # third-party go
-readonly GLIDE_VERSION="0.11.0"
+readonly GLIDE_VERSION="0.12.3"
 readonly GODEP_VERSION="74"
 
 # cli arguments
@@ -324,7 +324,7 @@ install_go_gettables() {
 
 
   ###
-  # lego 
+  # lego
   ###
   readonly lego_url="github.com/xenolf/lego"
   echo ""
@@ -339,6 +339,33 @@ install_go_gettables() {
   echo ""
   inf "Installing lint"
   $go_root/bin/go get -u "$lint_url"
+
+
+  ###
+  # gotests
+  ###
+  readonly gotests_url="github.com/cweill/gotests/..."
+  echo ""
+  inf "Installing gotests"
+  $go_root/bin/go get -u "$gotests_url"
+
+
+  ###
+  # boilr
+  ###
+  readonly boilr_url="github.com/tmrts/boilr"
+  echo ""
+  inf "Installing boilr"
+  $go_root/bin/go get -u "$boilr_url"
+
+
+  ###
+  # dep
+  ###
+  readonly dep_url="github.com/golang/dep/..."
+  echo ""
+  inf "Installing dep"
+  $go_root/bin/go get -u "$dep_url"
 }
 
 

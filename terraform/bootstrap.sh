@@ -24,7 +24,7 @@ usage() {
   an environment for a new, non-privileged user.
 
   OPTIONS:
-    -i --install             install Terraform 
+    -i --install             install Terraform
     -h --help                show this help
 
 
@@ -88,7 +88,7 @@ cmdline() {
 prerequisites() {
   local git_cmd=`which git`
   local unzip_cmd=`which unzip`
-  
+
   if [ -z "$git_cmd" ]; then
     error "git does not appear to be installed. Please install and re-run this script."
     exit 1

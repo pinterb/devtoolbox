@@ -19,6 +19,8 @@ source "${PROGDIR}/$(echo $DISTRO_ID | tr '[:upper:]' '[:lower:]').sh"
 DEV_USER=
 ENABLE_ANSIBLE=
 ENABLE_AWS=
+ENABLE_KOPS=
+ENABLE_KUBE_AWS=
 ENABLE_DOCKER=
 ENABLE_GOLANG=
 ENABLE_GCLOUD=
@@ -67,6 +69,8 @@ usage() {
     -p --proto-buf           enable protocol buffers (i.e. protoc)
     -t --terraform           enable terraform
     -v --vim                 enable vim-plug & choice plugins (e.g. vim-go)
+    -w --kube-aws            enable kube-aws (a kubernetes provisioning tool)
+    -x --kops                enable kops (a kubernetes provisioning tool)
     -y --gcloud              enable gcloud cli
     -z --aws                 enable aws cli
     -h --help                show this help
@@ -96,6 +100,8 @@ cmdline() {
       --kubectl)        args="${args}-k ";;
       --proto-buf)      args="${args}-p ";;
       --node)           args="${args}-n ";;
+      --kube-aws)       args="${args}-w ";;
+      --kops)           args="${args}-x ";;
       --gcloud)         args="${args}-y ";;
       --terraform)      args="${args}-t ";;
       --vim)            args="${args}-v ";;
@@ -109,7 +115,7 @@ cmdline() {
   #Reset the positional parameters to the short options
   eval set -- $args
 
-  while getopts ":u:adkpgnytvzh" OPTION
+  while getopts ":u:adkpgnwxytvzh" OPTION
   do
      case $OPTION in
      u)
@@ -132,6 +138,12 @@ cmdline() {
          ;;
      n)
          readonly ENABLE_NODE=1
+         ;;
+     w)
+         readonly ENABLE_KUBE_AWS=1
+         ;;
+     x)
+         readonly ENABLE_KOPS=1
          ;;
      y)
          readonly ENABLE_GCLOUD=1
@@ -347,7 +359,7 @@ enable_pathogen_bundles()
 
   local inst_dir="/home/$DEV_USER/.vim/bundle"
   rm -rf "$inst_dir"; mkdir -p "$inst_dir"
-  cd "$inst_dir"
+  cd "$inst_dir" || exit 1
 
   inf "Re-populating pathogen bundles..."
 
@@ -384,6 +396,12 @@ enable_pathogen_bundles()
 
   ## Git
   git clone http://github.com/tpope/vim-git
+
+  ## Terraform
+  git clone http://github.com/hashivim/vim-terraform
+
+  ## gotests
+  git clone https://github.com/buoto/gotests-vim
 
   if [ $MEM_TOTAL_KB -ge 1500000 ]; then
     enable_vim_ycm
@@ -426,7 +444,7 @@ enable_vim_ycm()
   local ycm_opts=
 
   if command_exists go; then
-    ycm_opts="--gocode-completer"
+    ycm_opts="--gocode-completer --tern-completer"
   fi
 
   sh -c "$inst_dir/youcompleteme/install.py $ycm_opts"
@@ -628,6 +646,60 @@ install_aws()
 }
 
 
+### kops
+# https://github.com/kubernetes/kops#linux
+###
+install_kops()
+{
+  echo ""
+  inf "Installing Kubernetes Kops..."
+  echo ""
+
+  local inst_dir="/usr/local/bin"
+
+  if command_exists kops; then
+    warn "kops is already installed...will re-install"
+    $SH_C 'rm /usr/local/bin/kops'
+  fi
+
+  wget -O /tmp/kops "https://github.com/kubernetes/kops/releases/download/${KOPS_VER}/kops-linux-amd64"
+  chmod +x /tmp/kops
+  $SH_C 'mv /tmp/kops /usr/local/bin/kops'
+}
+
+
+### CoreOS kube-aws
+# https://coreos.com/kubernetes/docs/latest/kubernetes-on-aws.html#download-kube-aws
+###
+install_kube_aws()
+{
+  echo ""
+  inf "Installing CoreOS kube-aws..."
+  echo ""
+
+  local inst_dir="/usr/local/bin"
+
+  # Import the CoreOS Application Signing Public Key
+  gpg2 --keyserver pgp.mit.edu --recv-key FC8A365E
+
+  # Validated imported key
+  #gpg2 --fingerprint FC8A365E | grep -i "18AD 5014 C99E F7E3 BA5F 6CE9 50BD D3E0 FC8A 365E"
+
+  if command_exists kube-aws; then
+    warn "kube-aws is already installed...will re-install"
+    $SH_C 'rm /usr/local/bin/kube-aws'
+  fi
+
+  wget -O /tmp/kube-aws.tar.gz "https://github.com/coreos/kube-aws/releases/download/v${KUBE_AWS_VER}/kube-aws-linux-amd64.tar.gz"
+  tar zxvf /tmp/kube-aws.tar.gz -C /tmp
+
+  chmod +x /tmp/linux-amd64/kube-aws
+  $SH_C 'mv /tmp/linux-amd64/kube-aws /usr/local/bin/kube-aws'
+  rm /tmp/kube-aws.tar.gz
+  rm -rf /tmp/linux-amd64
+}
+
+
 ### kubectl cli
 # http://kubernetes.io/docs/user-guide/prereqs/
 ###
@@ -706,12 +778,12 @@ install_cfssl()
 # https://developers.google.com/protocol-buffers/
 ###
 install_protobuf()
-{ 
+{
   echo ""
   inf "Installing protocol buffers..."
   echo ""
   local install_proto=0
-  
+
   if command_exists protoc; then
     if [ $(protoc --version | awk '{ print $2; exit }') == "$PROTOBUF_VER" ]; then
       warn "protoc is already installed."
@@ -720,7 +792,7 @@ install_protobuf()
       inf "protoc is already installed...but versions don't match"
     fi
   fi
-  
+
   if [ $install_proto -eq 0 ]; then
     wget -O /tmp/protoc.tar.gz "https://github.com/google/protobuf/archive/v${PROTOBUF_VER}.tar.gz"
     tar -zxvf /tmp/protoc.tar.gz -C /tmp
@@ -730,7 +802,7 @@ install_protobuf()
     ./configure
     make
     make check
-  
+
     if [ "$DEFAULT_USER" != 'root' ]; then
       sudo make install
       sudo ldconfig
@@ -824,6 +896,17 @@ main() {
     install_node
   fi
 
+  # kops handler
+  if [ -n "$ENABLE_KOPS" ]; then
+    enable_terraform
+    install_kops
+  fi
+
+  # kube-aws handler
+  if [ -n "$ENABLE_KUBE_AWS" ]; then
+    install_aws
+    install_kube_aws
+  fi
 
   # always the last step, notify use to logoff for changes to take affect
   if [ $LOGOFF_REQ -eq 1 ]; then

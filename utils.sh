@@ -4,6 +4,8 @@ HELM_VER="2.0.0-alpha.4"
 CFSSL_VER="1.2"
 KUBE_VER="1.3.6"
 PROTOBUF_VER="3.1.0"
+KOPS_VER="1.5.1"
+KUBE_AWS_VER="0.9.4-rc.2"
 
 # Get distro data from /etc/os-release
 if [ -f /etc/lsb-release ]; then
