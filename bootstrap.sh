@@ -29,6 +29,7 @@ ENABLE_VIM=
 ENABLE_KUBE_UTILS=
 ENABLE_PROTO_BUF=
 ENABLE_NODE=
+ENABLE_SERVERLESS=
 
 # misc. flags
 SHOULD_WARM=0
@@ -67,6 +68,7 @@ usage() {
     -k --kubectl             enable kubectl and helm
     -n --node                enable node.js and serverless
     -p --proto-buf           enable protocol buffers (i.e. protoc)
+    -s --serverless          enable various serverless utilities (e.g. serverless, apex, sparta)
     -t --terraform           enable terraform
     -v --vim                 enable vim-plug & choice plugins (e.g. vim-go)
     -w --kube-aws            enable kube-aws (a kubernetes provisioning tool)
@@ -103,6 +105,7 @@ cmdline() {
       --kube-aws)       args="${args}-w ";;
       --kops)           args="${args}-x ";;
       --gcloud)         args="${args}-y ";;
+      --serverless)     args="${args}-s ";;
       --terraform)      args="${args}-t ";;
       --vim)            args="${args}-v ";;
       --help)           args="${args}-h ";;
@@ -115,7 +118,7 @@ cmdline() {
   #Reset the positional parameters to the short options
   eval set -- $args
 
-  while getopts ":u:adkpgnwxytvzh" OPTION
+  while getopts ":u:adkpgnwxystvzh" OPTION
   do
      case $OPTION in
      u)
@@ -147,6 +150,9 @@ cmdline() {
          ;;
      y)
          readonly ENABLE_GCLOUD=1
+         ;;
+     s)
+         readonly ENABLE_SERVERLESS=1
          ;;
      t)
          readonly ENABLE_TERRAFORM=1
@@ -906,6 +912,11 @@ main() {
   if [ -n "$ENABLE_KUBE_AWS" ]; then
     install_aws
     install_kube_aws
+  fi
+
+  if [ -n "$ENABLE_SERVERLESS" ]; then
+    install_node
+    install_serverless
   fi
 
   # always the last step, notify use to logoff for changes to take affect

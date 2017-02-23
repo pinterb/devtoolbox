@@ -55,10 +55,43 @@ install_node()
   $SH_C 'apt-get install -y python-software-properties'
   curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
   $SH_C 'apt-get install -y nodejs'
-  $SH_C 'npm install -g serverless'
-  $SH_C 'npm install -g yarn'
+
+  if command_exists yarn; then
+    echo "yarn (nodejs package mgr) is already installed. Will attempt to upgrade..."
+    $SH_C 'npm upgrade --global yarn'
+  else
+    $SH_C 'npm install -g yarn'
+  fi
 }
 
+
+### serverless
+#
+###
+install_serverless()
+{
+  echo ""
+  inf "Installing serverless utilities..."
+  echo ""
+
+  if command_exists serverless; then
+    echo "serverless client is already installed. Will attempt to upgrade..."
+    $SH_C 'yarn global add serverless'
+  else
+    $SH_C 'yarn global upgrade serverless'
+  fi
+
+  if command_exists apex; then
+    echo "apex client is already installed. Will attempt to upgrade..."
+    $SH_C 'apex upgrade'
+  else
+    rm -rf /tmp/apex-install.sh
+    wget -O /tmp/apex-install.sh \
+      https://raw.githubusercontent.com/apex/apex/master/install.sh
+    chmod +x /tmp/apex-install.sh
+    $SH_C '/tmp/apex-install.sh'
+  fi
+}
 
 
 ### docker
