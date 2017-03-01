@@ -30,6 +30,7 @@ ENABLE_KUBE_UTILS=
 ENABLE_PROTO_BUF=
 ENABLE_NODE=
 ENABLE_SERVERLESS=
+ENABLE_HYPER=
 
 # misc. flags
 SHOULD_WARM=0
@@ -68,6 +69,7 @@ usage() {
     -k --kubectl             enable kubectl and helm
     -n --node                enable node.js and serverless
     -p --proto-buf           enable protocol buffers (i.e. protoc)
+    -r --hyper               enable hyper.sh (Hyper.sh is a hypervisor-agnostic Docker runtime)
     -s --serverless          enable various serverless utilities (e.g. serverless, apex, sparta)
     -t --terraform           enable terraform
     -v --vim                 enable vim-plug & choice plugins (e.g. vim-go)
@@ -101,6 +103,7 @@ cmdline() {
       --golang)         args="${args}-g ";;
       --kubectl)        args="${args}-k ";;
       --proto-buf)      args="${args}-p ";;
+      --hyper)          args="${args}-r ";;
       --node)           args="${args}-n ";;
       --kube-aws)       args="${args}-w ";;
       --kops)           args="${args}-x ";;
@@ -118,7 +121,7 @@ cmdline() {
   #Reset the positional parameters to the short options
   eval set -- $args
 
-  while getopts ":u:adkpgnwxystvzh" OPTION
+  while getopts ":u:adkpgnwxyrstvzh" OPTION
   do
      case $OPTION in
      u)
@@ -138,6 +141,9 @@ cmdline() {
          ;;
      p)
          readonly ENABLE_PROTO_BUF=1
+         ;;
+     r)
+         readonly ENABLE_HYPER=1
          ;;
      n)
          readonly ENABLE_NODE=1
@@ -674,6 +680,32 @@ install_kops()
 }
 
 
+### hyper.sh
+# https://www.hyper.sh/
+###
+install_hyper()
+{
+  echo ""
+  inf "Installing Hyper.sh..."
+  echo ""
+
+  local inst_dir="/usr/local/bin"
+
+  if command_exists hyper; then
+    warn "hyper is already installed...will re-install"
+    $SH_C 'rm /usr/local/bin/hyper'
+  fi
+
+  wget -O /tmp/hyper-linux.tar.gz \
+    "https://hyper-install.s3.amazonaws.com/hyper-linux-x86_64.tar.gz"
+  tar zxvf /tmp/hyper-linux.tar.gz -C /tmp
+
+  chmod +x /tmp/hyper
+  $SH_C 'mv /tmp/hyper /usr/local/bin/hyper'
+  rm /tmp/hyper-linux.tar.gz
+}
+
+
 ### CoreOS kube-aws
 # https://coreos.com/kubernetes/docs/latest/kubernetes-on-aws.html#download-kube-aws
 ###
@@ -917,6 +949,10 @@ main() {
   if [ -n "$ENABLE_SERVERLESS" ]; then
     install_node
     install_serverless
+  fi
+
+  if [ -n "$ENABLE_HYPER" ]; then
+    install_hyper
   fi
 
   # always the last step, notify use to logoff for changes to take affect
