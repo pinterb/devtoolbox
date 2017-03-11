@@ -26,9 +26,9 @@ base_setup()
   # for asciinema support
   $SH_C 'apt-add-repository -y ppa:zanchey/asciinema'
 
-  $SH_C 'apt-get -y update'
-  $SH_C 'apt-get install -yq git mercurial subversion wget curl jq unzip vim gnupg2 \
+  $SH_C 'apt-get install -yq git mercurial subversion letsencrypt wget curl jq unzip vim gnupg2 \
   build-essential autoconf automake libtool make g++ cmake make ssh gcc openssh-client python-dev python3-dev libssl-dev libffi-dev asciinema tree'
+  $SH_C 'apt-get -y update'
 
   if ! command_exists pip; then
     $SH_C 'apt-get remove -y python-pip'
@@ -76,9 +76,11 @@ install_serverless()
 
   if command_exists serverless; then
     echo "serverless client is already installed. Will attempt to upgrade..."
-    $SH_C 'yarn global add serverless'
-  else
     $SH_C 'yarn global upgrade serverless'
+    ##$SH_C 'yarn global add serverless'
+  else
+    ##$SH_C 'yarn global upgrade serverless'
+    $SH_C 'yarn global add serverless'
   fi
 
   if command_exists apex; then
@@ -90,6 +92,21 @@ install_serverless()
       https://raw.githubusercontent.com/apex/apex/master/install.sh
     chmod +x /tmp/apex-install.sh
     $SH_C '/tmp/apex-install.sh'
+  fi
+
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    chown "$DEV_USER":"$DEV_USER" -R "/home/$DEV_USER/.config/yarn/global/"
+    chown "$DEV_USER":"$DEV_USER" -R "/home/$DEV_USER/.cache"
+  else
+    sudo chown "$DEFAULT_USER":"$DEFAULT_USER" -R "/home/$DEFAULT_USER/.config/yarn/global/"
+    sudo chown "$DEFAULT_USER":"$DEFAULT_USER" -R "/home/$DEFAULT_USER/.cache"
+  fi
+
+  if command_exists functions; then
+    echo "google cloud functions emulator is already installed. Will attempt to upgrade..."
+    $SH_C 'npm update -g @google-cloud/functions-emulator'
+  else
+    $SH_C 'npm install -g @google-cloud/functions-emulator'
   fi
 }
 

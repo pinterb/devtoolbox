@@ -31,6 +31,7 @@ ENABLE_PROTO_BUF=
 ENABLE_NODE=
 ENABLE_SERVERLESS=
 ENABLE_HYPER=
+ENABLE_DO=
 
 # misc. flags
 SHOULD_WARM=0
@@ -68,6 +69,7 @@ usage() {
     -g --golang              enable golang (incl. third-party utilities)
     -k --kubectl             enable kubectl and helm
     -n --node                enable node.js and serverless
+    -o --digitalocean        enable digitalocean cli
     -p --proto-buf           enable protocol buffers (i.e. protoc)
     -r --hyper               enable hyper.sh (Hyper.sh is a hypervisor-agnostic Docker runtime)
     -s --serverless          enable various serverless utilities (e.g. serverless, apex, sparta)
@@ -105,6 +107,7 @@ cmdline() {
       --proto-buf)      args="${args}-p ";;
       --hyper)          args="${args}-r ";;
       --node)           args="${args}-n ";;
+      --digitalocean)   args="${args}-o ";;
       --kube-aws)       args="${args}-w ";;
       --kops)           args="${args}-x ";;
       --gcloud)         args="${args}-y ";;
@@ -121,7 +124,7 @@ cmdline() {
   #Reset the positional parameters to the short options
   eval set -- $args
 
-  while getopts ":u:adkpgnwxyrstvzh" OPTION
+  while getopts ":u:adkpgnowxyrstvzh" OPTION
   do
      case $OPTION in
      u)
@@ -147,6 +150,9 @@ cmdline() {
          ;;
      n)
          readonly ENABLE_NODE=1
+         ;;
+     o)
+         readonly ENABLE_DO=1
          ;;
      w)
          readonly ENABLE_KUBE_AWS=1
@@ -527,42 +533,41 @@ enable_golang()
 }
 
 
-enable_terraform()
+### Terraform
+# https://www.terraform.io/intro/getting-started/install.html
+###
+install_terraform()
 {
   echo ""
-  inf "Enabling Terraform..."
+  inf "Installing Terraform..."
   echo ""
 
-  local inst_dir="/home/$DEV_USER/.bootstrap/terraform"
+  local install=0
+    #terraform version | awk '{ print $2; exit }' | grep "$TERRAFORM_VER" > /dev/null
 
-  rm -rf "$inst_dir"
-  cp -R "$PROGDIR/terraform" "$inst_dir"
-  chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
+  if command_exists terraform; then
+    if [ $(terraform version | awk '{ print $2; exit }') == "v$TERRAFORM_VER" ]; then
+      warn "terraform is already installed."
+      install=1
+    else
+      inf "terraform is already installed...but versions don't match"
+      $SH_C 'rm /usr/local/bin/terraform'
+    fi
+  fi
 
-  cp "$inst_dir/terraform_verify" "/home/$DEV_USER/.terraform_verify"
-  sed -i -e "s@###MY_PROJECT_DIR###@/home/${DEV_USER}/.bootstrap/terraform@" /home/$DEV_USER/.terraform_verify
+  if [ $install -eq 0 ]; then
+    wget -O /tmp/terraform.zip \
+      "https://releases.hashicorp.com/terraform/${TERRAFORM_VER}/terraform_${TERRAFORM_VER}_linux_amd64.zip"
+    $SH_C 'unzip /tmp/terraform.zip -d /usr/local/bin'
 
-  if [ -f "/home/$DEV_USER/.bash_profile" ]; then
-    inf "Setting up .bash_profile"
-    grep -q -F 'source "$HOME/.terraform_verify"' "/home/$DEV_USER/.bash_profile" || echo 'source "$HOME/.terraform_verify"' >> "/home/$DEV_USER/.bash_profile"
-  else
-    inf "Setting up .profile"
-    grep -q -F 'source "$HOME/.terraform_verify"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.terraform_verify"' >> "/home/$DEV_USER/.profile"
+    rm /tmp/terraform.zip
   fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
-    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
-    chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.terraform_verify"
-  else
-    echo ""
-    inf "Okay...Verifying Terraform..."
-    echo ""
-    sh "$HOME/.terraform_verify"
+    chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
   fi
-
-  # User must log off for these changes to take effect
-  LOGOFF_REQ=1
 }
+
 
 
 ### google cloud platform cli
@@ -703,6 +708,32 @@ install_hyper()
   chmod +x /tmp/hyper
   $SH_C 'mv /tmp/hyper /usr/local/bin/hyper'
   rm /tmp/hyper-linux.tar.gz
+}
+
+
+### DigitalOcean doctl
+# https://www.digitalocean.com/community/tutorials/how-to-use-doctl-the-official-digitalocean-command-line-client
+###
+install_doctl()
+{
+  echo ""
+  inf "Installing DigitalOcean doctl..."
+  echo ""
+
+  local inst_dir="/usr/local/bin"
+
+  if command_exists doctl; then
+    warn "doctl is already installed...will re-install"
+    $SH_C 'rm /usr/local/bin/doctl'
+  fi
+
+  wget -O /tmp/doctl-linux.tar.gz \
+    https://github.com/digitalocean/doctl/releases/download/v${DOCTL_VER}/doctl-${DOCTL_VER}-linux-amd64.tar.gz
+  tar zxvf /tmp/doctl-linux.tar.gz -C /tmp
+
+  chmod +x /tmp/doctl
+  $SH_C 'mv /tmp/doctl /usr/local/bin/doctl'
+  rm /tmp/doctl-linux.tar.gz
 }
 
 
@@ -890,7 +921,7 @@ main() {
 
   # terraform handler
   if [ -n "$ENABLE_TERRAFORM" ]; then
-    enable_terraform
+    install_terraform
   fi
 
   # gcloud handler
@@ -936,7 +967,7 @@ main() {
 
   # kops handler
   if [ -n "$ENABLE_KOPS" ]; then
-    enable_terraform
+    install_terraform
     install_kops
   fi
 
@@ -953,6 +984,10 @@ main() {
 
   if [ -n "$ENABLE_HYPER" ]; then
     install_hyper
+  fi
+
+  if [ -n "$ENABLE_DO" ]; then
+    install_doctl
   fi
 
   # always the last step, notify use to logoff for changes to take affect
