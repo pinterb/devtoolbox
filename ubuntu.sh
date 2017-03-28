@@ -133,15 +133,15 @@ install_docker()
 
     $SH_C 'apt-get install -y "linux-image-extra-$(uname -r)"'
     if [ "$DISTRO_VER" == "16.04" ]; then
-      $SH_C 'echo "deb https://apt.dockerproject.org/repo ubuntu-xenial main" > /etc/apt/sources.list.d/docker.list'
+      $SH_C 'echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable" > /etc/apt/sources.list'
     elif [ "$DISTRO_VER" == "15.10" ]; then
-      $SH_C 'echo "deb https://apt.dockerproject.org/repo ubuntu-wily main" > /etc/apt/sources.list.d/docker.list'
+      $SH_C 'echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu wily stable" > /etc/apt/sources.list'
     elif [ "$DISTRO_VER" == "14.04" ]; then
-      $SH_C 'echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" > /etc/apt/sources.list.d/docker.list'
+      $SH_C 'echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu trusty stable" > /etc/apt/sources.list'
     fi
 
     $SH_C 'apt-get -y update'
-    $SH_C 'apt-get install -yq docker-engine'
+    $SH_C 'apt-get install -yq docker-ce'
   fi
 
   $SH_C 'groupadd -f docker'

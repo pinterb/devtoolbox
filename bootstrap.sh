@@ -464,6 +464,7 @@ enable_vim_ycm()
   if command_exists go; then
     ycm_opts="--gocode-completer --tern-completer"
   fi
+    ycm_opts="--all"
 
   sh -c "$inst_dir/youcompleteme/install.py $ycm_opts"
 }
@@ -543,7 +544,6 @@ install_terraform()
   echo ""
 
   local install=0
-    #terraform version | awk '{ print $2; exit }' | grep "$TERRAFORM_VER" > /dev/null
 
   if command_exists terraform; then
     if [ $(terraform version | awk '{ print $2; exit }') == "v$TERRAFORM_VER" ]; then
