@@ -759,7 +759,7 @@ install_kube_aws()
     $SH_C 'rm /usr/local/bin/kube-aws'
   fi
 
-  wget -O /tmp/kube-aws.tar.gz "https://github.com/coreos/kube-aws/releases/download/v${KUBE_AWS_VER}/kube-aws-linux-amd64.tar.gz"
+  wget -O /tmp/kube-aws.tar.gz "https://github.com/kubernetes-incubator/kube-aws/releases/download/v${KUBE_AWS_VER}/kube-aws-linux-amd64.tar.gz"
   tar zxvf /tmp/kube-aws.tar.gz -C /tmp
 
   chmod +x /tmp/linux-amd64/kube-aws
@@ -778,17 +778,16 @@ install_kubectl()
   inf "Installing kubectl CLI..."
   echo ""
 
-  local inst_dir="/usr/local/bin"
-
   if command_exists kubectl; then
-    warn "kubectl is already installed."
-  else
-    wget -O /tmp/kubernetes.tar.gz "https://github.com/kubernetes/kubernetes/releases/download/v${KUBE_VER}/kubernetes.tar.gz"
-    tar -zxvf /tmp/kubernetes.tar.gz -C /tmp
-    $SH_C 'cp /tmp/kubernetes/platforms/linux/amd64/kubectl /usr/local/bin/kubectl'
-    rm /tmp/kubernetes.tar.gz
-    rm -rf /tmp/kubernetes
+    warn "kubectl is already installed...will re-install"
+    $SH_C 'rm /usr/local/bin/kubectl'
   fi
+
+  wget -O /tmp/kubernetes.tar.gz "https://github.com/kubernetes/kubernetes/releases/download/v${KUBE_VER}/kubernetes.tar.gz"
+  tar -zxvf /tmp/kubernetes.tar.gz -C /tmp
+  $SH_C 'cp /tmp/kubernetes/platforms/linux/amd64/kubectl /usr/local/bin/kubectl'
+  rm /tmp/kubernetes.tar.gz
+  rm -rf /tmp/kubernetes
 }
 
 
@@ -804,15 +803,17 @@ install_helm()
   local inst_dir="/usr/local/bin"
 
   if command_exists helm; then
-    warn "helm is already installed."
-  else
-    wget -O /tmp/helm.tar.gz "https://github.com/kubernetes/helm/releases/download/v${HELM_VER}/helm-v${HELM_VER}-linux-amd64.tar.gz"
-    tar -zxvf /tmp/helm.tar.gz -C /tmp
-    $SH_C 'cp /tmp/linux-amd64/helm /usr/local/bin/'
-    $SH_C 'cp /tmp/linux-amd64/tiller /usr/local/bin/'
-    rm /tmp/helm.tar.gz
-    rm -rf "/tmp/linux-amd64"
+    warn "helm is already installed...will re-install"
+    $SH_C 'rm /usr/local/bin/helm'
+    $SH_C 'rm /usr/local/bin/tiller'
   fi
+
+  wget -O /tmp/helm.tar.gz "https://github.com/kubernetes/helm/releases/download/v${HELM_VER}/helm-v${HELM_VER}-linux-amd64.tar.gz"
+  tar -zxvf /tmp/helm.tar.gz -C /tmp
+  $SH_C 'cp /tmp/linux-amd64/helm /usr/local/bin/'
+  $SH_C 'cp /tmp/linux-amd64/tiller /usr/local/bin/'
+  rm /tmp/helm.tar.gz
+  rm -rf "/tmp/linux-amd64"
 }
 
 
