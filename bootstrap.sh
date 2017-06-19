@@ -33,6 +33,7 @@ ENABLE_SERVERLESS=
 ENABLE_HYPER=
 ENABLE_DO=
 ENABLE_HABITAT=
+ENABLE_AZURE=
 
 # misc. flags
 SHOULD_WARM=0
@@ -67,6 +68,7 @@ usage() {
     --user <userid>        non-privileged user account to be bootstrapped (NOTE: invalid option when running as non-privileged user)
     --ansible              enable ansible
     --aws                  enable aws cli
+    --azure                enable azure cli
     --digitalocean         enable digitalocean cli
     --docker               enable docker
     --gcloud               enable gcloud cli
@@ -141,6 +143,9 @@ cmdline() {
         ;;
       ansible)
         readonly ENABLE_ANSIBLE=1
+        ;;
+      azure)
+        readonly ENABLE_AZURE=1
         ;;
       docker)
         readonly ENABLE_DOCKER=1
@@ -636,6 +641,39 @@ install_terraform()
 }
 
 
+### Azure cli
+# https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
+###
+install_azure()
+{
+  echo ""
+  inf "Installing Azure cli..."
+  echo ""
+
+  local install=0
+
+  if command_exists az; then
+    if [ $(az --version | awk '{ print $2; exit }') == "($AZURE_VER)" ]; then
+      warn "azure cli is already installed."
+      install=1
+    else
+      inf "azure cli is already installed...but versions don't match"
+    fi
+  fi
+
+  if [ $install -eq 0 ]; then
+    wget -O /tmp/azure-cli.sh https://aka.ms/InstallAzureCli
+    #chmod +x /tmp/azure-cli.sh
+    $SH_C 'bash /tmp/azure-cli.sh'
+
+    rm /tmp/azure-cli.sh
+  fi
+
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
+  fi
+}
+
 
 ### google cloud platform cli
 # https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
@@ -1060,6 +1098,10 @@ main() {
 
   if [ -n "$ENABLE_HABITAT" ]; then
     install_habitat
+  fi
+
+  if [ -n "$ENABLE_AZURE" ]; then
+    install_azure
   fi
 
   # always the last step, notify use to logoff for changes to take affect
