@@ -1,14 +1,16 @@
 #!/bin/bash -
 
 HELM_VER="2.4.2"
-TERRAFORM_VER="0.9.6"
+TERRAFORM_VER="0.9.8"
 CFSSL_VER="1.2"
 KUBE_VER="1.6.4"
 PROTOBUF_VER="3.3.0"
-KOPS_VER="1.6.0"
+KOPS_VER="1.6.1"
 KUBE_AWS_VER="0.9.7-rc.2"
 DOCTL_VER="1.6.1"
 DOCKER_VER="17.03.0"
+HABITAT_VER="0.24.1"
+HABITAT_VER_TS="20170522083228"
 
 # Get distro data from /etc/os-release
 if [ -f /etc/lsb-release ]; then

@@ -32,6 +32,7 @@ ENABLE_NODE=
 ENABLE_SERVERLESS=
 ENABLE_HYPER=
 ENABLE_DO=
+ENABLE_HABITAT=
 
 # misc. flags
 SHOULD_WARM=0
@@ -63,23 +64,24 @@ usage() {
   to install specified development tools.
 
   OPTIONS:
-    -u --user                non-privileged user account to be bootstrapped (NOTE: invalid option when running as non-privileged user)
-    -a --ansible             enable ansible
-    -d --docker              enable docker
-    -g --golang              enable golang (incl. third-party utilities)
-    -k --kubectl             enable kubectl and helm
-    -n --node                enable node.js and serverless
-    -o --digitalocean        enable digitalocean cli
-    -p --proto-buf           enable protocol buffers (i.e. protoc)
-    -r --hyper               enable hyper.sh (Hyper.sh is a hypervisor-agnostic Docker runtime)
-    -s --serverless          enable various serverless utilities (e.g. serverless, apex, sparta)
-    -t --terraform           enable terraform
-    -v --vim                 enable vim-plug & choice plugins (e.g. vim-go)
-    -w --kube-aws            enable kube-aws (a kubernetes provisioning tool)
-    -x --kops                enable kops (a kubernetes provisioning tool)
-    -y --gcloud              enable gcloud cli
-    -z --aws                 enable aws cli
-    -h --help                show this help
+    --user <userid>        non-privileged user account to be bootstrapped (NOTE: invalid option when running as non-privileged user)
+    --ansible              enable ansible
+    --aws                  enable aws cli
+    --digitalocean         enable digitalocean cli
+    --docker               enable docker
+    --gcloud               enable gcloud cli
+    --golang               enable golang (incl. third-party utilities)
+    --habitat              enable habitat.sh (Habitat enables you to build and run your applications in a Cloud Native manner.)
+    --hyper                enable hyper.sh (Hyper.sh is a hypervisor-agnostic Docker runtime)
+    --kops                 enable kops (a kubernetes provisioning tool)
+    --kubectl              enable kubectl and helm
+    --kube-aws             enable kube-aws (a kubernetes provisioning tool)
+    --node                 enable node.js and serverless
+    --proto-buf            enable protocol buffers (i.e. protoc)
+    --serverless           enable various serverless utilities (e.g. serverless, apex, sparta)
+    --terraform            enable terraform
+    --vim                  enable vim-plug & choice plugins (e.g. vim-go)
+    -h --help              show this help
 
 
   Examples:
@@ -87,114 +89,120 @@ usage() {
 EOF
 }
 
-
+###
+# http://mywiki.wooledge.org/ComplexOptionParsing
+###
 cmdline() {
-  # got this idea from here:
-  # http://kirk.webfinish.com/2009/10/bash-shell-script-to-use-getopts-with-gnu-style-long-positional-parameters/
-  local arg=
-  local args=
-  for arg
-  do
-    local delim=""
-    case "$arg" in
-      #translate --gnu-long-options to -g (short options)
-      --user)           args="${args}-u ";;
-      --ansible)        args="${args}-a ";;
-      --aws)            args="${args}-z ";;
-      --docker)         args="${args}-d ";;
-      --golang)         args="${args}-g ";;
-      --kubectl)        args="${args}-k ";;
-      --proto-buf)      args="${args}-p ";;
-      --hyper)          args="${args}-r ";;
-      --node)           args="${args}-n ";;
-      --digitalocean)   args="${args}-o ";;
-      --kube-aws)       args="${args}-w ";;
-      --kops)           args="${args}-x ";;
-      --gcloud)         args="${args}-y ";;
-      --serverless)     args="${args}-s ";;
-      --terraform)      args="${args}-t ";;
-      --vim)            args="${args}-v ";;
-      --help)           args="${args}-h ";;
-      #pass through anything else
-      *) [[ "${arg:0:1}" == "-" ]] || delim="\""
-          args="${args}${delim}${arg}${delim} ";;
+  i=$(($# + 1)) # index of the first non-existing argument
+  declare -A longoptspec
+  # Use associative array to declare how many arguments a long option
+  # expects. In this case we declare that loglevel expects/has one
+  # argument and range has two. Long options that aren't listed in this
+  # way will have zero arguments by default.
+  longoptspec=( [user]=1 )
+  optspec=":h-:"
+  while getopts "$optspec" opt; do
+  while true; do
+    case "${opt}" in
+      -) #OPTARG is name-of-long-option or name-of-long-option=value
+        if [[ ${OPTARG} =~ .*=.* ]] # with this --key=value format only one argument is possible
+        then
+          opt=${OPTARG/=*/}
+          ((${#opt} <= 1)) && {
+            error "Syntax error: Invalid long option '$opt'" >&2
+            exit 2
+          }
+          if (($((longoptspec[$opt])) != 1))
+          then
+            error "Syntax error: Option '$opt' does not support this syntax." >&2
+            exit 2
+          fi
+          OPTARG=${OPTARG#*=}
+        else #with this --key value1 value2 format multiple arguments are possible
+          opt="$OPTARG"
+          ((${#opt} <= 1)) && {
+            error "Syntax error: Invalid long option '$opt'" >&2
+            exit 2
+          }
+          OPTARG=(${@:OPTIND:$((longoptspec[$opt]))})
+          ((OPTIND+=longoptspec[$opt]))
+          #echo $OPTIND
+          ((OPTIND > i)) && {
+          error "Syntax error: Not all required arguments for option '$opt' are given." >&2
+          exit 3
+          }
+        fi
+
+        continue #now that opt/OPTARG are set we can process them as
+        # if getopts would've given us long options
+        ;;
+      user)
+        DEV_USER=$OPTARG
+        ;;
+      ansible)
+        readonly ENABLE_ANSIBLE=1
+        ;;
+      docker)
+        readonly ENABLE_DOCKER=1
+        ;;
+      golang)
+        readonly ENABLE_GOLANG=1
+        ;;
+      digitalocean)
+        readonly ENABLE_DO=1
+        ;;
+      aws)
+        readonly ENABLE_AWS=1
+        ;;
+      gcloud)
+        readonly ENABLE_GCLOUD=1
+        ;;
+      habitat)
+        readonly ENABLE_HABITAT=1
+        ;;
+      hyper)
+        readonly ENABLE_HYPER=1
+        ;;
+      kops)
+        readonly ENABLE_KOPS=1
+        ;;
+      kubectl)
+        readonly ENABLE_KUBE_UTILS=1
+        ;;
+      kube-aws)
+        readonly ENABLE_KUBE_AWS=1
+        ;;
+      node)
+        readonly ENABLE_NODE=1
+        ;;
+      proto-buf)
+        readonly ENABLE_PROTO_BUF=1
+        ;;
+      serverless)
+        readonly ENABLE_SERVERLESS=1
+        ;;
+      terraform)
+        readonly ENABLE_TERRAFORM=1
+        ;;
+      vim)
+        readonly ENABLE_VIM=1
+        ;;
+      h|help)
+        usage
+        exit 0
+        ;;
+      ?)
+        error "Syntax error: Unknown short option '$OPTARG'" >&2
+        exit 1
+        ;;
+      *)
+        error "Syntax error: Unknown long option '$opt'" >&2
+        exit 2
+        ;;
     esac
+    break; done
   done
 
-  #Reset the positional parameters to the short options
-  eval set -- $args
-
-  while getopts ":u:adkpgnowxyrstvzh" OPTION
-  do
-     case $OPTION in
-     u)
-         DEV_USER=$OPTARG
-         ;;
-     a)
-         readonly ENABLE_ANSIBLE=1
-         ;;
-     d)
-         readonly ENABLE_DOCKER=1
-         ;;
-     g)
-         readonly ENABLE_GOLANG=1
-         ;;
-     k)
-         readonly ENABLE_KUBE_UTILS=1
-         ;;
-     p)
-         readonly ENABLE_PROTO_BUF=1
-         ;;
-     r)
-         readonly ENABLE_HYPER=1
-         ;;
-     n)
-         readonly ENABLE_NODE=1
-         ;;
-     o)
-         readonly ENABLE_DO=1
-         ;;
-     w)
-         readonly ENABLE_KUBE_AWS=1
-         ;;
-     x)
-         readonly ENABLE_KOPS=1
-         ;;
-     y)
-         readonly ENABLE_GCLOUD=1
-         ;;
-     s)
-         readonly ENABLE_SERVERLESS=1
-         ;;
-     t)
-         readonly ENABLE_TERRAFORM=1
-         ;;
-     v)
-         readonly ENABLE_VIM=1
-         ;;
-     z)
-         readonly ENABLE_AWS=1
-         ;;
-     h)
-         usage
-         exit 0
-         ;;
-     \:)
-         echo "  argument missing from -$OPTARG option"
-         echo ""
-         usage
-         exit 1
-         ;;
-     \?)
-         echo "  unknown option: -$OPTARG"
-         echo ""
-         usage
-         exit 1
-         ;;
-    esac
-  done
-
-  return 0
 }
 
 
@@ -531,6 +539,65 @@ enable_golang()
 
   # User must log off for these changes to take effect
   LOGOFF_REQ=1
+}
+
+
+### Habitat
+# https://www.habitat.sh/docs/get-habitat/
+###
+install_habitat()
+{
+  echo ""
+  inf "Installing Habitat..."
+  echo ""
+
+  local install=0
+
+  if command_exists hab; then
+    if [ $(hab --version | awk '{ print $2; exit }') == "${HABITAT_VER}/${HABITAT_VER_TS}" ]; then
+      warn "habitat is already installed."
+      install=2
+    else
+      inf "habitat is already installed...but versions don't match"
+      $SH_C 'rm /usr/local/bin/hab'
+      install=1
+    fi
+  fi
+
+  if [ $install -le 1 ]; then
+    wget -O /tmp/habitat.tar.gz \
+      "https://bintray.com/habitat/stable/download_file?file_path=linux%2Fx86_64%2Fhab-${HABITAT_VER}-${HABITAT_VER_TS}-x86_64-linux.tar.gz"
+    tar zxvf /tmp/habitat.tar.gz -C /tmp
+
+    chmod +x "/tmp/hab-${HABITAT_VER}-${HABITAT_VER_TS}-x86_64-linux/hab"
+    $SH_C "mv /tmp/hab-${HABITAT_VER}-${HABITAT_VER_TS}-x86_64-linux/hab /usr/local/bin/hab"
+
+    rm -rf "/tmp/hab-${HABITAT_VER}-${HABITAT_VER_TS}-x86_64-linux"
+    rm /tmp/habitat.tar.gz
+
+    # set up hab group and user.
+    # also add non-privileged user to hab group
+    if [ $install -eq 0 ]; then
+      $SH_C "groupadd hab"
+      $SH_C "useradd -g hab hab"
+
+      if [ "$DEFAULT_USER" == 'root' ]; then
+        chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
+        usermod -a -G hab "$DEV_USER"
+      else
+        $SH_C "usermod -a -G hab $DEV_USER"
+      fi
+
+      # User must log off for these changes to take effect
+      LOGOFF_REQ=1
+    fi
+  fi
+
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
+  else
+    $SH_C "chown root:root /usr/local/bin/hab"
+  fi
 }
 
 
@@ -989,6 +1056,10 @@ main() {
 
   if [ -n "$ENABLE_DO" ]; then
     install_doctl
+  fi
+
+  if [ -n "$ENABLE_HABITAT" ]; then
+    install_habitat
   fi
 
   # always the last step, notify use to logoff for changes to take affect
