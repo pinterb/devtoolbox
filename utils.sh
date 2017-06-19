@@ -12,6 +12,7 @@ DOCKER_VER="17.03.0"
 HABITAT_VER="0.24.1"
 HABITAT_VER_TS="20170522083228"
 AZURE_VER="2.0.8"
+GOLANG_VER="1.8.3"
 
 # Get distro data from /etc/os-release
 if [ -f /etc/lsb-release ]; then

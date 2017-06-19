@@ -506,44 +506,64 @@ install_git_subrepo()
 }
 
 
-enable_golang()
+### Golang
+# https://golang.org
+###
+install_golang()
 {
   echo ""
-  inf "Enabling Golang..."
+  inf "Installing Golang.."
   echo ""
 
-  local inst_dir="/home/$DEV_USER/.bootstrap/golang"
+  local install=0
 
-  rm -rf "$inst_dir"
-  cp -R "$PROGDIR/golang" "$inst_dir"
+  if command_exists go; then
+    if [ $(go version | awk '{ print $3; exit }') == "go$GOLANG_VER" ]; then
+      warn "go is already installed."
+      install=1
+    else
+      inf "go is already installed...but versions don't match"
+    fi
+  fi
 
-  cp "$inst_dir/golang_profile" "/home/$DEV_USER/.golang_profile"
-  cp "$inst_dir/golang_verify" "/home/$DEV_USER/.golang_verify"
-  sed -i -e "s@###MY_PROJECT_DIR###@/home/${DEV_USER}/.bootstrap/golang@" /home/$DEV_USER/.golang_verify
+  if [ $install -eq 0 ]; then
+    git clone https://github.com/pinterb/install-golang.sh /tmp/install-golang
+    source /tmp/install-golang/utils.sh
 
-  if [ -f "/home/$DEV_USER/.bash_profile" ]; then
-    inf "Setting up .bash_profile"
-    grep -q -F 'source "$HOME/.golang_profile"' "/home/$DEV_USER/.bash_profile" || echo 'source "$HOME/.golang_profile"' >> "/home/$DEV_USER/.bash_profile"
-    grep -q -F 'source "$HOME/.golang_verify"' "/home/$DEV_USER/.bash_profile" || echo 'source "$HOME/.golang_verify"' >> "/home/$DEV_USER/.bash_profile"
-  else
-    inf "Setting up .profile"
-    grep -q -F 'source "$HOME/.golang_profile"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.golang_profile"' >> "/home/$DEV_USER/.profile"
-    grep -q -F 'source "$HOME/.golang_verify"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.golang_verify"' >> "/home/$DEV_USER/.profile"
+    if [ "$GOLANG_VER" == "$GOLANG_VERSION" ]; then
+      $SH_C '/tmp/install-golang/install-golang.sh'
+    else
+      error "expected golang version (i.e. $GOLANG_VER) doesn't match github.com/pinterb/install-golang.sh version (i.e. $GOLANG_VERSION)"
+    fi
+
+    rm -rf /tmp/install-golang
   fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
-    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
-    chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.golang_profile"
-    chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.golang_verify"
+    warn "the non-privileged user will need to create & set their own GOPATH"
   else
-    echo ""
-    inf "Okay...Verifying Golang..."
-    echo ""
-    sh "$HOME/.golang_verify"
-  fi
+    local gopath=$(go env GOPATH)
+    if [ -d "$gopath" ]; then
+      inf "Good news...your default GOPATH of \"$gopath\" already exists"
+    else
+      inf "your default GOPATH of \"$gopath\" does not exist...creating it now"
+      mkdir -p "$gopath/bin"
+      mkdir "$gopath/src"
+      mkdir "$gopath/pkg"
 
-  # User must log off for these changes to take effect
-  LOGOFF_REQ=1
+      inf "updating ~/.profile with GOPATH..."
+      echo "" >> "/home/$DEV_USER/.profile"
+      echo "# The following GOPATH was automatically added by $PROGDIR/$PROGNAME" >> "/home/$DEV_USER/.profile"
+      echo "export GOPATH=$gopath" >> "/home/$DEV_USER/.profile"
+      echo 'export PATH=$PATH:$GOPATH/bin' >> "/home/$DEV_USER/.profile"
+
+      # User must log off for these changes to take effect
+      LOGOFF_REQ=1
+
+      # To uninstall, clean-up .profile by:
+      #sed -i.gopath-bak '/GOPATH/d' "/home/$DEV_USER/.profile"
+    fi
+  fi
 }
 
 
@@ -1022,7 +1042,7 @@ main() {
 
   # golang handler
   if [ -n "$ENABLE_GOLANG" ]; then
-    enable_golang
+    install_golang
   fi
 
   # terraform handler
