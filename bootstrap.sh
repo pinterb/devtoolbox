@@ -17,6 +17,9 @@ source "${PROGDIR}/$(echo $DISTRO_ID | tr '[:upper:]' '[:lower:]').sh"
 
 # cli arguments
 DEV_USER=
+ENABLE_BASE=
+ENABLE_DOTFILES=
+ENABLE_TLS=
 ENABLE_ANSIBLE=
 ENABLE_AWS=
 ENABLE_KOPS=
@@ -26,7 +29,6 @@ ENABLE_GOLANG=
 ENABLE_GCLOUD=
 ENABLE_TERRAFORM=
 ENABLE_VIM=
-ENABLE_KUBE_UTILS=
 ENABLE_PROTO_BUF=
 ENABLE_NODE=
 ENABLE_SERVERLESS=
@@ -34,6 +36,13 @@ ENABLE_HYPER=
 ENABLE_DO=
 ENABLE_HABITAT=
 ENABLE_AZURE=
+ENABLE_DRAFT=
+ENABLE_NGROK=
+
+ENABLE_MINIKUBE=
+ENABLE_KUBECTL=
+ENABLE_HELM=
+ENABLE_DRAFT=
 
 # misc. flags
 SHOULD_WARM=0
@@ -60,29 +69,41 @@ usage() {
   cat <<- EOF
   usage: $PROGNAME options
 
-  $PROGNAME bootstraps all or some of a development environment for a new, non-privileged user.
-  It downloads install scripts under the new user's home directory and enables .profile or .bash_profile
-  to install specified development tools.
+  $PROGNAME installs various Linux packages and untilites commonly used for development and devlops by a new, non-privileged user.
+  Currently, only Ubuntu is supported.
 
   OPTIONS:
     --user <userid>        non-privileged user account to be bootstrapped (NOTE: invalid option when running as non-privileged user)
-    --ansible              enable ansible
-    --aws                  enable aws cli
-    --azure                enable azure cli
-    --digitalocean         enable digitalocean cli
-    --docker               enable docker
-    --gcloud               enable gcloud cli
-    --golang               enable golang (incl. third-party utilities)
-    --habitat              enable habitat.sh (Habitat enables you to build and run your applications in a Cloud Native manner.)
-    --hyper                enable hyper.sh (Hyper.sh is a hypervisor-agnostic Docker runtime)
-    --kops                 enable kops (a kubernetes provisioning tool)
-    --kubectl              enable kubectl and helm
-    --kube-aws             enable kube-aws (a kubernetes provisioning tool)
-    --node                 enable node.js and serverless
-    --proto-buf            enable protocol buffers (i.e. protoc)
-    --serverless           enable various serverless utilities (e.g. serverless, apex, sparta)
-    --terraform            enable terraform
-    --vim                  enable vim-plug & choice plugins (e.g. vim-go)
+    --base-setup           base packages (e.g. jq, tree, python3, unzip, build-essential)
+    --dotfiles             opinionated dotfiles
+
+    --aws                  aws cli
+    --azure                azure cli
+    --digitalocean         digitalocean cli
+    --gcloud               gcloud cli
+    --hyper                hyper.sh (Hyper.sh is a hypervisor-agnostic Docker runtime)
+
+    --ansible              ansible
+    --docker               docker
+    --terraform            terraform
+
+    --golang               golang (incl. third-party utilities)
+    --habitat              habitat.sh (Habitat enables you to build and run your applications in a Cloud Native manner.)
+    --node                 node.js
+    --proto-buf            protocol buffers (i.e. protoc)
+    --serverless           various serverless utilities (e.g. serverless, apex, sparta)
+
+    --minikube             opinionated local development workflow for applications deployed to Kubernetes (github.com/Azure/draft)
+    --kubectl              kubectl
+    --helm                 helm
+    --draft                opinionated local development workflow for applications deployed to Kubernetes (github.com/Azure/draft)
+    --kops                 kops (a kubernetes provisioning tool)
+    --kube-aws             kube-aws (a kubernetes provisioning tool)
+
+    --ngrok                create secure tunnels to localhost (ngrok.com)
+    --tls-utils            utilities for managing TLS certificates (e.g. letsencrypt, cfssl)
+    --vim                  vim-plug & choice plugins (e.g. vim-go)
+
     -h --help              show this help
 
 
@@ -147,8 +168,17 @@ cmdline() {
       azure)
         readonly ENABLE_AZURE=1
         ;;
+      base-setup)
+        readonly ENABLE_BASE=1
+        ;;
       docker)
         readonly ENABLE_DOCKER=1
+        ;;
+      dotfiles)
+        readonly ENABLE_DOTFILES=1
+        ;;
+      draft)
+        readonly ENABLE_DRAFT=1
         ;;
       golang)
         readonly ENABLE_GOLANG=1
@@ -165,6 +195,9 @@ cmdline() {
       habitat)
         readonly ENABLE_HABITAT=1
         ;;
+      helm)
+        readonly ENABLE_HELM=1
+        ;;
       hyper)
         readonly ENABLE_HYPER=1
         ;;
@@ -172,10 +205,13 @@ cmdline() {
         readonly ENABLE_KOPS=1
         ;;
       kubectl)
-        readonly ENABLE_KUBE_UTILS=1
+        readonly ENABLE_KUBECTL=1
         ;;
       kube-aws)
         readonly ENABLE_KUBE_AWS=1
+        ;;
+      ngrok)
+        readonly ENABLE_NGROK=1
         ;;
       node)
         readonly ENABLE_NODE=1
@@ -188,6 +224,9 @@ cmdline() {
         ;;
       terraform)
         readonly ENABLE_TERRAFORM=1
+        ;;
+      tls-utils)
+        readonly ENABLE_TLS=1
         ;;
       vim)
         readonly ENABLE_VIM=1
@@ -326,6 +365,18 @@ dotfiles()
   # handle .profile
   if [ -f "/home/$DEV_USER/.profile" ]; then
     if [ ! -f "/home/$DEV_USER/.profile-orig" ]; then
+
+      # first verify that .profile hasn't been modified by another install function (e.g. golang)
+      if [ -d "/home/$DEV_USER/.bootstrap/touched-dotprofile" ]; then
+        echo ""
+        error "Can't replace .profile 'cause it's already been modified."
+        error "The files in the following directory indicate which install functions touched the .profile file:"
+        error "   /home/$DEV_USER/.bootstrap/touched-dotprofile/*"
+        echo ""
+        error "To use a new .profile, you'll need to manually merge differences. Sorry."
+        exit 1
+      fi
+
       inf "Backing up .profile file"
       cp "/home/$DEV_USER/.profile" "/home/$DEV_USER/.profile-orig"
 
@@ -334,7 +385,7 @@ dotfiles()
         cp "$PROGDIR/dotfiles/profile" "/home/$DEV_USER/.profile"
       fi
     else
-      cp "/home/$DEV_USER/.bashrc" "/home/$DEV_USER/.profile-$TODAY"
+      cp "/home/$DEV_USER/.profile" "/home/$DEV_USER/.profile-$TODAY"
     fi
   fi
 
@@ -506,6 +557,42 @@ install_git_subrepo()
 }
 
 
+###
+# baseline packages and files
+###
+install_base()
+{
+  if function_exists base_setup; then
+    base_setup
+  else
+    error "baseline install function doesn't exist."
+    exit 1
+  fi
+
+  if function_exists binfiles; then
+    binfiles
+  else
+    error "bin files install function doesn't exist."
+    exit 1
+  fi
+}
+
+
+###
+# install opinionated dot files
+###
+install_dotfiles()
+{
+  if function_exists dotfiles; then
+    dotfiles
+  else
+    error "dot files install function doesn't exist."
+    exit 1
+  fi
+}
+
+
+
 ### Golang
 # https://golang.org
 ###
@@ -548,8 +635,11 @@ install_golang()
     else
       inf "your default GOPATH of \"$gopath\" does not exist...creating it now"
       mkdir -p "$gopath/bin"
-      mkdir "$gopath/src"
-      mkdir "$gopath/pkg"
+      mkdir -p "$gopath/src"
+      mkdir -p "$gopath/pkg"
+
+      # we don't want to overlay dot files after we modify .profile with GOPATH
+      mark_dotprofile_as_touched golang
 
       inf "updating ~/.profile with GOPATH..."
       echo "" >> "/home/$DEV_USER/.profile"
@@ -603,14 +693,17 @@ install_habitat()
     # set up hab group and user.
     # also add non-privileged user to hab group
     if [ $install -eq 0 ]; then
-      $SH_C "groupadd hab"
+      $SH_C 'groupadd -f hab'
+      inf "added hab group"
+      echo ""
       $SH_C "useradd -g hab hab"
 
       if [ "$DEFAULT_USER" == 'root' ]; then
         chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
         usermod -a -G hab "$DEV_USER"
       else
-        $SH_C "usermod -a -G hab $DEV_USER"
+        $SH_C "usermod -aG hab $DEV_USER"
+        inf "added $DEV_USER to group hab"
       fi
 
       # User must log off for these changes to take effect
@@ -735,6 +828,56 @@ enable_gcloud()
     sh "$HOME/.gcloud_verify"
   fi
 }
+
+
+### google cloud platform cli
+# https://cloud.google.com/sdk/downloads#versioned
+###
+install_gcloud()
+{
+  echo ""
+  inf "Installing google cloud sdk (aka gcloud)..."
+  echo ""
+
+  local install=0
+
+  if command_exists gcloud; then
+    if [ $(gcloud version | awk '{ print $4; exit }') == "$GCLOUD_VER" ]; then
+      warn "gcloud is already installed."
+      install=1
+    else
+      inf "gcloud is already installed...but versions don't match"
+      $SH_C "rm -rf /home/$DEV_USER/bin/google-cloud-sdk"
+      #$SH_C "rm /home/$DEV_USER/bin/gcloud"
+    fi
+  fi
+
+  if [ $install -eq 0 ]; then
+    wget -O /tmp/gcloud.tar.gz \
+      "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VER}-linux-x86_64.tar.gz"
+
+    local checksum=$(sha256sum /tmp/gcloud.tar.gz | awk '{ print $1 }')
+    if [ "$checksum" != "$GCLOUD_CHECKSUM" ]; then
+      error "checksum verification failed:"
+      error "  expected: $GCLOUD_CHECKSUM"
+      error "    actual: $checksum"
+      exit 1
+    fi
+
+    tar -zxvf /tmp/gcloud.tar.gz -C "/home/$DEV_USER/bin/"
+    #$SH_C 'unzip /tmp/terraform.zip -d /usr/local/bin'
+    "/home/$DEV_USER/bin/google-cloud-sdk/install.sh" --quiet --rc-path "/home/$DEV_USER/.profile" --usage-reporting true --command-completion true --path-update true
+
+    rm /tmp/gcloud.tar.gz
+
+    # we don't want to overlay dot files after we modify .profile with gcloud
+    mark_dotprofile_as_touched gcloud
+
+    # User must log off for these changes to take effect
+    LOGOFF_REQ=1
+  fi
+}
+
 
 
 ### ansible
@@ -903,16 +1046,36 @@ install_kubectl()
   inf "Installing kubectl CLI..."
   echo ""
 
+  local install=0
+
   if command_exists kubectl; then
-    warn "kubectl is already installed...will re-install"
-    $SH_C 'rm /usr/local/bin/kubectl'
+    local kubectl_loc=$(which kubectl)
+    if [ "$kubectl_loc" == "/home/$DEV_USER/bin/google-cloud-sdk/bin/kubectl" ]; then
+      error "it appears kubectl was installed using the google cloud sdk."
+      error "if you want to install using this --kubectl option;"
+      error "  then first uninstall gcloud version using 'gcloud components remove kubectl'"
+      exit 1
+    fi
+
+    if [ $(kubectl version | awk '{ print $5; exit }' | grep "v$KUBE_VER") ]; then
+      warn "kubectl is already installed."
+      install=1
+    else
+      inf "kubectl is already installed...but versions don't match"
+      $SH_C 'rm /usr/local/bin/kubectl'
+    fi
   fi
 
-  wget -O /tmp/kubernetes.tar.gz "https://github.com/kubernetes/kubernetes/releases/download/v${KUBE_VER}/kubernetes.tar.gz"
-  tar -zxvf /tmp/kubernetes.tar.gz -C /tmp
-  $SH_C 'cp /tmp/kubernetes/platforms/linux/amd64/kubectl /usr/local/bin/kubectl'
-  rm /tmp/kubernetes.tar.gz
-  rm -rf /tmp/kubernetes
+  if [ $install -eq 0 ]; then
+    wget -O "/tmp/kubernetes.tar.gz" \
+      "https://github.com/kubernetes/kubernetes/releases/download/v${KUBE_VER}/kubernetes.tar.gz"
+    tar -zxvf /tmp/kubernetes.tar.gz -C /tmp
+    "/tmp/kubernetes/cluster/get-kube-binaries.sh"
+    cp /tmp/kubernetes/client/bin/kube* "/home/$DEV_USER/bin/"
+
+    rm /tmp/kubernetes.tar.gz
+    rm -rf /tmp/kubernetes
+  fi
 }
 
 
@@ -925,20 +1088,58 @@ install_helm()
   inf "Installing helm CLI..."
   echo ""
 
-  local inst_dir="/usr/local/bin"
+  local install=0
 
   if command_exists helm; then
-    warn "helm is already installed...will re-install"
-    $SH_C 'rm /usr/local/bin/helm'
-    $SH_C 'rm /usr/local/bin/tiller'
+    if [ $(helm version | awk -F: '{ print $3; exit }' | awk -F, '{ print $1; exit }' 2>/dev/null | grep "v${HELM_VER}") ]; then
+      warn "helm is already installed."
+      install=1
+    else
+      inf "helm is already installed...but versions don't match"
+      $SH_C 'rm /usr/local/bin/helm'
+      $SH_C 'rm /usr/local/bin/tiller'
+    fi
   fi
 
-  wget -O /tmp/helm.tar.gz "https://github.com/kubernetes/helm/releases/download/v${HELM_VER}/helm-v${HELM_VER}-linux-amd64.tar.gz"
-  tar -zxvf /tmp/helm.tar.gz -C /tmp
-  $SH_C 'cp /tmp/linux-amd64/helm /usr/local/bin/'
-  $SH_C 'cp /tmp/linux-amd64/tiller /usr/local/bin/'
-  rm /tmp/helm.tar.gz
-  rm -rf "/tmp/linux-amd64"
+  if [ $install -eq 0 ]; then
+    wget -O /tmp/helm.tar.gz \
+      "https://storage.googleapis.com/kubernetes-helm/helm-v${HELM_VER}-linux-amd64.tar.gz"
+    tar -zxvf /tmp/helm.tar.gz -C /tmp
+    $SH_C 'cp /tmp/linux-amd64/helm /usr/local/bin/'
+    rm /tmp/helm.tar.gz
+    rm -rf "/tmp/linux-amd64"
+  fi
+}
+
+
+###
+# TLS utilities
+###
+install_tls()
+{
+  if function_exists install_cfssl; then
+    install_cfssl
+  else
+    warn "cfssl install function doesn't exist."
+  fi
+
+  if function_exists install_letsencrypt; then
+    install_letsencrypt
+  else
+    warn "letsencrypt install function doesn't exist."
+  fi
+
+  if function_exists install_certbot; then
+    install_certbot
+  else
+    warn "certbot install function doesn't exist."
+  fi
+
+  install_manuale
+
+  # lego install using "go get -u" doesn't seem to work.  And dependencies are
+  # not defined in the project.
+  #install_lego
 }
 
 
@@ -966,6 +1167,77 @@ install_cfssl()
     chmod +x /tmp/cfssljson_linux-amd64
     $SH_C 'mv /tmp/cfssljson_linux-amd64 /usr/local/bin/cfssljson'
   fi
+}
+
+
+### manuaLE (A python Lets Encrypt client)
+# https://github.com/veeti/manuale
+###
+install_manuale()
+{
+  echo ""
+  inf "Installing manuaLE Lets Encrypt client..."
+  echo ""
+
+  if command_exists manuale; then
+    local version="$(manuale --version)"
+    warn "manuale cli is already installed...attempting upgrade"
+    $SH_C 'pip3 install --upgrade manuale'
+  else
+    $SH_C 'pip3 install manuale'
+  fi
+}
+
+
+### lego (A golang Lets Encrypt client)
+# https://github.com/xenolf/lego
+###
+install_lego()
+{
+  echo ""
+  inf "Installing lego Lets Encrypt client..."
+  echo ""
+
+  if ! command_exists go; then
+    warn "golang is required to install this utility.  But golang doesn't appear to be installed.  So skipping install"
+  else
+    rm -rf "$GOPATH/src/github.com/xenolf/lego"
+    go get -u github.com/xenolf/lego
+  fi
+}
+
+
+### ngrok
+# https://ngrok.com
+###
+install_ngrok()
+{
+  echo ""
+  inf "Installing ngrok..."
+  echo ""
+
+  local install=0
+  local inst_dir="/usr/local/bin"
+
+  if command_exists ngrok; then
+    if [ $(ngrok version | awk '{ print $3; exit }') == "$NGROK_VER" ]; then
+      warn "ngrok is already installed."
+      install=1
+    else
+      inf "ngrok is already installed...but versions don't match. Will update in-place..."
+      install=2
+      ngrok update
+    fi
+  fi
+
+  if [ $install -eq 0 ]; then
+    wget -O /tmp/ngrok.zip \
+      "https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip"
+    $SH_C 'unzip /tmp/ngrok.zip -d /usr/local/bin'
+
+    rm /tmp/ngrok.zip
+  fi
+
 }
 
 
@@ -1034,11 +1306,23 @@ main() {
   distro_check
   valid_args
   prerequisites
-  base_setup
-  binfiles
-  dotfiles
-  install_git_subrepo
-  install_cfssl
+
+  #install_git_subrepo
+
+  # base packages, files, etc.
+  if [ -n "$ENABLE_BASE" ]; then
+    install_base
+  fi
+
+  # dot files
+  if [ -n "$ENABLE_DOTFILES" ]; then
+    install_dotfiles
+  fi
+
+  # tls utilities
+  if [ -n "$ENABLE_TLS" ]; then
+    install_tls
+  fi
 
   # golang handler
   if [ -n "$ENABLE_GOLANG" ]; then
@@ -1052,7 +1336,7 @@ main() {
 
   # gcloud handler
   if [ -n "$ENABLE_GCLOUD" ]; then
-    enable_gcloud
+    install_gcloud
   fi
 
   # aws handler
@@ -1076,10 +1360,9 @@ main() {
     install_docker
   fi
 
-  # kubectl & helm handler
-  if [ -n "$ENABLE_KUBE_UTILS" ]; then
+  # kubectl handler
+  if [ -n "$ENABLE_KUBECTL" ]; then
     install_kubectl
-    install_helm
   fi
 
   # protobuf support (compile from source)
@@ -1122,6 +1405,14 @@ main() {
 
   if [ -n "$ENABLE_AZURE" ]; then
     install_azure
+  fi
+
+  if [ -n "$ENABLE_NGROK" ]; then
+    install_ngrok
+  fi
+
+  if [ -n "$ENABLE_HELM" ]; then
+    install_helm
   fi
 
   # always the last step, notify use to logoff for changes to take affect

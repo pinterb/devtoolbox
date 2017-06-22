@@ -1,11 +1,11 @@
 #!/bin/bash -
 
-HELM_VER="2.4.2"
+HELM_VER="2.5.0"
 TERRAFORM_VER="0.9.8"
 CFSSL_VER="1.2"
-KUBE_VER="1.6.4"
+KUBE_VER="1.6.6"
 PROTOBUF_VER="3.3.0"
-KOPS_VER="1.6.1"
+KOPS_VER="1.6.2"
 KUBE_AWS_VER="0.9.7-rc.2"
 DOCTL_VER="1.6.1"
 DOCKER_VER="17.03.0"
@@ -13,6 +13,12 @@ HABITAT_VER="0.24.1"
 HABITAT_VER_TS="20170522083228"
 AZURE_VER="2.0.8"
 GOLANG_VER="1.8.3"
+NGROK_VER="12.2.4"
+
+# https://cloud.google.com/sdk/downloads#versioned
+GCLOUD_VER="160.0.0"
+GCLOUD_CHECKSUM="e799bfbc35ee75f2b7c2181a9e090be28e7a1a73b92953e9087b77bc7fc7a894"
+
 
 # Get distro data from /etc/os-release
 if [ -f /etc/lsb-release ]; then
@@ -79,6 +85,25 @@ absolute_path() {
 
 command_exists() {
   command -v "$@" > /dev/null 2>&1
+}
+
+function_exists() {
+  #type -t "$@" && type -t "$@" | grep -q '^function$' > /dev/null 2>&1
+  if [[ $(type -t "$@" 2>/dev/null) == function ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+mark_dotprofile_as_touched() {
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    su -c "mkdir -p /home/$DEV_USER/.bootstrap/touched-dotprofile" "$DEV_USER"
+    su -c "echo 'modified by install script' > /home/$DEV_USER/.bootstrap/touched-dotprofile/$@" "$DEV_USER"
+  else
+    mkdir -p "/home/$DEV_USER/.bootstrap/touched-dotprofile"
+    echo 'modified by install script' > "/home/$DEV_USER/.bootstrap/touched-dotprofile/$@"
+  fi
 }
 
 semverParse() {

@@ -26,7 +26,7 @@ base_setup()
   # for asciinema support
   $SH_C 'apt-add-repository -y ppa:zanchey/asciinema >/dev/null 2>&1'
 
-  $SH_C 'apt-get install -yq git mercurial subversion letsencrypt wget curl jq unzip vim gnupg2 \
+  $SH_C 'apt-get install -yq software-properties-common git mercurial subversion wget curl jq unzip vim gnupg2 \
   build-essential autoconf automake libtool make g++ cmake make ssh gcc openssh-client python-dev python3-dev libssl-dev libffi-dev asciinema tree >/dev/null 2>&1'
   $SH_C 'apt-get -y update >/dev/null 2>&1'
 
@@ -43,7 +43,64 @@ base_setup()
   $SH_C 'pip install --upgrade pyyaml >/dev/null 2>&1'
   $SH_C 'pip install --upgrade cookiecutter >/dev/null 2>&1'
 
+  if ! command_exists pip3; then
+    echo ""
+    inf "replacing python3-pip with easy_install pip3"
+    echo ""
+    $SH_C 'apt-get install -y python3-setuptools >/dev/null 2>&1'
+    $SH_C 'easy_install3 pip >/dev/null 2>&1'
+    echo ""
+  fi
+
+  $SH_C 'pip3 install --upgrade pyyaml >/dev/null 2>&1'
+  $SH_C 'pip3 install --upgrade cookiecutter >/dev/null 2>&1'
+
   $SH_C 'apt-get -y autoremove >/dev/null 2>&1'
+}
+
+
+install_letsencrypt()
+{
+  echo ""
+  inf "Installing Lets Encrypt package for Ubuntu..."
+  echo ""
+
+  $SH_C 'apt-get install -yq letsencrypt >/dev/null 2>&1'
+  $SH_C 'apt-get -y update >/dev/null 2>&1'
+}
+
+
+### certbot
+# https://certbot.eff.org/all-instructions/#ubuntu-16-04-xenial-none-of-the-above
+###
+install_certbot()
+{
+  echo ""
+  inf "Installing certbot package for Ubuntu..."
+  echo ""
+
+  $SH_C 'apt-add-repository -y ppa:certbot/certbot >/dev/null 2>&1'
+  $SH_C 'apt-get -y update >/dev/null 2>&1'
+  $SH_C 'apt-get install -yq certbot >/dev/null 2>&1'
+
+  echo ""
+  inf "   installing certbot plugin for Gandi..."
+  git clone https://github.com/Gandi/letsencrypt-gandi.git /tmp/letsencrypt-gandi
+  if [ ! -d /tmp/letsencrypt-gandi ]; then
+    error "   failed to git clone gandi plugin repository"
+    exit 1
+  else
+    cd /tmp/letsencrypt-gandi
+    $SH_C 'pip install -e . >/dev/null 2>&1'
+    cd -
+    $SH_C 'rm -rf /tmp/letsencrypt-gandi'
+  fi
+
+  echo ""
+  inf "   installing certbot plugin for S3/CloudFront..."
+  $SH_C 'pip install certbot-s3front >/dev/null 2>&1'
+
+  echo ""
 }
 
 
