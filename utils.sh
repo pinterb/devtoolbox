@@ -14,6 +14,7 @@ HABITAT_VER_TS="20170522083228"
 AZURE_VER="2.0.8"
 GOLANG_VER="1.8.3"
 NGROK_VER="12.2.4"
+MINIKUBE_VER="0.20.0"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="160.0.0"

@@ -274,3 +274,45 @@ install_docker()
   # User must log off for these changes to take effect
   LOGOFF_REQ=1
 }
+
+
+### Install libvirt and qemu-kvm
+# https://???
+###
+install_kvm()
+{
+  echo ""
+  inf "Installing libvirt and qemu-kvm..."
+  echo ""
+
+  local kvm_supported=$(egrep -c '(vmx|svm)' /proc/cpuinfo)
+  if [ $kvm_supported -eq 0 ]; then
+    echo ""
+    echo ""
+    warn "***************************************************"
+    warn "* This machine may not support kvm virtualization *"
+    warn "***************************************************"
+    echo ""
+  fi
+
+  $SH_C 'apt-get install -yq cpu-checker'
+
+  $SH_C 'apt-get install -yq qemu-kvm libvirt-bin virtinst bridge-utils'
+
+  # Add $DEV_USER to the libvirtd group (use libvirt group for rpm based
+  # distros) so you don't need to sudo
+  # Debian/Ubuntu (NOTE: For Ubuntu 17.04 change the group to `libvirt`)
+  if [ "$DISTRO_VER" > "16.10" ]; then
+    $SH_C "usermod -a -G libvirt $DEV_USER"
+  else
+    $SH_C "usermod -a -G libvirtd $DEV_USER"
+  fi
+
+  # Update your current session for the group change to take effect
+  # Debian/Ubuntu (NOTE: For Ubuntu 17.04 change the group to `libvirt`)
+  if [ "$DISTRO_VER" > "16.10" ]; then
+    $SH_C 'newgrp libvirt'
+  else
+    $SH_C 'newgrp libvirtd'
+  fi
+}

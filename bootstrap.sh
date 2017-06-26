@@ -210,6 +210,9 @@ cmdline() {
       kube-aws)
         readonly ENABLE_KUBE_AWS=1
         ;;
+      minikube)
+        readonly ENABLE_MINIKUBE=1
+        ;;
       ngrok)
         readonly ENABLE_NGROK=1
         ;;
@@ -1112,6 +1115,48 @@ install_helm()
 }
 
 
+### minikube
+# https://github.com/kubernetes/minikube
+###
+install_minikube()
+{
+  echo ""
+  inf "Installing minikube..."
+  echo ""
+
+  local install=0
+
+  if ! command_exists kubectl; then
+    error "minikube requires kubectl. First install kubectl and then re-try the installation of minikube."
+    exit 1
+  fi
+
+  if function_exists install_kvm; then
+    install_kvm
+  else
+    error "attempting to install kvm as part of this minikube install. But the expected kvm install script was not found."
+  fi
+
+  if command_exists minikube; then
+    if [ $(minikube version | awk -F: '{ print $3; exit }' | awk -F, '{ print $1; exit }' 2>/dev/null | grep "v${MINIKUBE_VER}") ]; then
+      warn "minikube is already installed."
+      install=1
+    else
+      inf "minikube is already installed...but versions don't match"
+      $SH_C 'rm /usr/local/bin/helm'
+      $SH_C 'rm /usr/local/bin/tiller'
+    fi
+  fi
+
+  if [ $install -eq 0 ]; then
+    wget -O /tmp/minikube \
+      "https://storage.googleapis.com/minikube/releases/v${MINIKUBE_VER}/minikube-linux-amd64"
+    chmod +x /tmp/minikube
+    $SH_C 'mv /tmp/minikube /usr/local/bin/'
+  fi
+}
+
+
 ###
 # TLS utilities
 ###
@@ -1414,6 +1459,11 @@ main() {
   if [ -n "$ENABLE_HELM" ]; then
     install_helm
   fi
+
+  if [ -n "$ENABLE_MINIKUBE" ]; then
+    install_minikube
+  fi
+
 
   # always the last step, notify use to logoff for changes to take affect
   if [ $LOGOFF_REQ -eq 1 ]; then
