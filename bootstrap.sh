@@ -36,7 +36,6 @@ ENABLE_HYPER=
 ENABLE_DO=
 ENABLE_HABITAT=
 ENABLE_AZURE=
-ENABLE_DRAFT=
 ENABLE_NGROK=
 
 ENABLE_MINIKUBE=
@@ -1115,6 +1114,51 @@ install_helm()
 }
 
 
+### draft
+# https://github.com/kubernetes/helm
+###
+install_draft()
+{
+  echo ""
+  inf "Installing draft..."
+  echo ""
+
+  local install=0
+
+  if ! command_exists minikube; then
+    error "draft requires minikube. First install minikube and then re-try the installation of draft."
+    exit 1
+  fi
+
+  if command_exists draft; then
+    if [ $(draft version | awk -F: '{ print $3; exit }' | awk -F, '{ print $1; exit }' 2>/dev/null | grep "v${DRAFT_VER}") ]; then
+      warn "draft is already downloaded."
+      install=1
+    else
+      inf "draft is already downloaded...but versions don't match"
+      $SH_C 'rm /usr/local/bin/draft'
+    fi
+  fi
+
+  if [ $install -eq 0 ]; then
+    wget -O /tmp/draft.tar.gz \
+      "https://github.com/Azure/draft/releases/download/v${DRAFT_VER}/draft-v${DRAFT_VER}-linux-amd64.tar.gz"
+    tar -zxvf /tmp/draft.tar.gz -C /tmp
+    $SH_C 'cp /tmp/linux-amd64/draft /usr/local/bin/'
+    rm /tmp/draft.tar.gz
+    rm -rf "/tmp/linux-amd64"
+
+    warn "draft has been (re-)downloaded and extracted into your path."
+    warn "  However, draft has not been installed. And installation is a bit more complicated than just dowloading."
+    warn "  Go to https://github.com/Azure/draft/blob/v${DRAFT_VER}/docs/install.md to learn how to complete the installation."
+  else
+    warn "While draft has already been downloaded, it may not have been fully installed."
+    warn "  And installation is a bit more complicated than just dowloading."
+    warn "  Go to https://github.com/Azure/draft/blob/v${DRAFT_VER}/docs/install.md to learn how to complete the installation."
+  fi
+}
+
+
 ### minikube
 # https://github.com/kubernetes/minikube
 ###
@@ -1464,6 +1508,9 @@ main() {
     install_minikube
   fi
 
+  if [ -n "$ENABLE_DRAFT" ]; then
+    install_draft
+  fi
 
   # always the last step, notify use to logoff for changes to take affect
   if [ $LOGOFF_REQ -eq 1 ]; then
