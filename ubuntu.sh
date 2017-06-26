@@ -285,17 +285,10 @@ install_kvm()
   inf "Installing libvirt and qemu-kvm..."
   echo ""
 
-  local kvm_supported=$(egrep -c '(vmx|svm)' /proc/cpuinfo)
-  if [ $kvm_supported -eq 0 ]; then
-    echo ""
-    echo ""
-    warn "***************************************************"
-    warn "* This machine may not support kvm virtualization *"
-    warn "***************************************************"
-    echo ""
+  if ! command_exists kvm-ok; then
+    $SH_C 'apt-get install -yq cpu-checker'
   fi
-
-  $SH_C 'apt-get install -yq cpu-checker'
+  kvm-ok > /dev/null || error "kvm is not supported on this machine" && exit 1
 
   $SH_C 'apt-get install -yq qemu-kvm libvirt-bin virtinst bridge-utils'
 
