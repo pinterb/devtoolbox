@@ -183,97 +183,110 @@ install_docker()
   inf "Installing Docker Community Edition..."
   echo ""
 
-  inf "removing any old Docker packages"
+  inf "  removing any old Docker packages"
   $SH_C 'apt-get remove docker docker-engine >/dev/null'
-  echo ""
 
   local install=0
   local docker_ce_ver="$DOCKER_VER-ce"
 
-
   if command_exists docker; then
     if [ $(docker -v | awk -F '[ ,]+' '{ print $3 }') == "$docker_ce_ver" ]; then
-      warn "docker-ce is already installed...skipping installation"
+      warn "  docker-ce is already installed...skipping installation"
+      echo ""
+      install=2
+    else
+      inf "  docker-ce is already installed. But versions don't match, so will attempt to upgrade..."
       echo ""
       install=1
-    else
-      inf "docker-ce is already installed. But versions don't match, so will attempt to upgrade..."
-      echo ""
     fi
+  fi
+
+  # Only need to install docker ppa for new installs
+  if [ $install -eq 0 ]; then
+    install_docker_deps
   fi
 
   # Either Docker isn't installed or installed version doesn't match desired
   # version
-  if [ $install -eq 0 ]; then
-    inf "adding ppa key and other prerequisites"
-    echo ""
-    $SH_C 'apt-get install -y apt-transport-https ca-certificates curl software-properties-common >/dev/null'
-    $SH_C 'apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D >/dev/null'
-    $SH_C 'apt-get -y update >/dev/null'
-
-    $SH_C 'apt-get install -y "linux-image-extra-$(uname -r)" >/dev/null'
-    $SH_C 'echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list'
-
-    if [ "$DISTRO_VER" == "14.04" ]; then
-      $SH_C 'apt-get install -y "linux-image-extra-$(uname -r)" linux-image-extra-virtual >/dev/null'
-    fi
-
+  if [ $install -le 1 ]; then
     # Note: You can run "sudo apt-cache madison docker-ce" to see what versions
     # are available
     local target_ver="$DOCKER_VER~ce-0~ubuntu-$(lsb_release -cs)"
 
     echo ""
-    inf "installing / upgrading docker-ce"
+    inf "  installing / upgrading docker-ce"
     echo ""
 
     $SH_C 'apt-get -y update >/dev/null'
     $SH_C "apt-get install -yq docker-ce=$target_ver"
-    echo ""
+  fi
 
+  # Finish configuring for new installations...
+  if [ $install -eq 0 ]; then
+    echo ""
     # edit dockerd startup to enable namespaces and ensure overlay2
     # note namespace won't work in all scenerios, like --net=host,
     # but its tighter security so it's recommended to try using first
     # this now uses the daemon.json method rather that the old way of modifying systemd
     $SH_C "printf '{ \"userns-remap\" : \"default\" , \"storage-driver\" : \"overlay2\" }' > /etc/docker/daemon.json"
-  fi
 
-  $SH_C 'groupadd -f docker'
-  inf "added docker group"
-  echo ""
-
-  echo "$DEV_USER" > /tmp/bootstrap_usermod_feh || exit 1
-  $SH_C 'usermod -aG docker $(cat /tmp/bootstrap_usermod_feh)'
-  rm -f /tmp/bootstrap_usermod_feh || exit 1
-  inf "added $DEV_USER to group docker"
-  echo ""
-
-  ## Start Docker
-  if command_exists systemctl; then
-    $SH_C 'systemctl daemon-reload'
-    $SH_C 'systemctl enable docker'
-    if [ ! -f "/var/run/docker.pid" ]; then
-      $SH_C 'systemctl start docker'
-    else
-      inf "Docker appears to already be running...will restart"
-      echo ""
-      $SH_C 'systemctl restart docker'
-    fi
-
-  else
-    inf "no systemctl found...assuming this OS is not using systemd (yet)"
+    $SH_C 'groupadd -f docker'
+    inf "added docker group"
     echo ""
 
-    if [ ! -f "/var/run/docker.pid" ]; then
-      $SH_C 'service docker start'
+    echo "$DEV_USER" > /tmp/bootstrap_usermod_feh || exit 1
+    $SH_C 'usermod -aG docker $(cat /tmp/bootstrap_usermod_feh)'
+    rm -f /tmp/bootstrap_usermod_feh || exit 1
+    inf "  added $DEV_USER to group docker"
+    echo ""
+
+   ## Start Docker
+   if command_exists systemctl; then
+     $SH_C 'systemctl daemon-reload'
+     $SH_C 'systemctl enable docker'
+     if [ ! -f "/var/run/docker.pid" ]; then
+       $SH_C 'systemctl start docker'
+     else
+       inf "  Docker appears to already be running...will restart"
+       echo ""
+       $SH_C 'systemctl restart docker'
+     fi
+
     else
-      inf "Docker appears to already be running"
-      echo ""
+     inf "  no systemctl found...assuming this OS is not using systemd (yet)"
+     echo ""
+
+     if [ ! -f "/var/run/docker.pid" ]; then
+       $SH_C 'service docker start'
+     else
+       inf "  Docker appears to already be running"
+       echo ""
+     fi
     fi
   fi
 
   # User must log off for these changes to take effect
   LOGOFF_REQ=1
 }
+
+
+install_docker_deps()
+{
+  echo ""
+  inf "  adding ppa key and other prerequisites"
+  echo ""
+  $SH_C 'apt-get install -y apt-transport-https ca-certificates curl software-properties-common >/dev/null'
+  $SH_C 'apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D >/dev/null'
+  $SH_C 'apt-get -y update >/dev/null'
+
+  $SH_C 'apt-get install -y "linux-image-extra-$(uname -r)" >/dev/null'
+  $SH_C 'echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" >> /etc/apt/sources.list'
+
+  if [ "$DISTRO_VER" == "14.04" ]; then
+    $SH_C 'apt-get install -y "linux-image-extra-$(uname -r)" linux-image-extra-virtual >/dev/null'
+  fi
+}
+
 
 
 ### Install libvirt and qemu-kvm
