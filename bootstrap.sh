@@ -37,11 +37,11 @@ ENABLE_DO=
 ENABLE_HABITAT=
 ENABLE_AZURE=
 ENABLE_NGROK=
-
 ENABLE_MINIKUBE=
 ENABLE_KUBECTL=
 ENABLE_HELM=
 ENABLE_DRAFT=
+ENABLE_BOSH=
 
 # misc. flags
 SHOULD_WARM=0
@@ -78,6 +78,7 @@ usage() {
 
     --aws                  aws cli
     --azure                azure cli
+    --bosh                 bosh cli
     --digitalocean         digitalocean cli
     --gcloud               gcloud cli
     --hyper                hyper.sh (Hyper.sh is a hypervisor-agnostic Docker runtime)
@@ -169,6 +170,9 @@ cmdline() {
         ;;
       base-setup)
         readonly ENABLE_BASE=1
+        ;;
+      bosh)
+        readonly ENABLE_BOSH=1
         ;;
       docker)
         readonly ENABLE_DOCKER=1
@@ -1114,6 +1118,44 @@ install_helm()
 }
 
 
+### bosh cli
+# https://bosh.io
+###
+install_bosh()
+{
+  echo ""
+  inf "Installing bosh CLI..."
+  echo ""
+
+  local install=0
+
+  if ! function_exists bosh_deps_install; then
+    error "bosh 'create-env' dependency install function doesn't exist."
+    exit 1
+  fi
+
+  if command_exists bosh; then
+    if [ $(bosh --version | awk '{ print $2; exit }' | awk -F- '{ print $1; exit }' 2>/dev/null | grep "${BOSH_VER}") ]; then
+      warn "bosh is already installed."
+      install=1
+    else
+      inf "bosh is already installed...but versions don't match"
+      $SH_C 'rm /usr/local/bin/bosh'
+    fi
+  fi
+
+  if [ $install -eq 0 ]; then
+    wget -O /tmp/bosh \
+      "https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-${BOSH_VER}-linux-amd64"
+    chmod +x /tmp/bosh
+    $SH_C 'mv /tmp/bosh /usr/local/bin/'
+
+    # install 'create-env' dependencies
+    bosh_deps_install
+  fi
+}
+
+
 ### draft
 # https://github.com/kubernetes/helm
 ###
@@ -1510,6 +1552,10 @@ main() {
 
   if [ -n "$ENABLE_DRAFT" ]; then
     install_draft
+  fi
+
+  if [ -n "$ENABLE_BOSH" ]; then
+    install_bosh
   fi
 
   # always the last step, notify use to logoff for changes to take affect

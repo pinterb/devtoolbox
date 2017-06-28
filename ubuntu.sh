@@ -309,3 +309,18 @@ install_kvm()
     $SH_C 'newgrp libvirtd'
   fi
 }
+
+
+### bosh dependencies
+# https://bosh.io/docs/cli-env-deps.html
+###
+bosh_deps_install()
+{
+  echo ""
+  inf "Installing ubuntu dependencies for boch CLI..."
+  echo ""
+
+  $SH_C 'apt-get install -yq zlibc zlib1g-dev ruby ruby-dev openssl libxslt-dev \
+    libxml2-dev libreadline6 libreadline6-dev libyaml-dev libsqlite3-dev sqlite3 >/dev/null 2>&1'
+  $SH_C 'apt-get -y update >/dev/null 2>&1'
+}
