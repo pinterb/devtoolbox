@@ -26,7 +26,7 @@ base_setup()
   # for asciinema support
   $SH_C 'apt-add-repository -y ppa:zanchey/asciinema >/dev/null 2>&1'
 
-  $SH_C 'apt-get install -yq software-properties-common git mercurial subversion wget curl jq unzip vim gnupg2 \
+  $SH_C 'apt-get install -yq --allow-unauthenticated software-properties-common git mercurial subversion wget curl jq unzip vim gnupg2 \
   build-essential autoconf automake libtool make g++ cmake make ssh gcc openssh-client python-dev python3-dev libssl-dev libffi-dev asciinema tree >/dev/null 2>&1'
   $SH_C 'apt-get -y update >/dev/null 2>&1'
 
@@ -65,7 +65,7 @@ install_letsencrypt()
   inf "Installing Lets Encrypt package for Ubuntu..."
   echo ""
 
-  $SH_C 'apt-get install -yq letsencrypt >/dev/null 2>&1'
+  $SH_C 'apt-get install -yq --allow-unauthenticated letsencrypt >/dev/null 2>&1'
   $SH_C 'apt-get -y update >/dev/null 2>&1'
 }
 
@@ -81,7 +81,7 @@ install_certbot()
 
   $SH_C 'apt-add-repository -y ppa:certbot/certbot >/dev/null 2>&1'
   $SH_C 'apt-get -y update >/dev/null 2>&1'
-  $SH_C 'apt-get install -yq certbot >/dev/null 2>&1'
+  $SH_C 'apt-get install -yq --allow-unauthenticated certbot >/dev/null 2>&1'
 
   echo ""
   inf "   installing certbot plugin for Gandi..."
@@ -218,7 +218,7 @@ install_docker()
     echo ""
 
     $SH_C 'apt-get -y update >/dev/null'
-    $SH_C "apt-get install -yq docker-ce=$target_ver"
+    $SH_C "apt-get install -yq --allow-unauthenticated docker-ce=$target_ver"
   fi
 
   # Finish configuring for new installations...
@@ -280,7 +280,7 @@ install_docker_deps()
   $SH_C 'apt-get -y update >/dev/null'
 
   $SH_C 'apt-get install -y "linux-image-extra-$(uname -r)" >/dev/null'
-  $SH_C 'echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" >> /etc/apt/sources.list'
+  $SH_C 'echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list'
 
   if [ "$DISTRO_VER" == "14.04" ]; then
     $SH_C 'apt-get install -y "linux-image-extra-$(uname -r)" linux-image-extra-virtual >/dev/null'
@@ -330,7 +330,7 @@ install_kvm()
 bosh_deps_install()
 {
   echo ""
-  inf "Installing ubuntu dependencies for boch CLI..."
+  inf "Installing ubuntu dependencies for bosh CLI..."
   echo ""
 
   $SH_C 'apt-get install -yq zlibc zlib1g-dev ruby ruby-dev openssl libxslt-dev \
