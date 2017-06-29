@@ -127,8 +127,11 @@ install_node()
   if [ $install -eq 0 ]; then
     exec_cmd 'apt-get install -y python-software-properties apt-transport-https ca-certificates curl software-properties-common >/dev/null'
     exec_nonprv_cmd "wget -O /tmp/node-install.sh https://deb.nodesource.com/setup_8.x"
+    exec_nonprv_cmd "chmod +x /tmp/node-install.sh"
     exec_cmd "/tmp/node-install.sh"
     exec_cmd 'apt-get install -y nodejs >/dev/null'
+    exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER/.config"
+    exec_cmd "rm /tmp/node-install.sh"
   fi
 
   if command_exists yarn; then

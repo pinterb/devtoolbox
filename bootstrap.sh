@@ -418,6 +418,7 @@ dotfiles()
     else
       exec_nonprv_cmd "cp /home/$DEV_USER/.bashrc /home/$DEV_USER/.bashrc-$TODAY"
     fi
+    echo ""
   fi
 
   # handle .profile
@@ -445,6 +446,7 @@ dotfiles()
     else
       exec_nonprv_cmd "cp /home/$DEV_USER/.profile /home/$DEV_USER/.profile-$TODAY"
     fi
+    echo ""
   fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
