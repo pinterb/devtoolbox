@@ -1,4 +1,4 @@
-#!/bin/bash -
+
 
 HELM_VER="2.5.0"
 TERRAFORM_VER="0.9.8"

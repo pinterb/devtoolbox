@@ -48,20 +48,66 @@ SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # based on user, determine how commands will be executed
-SH_C='sh -c'
+# ### DEPRECATE THIS???
+SH_C='bash -c'
 if [ "$DEFAULT_USER" != 'root' ]; then
   if command_exists sudo; then
-    SH_C='sudo -E sh -c'
+    SH_C='sudo -E bash -c'
   elif command_exists su; then
     SH_C='su -c'
   else
-    cat >&2 <<-'EOF'
-    Error: this installer needs the ability to run commands as root.
-    We are unable to find either "sudo" or "su" available to make this happen.
-EOF
+    error "This installer needs the ability to run commands as root."
+    error "We are unable to find either "sudo" or "su" available to make this happen."
     exit 1
   fi
 fi
+
+
+bail() {
+  error "problems executing command, exiting"
+  exit 1
+}
+
+
+# execute a bash with sudo or su
+# ...without failure
+exec_cmd_nobail() {
+  inf "+ $1"
+
+  if [ "$DEFAULT_USER" != 'root' ]; then
+    if command_exists sudo; then
+      sudo -E bash -c "$1"
+    elif command_exists su; then
+      su -c "$1"
+    else
+      error "This installer needs the ability to run commands as root."
+      error "We are unable to find either "sudo" or "su" available to make this happen."
+      exit 1
+    fi
+  else
+    bash -c "$1"
+  fi
+}
+
+
+# execute a bash with sudo or su
+exec_cmd() {
+  exec_cmd_nobail "$1" || bail
+}
+
+
+# execute as a non-privileged user
+# ...without failure
+exec_nonprv_cmd_nobail() {
+  inf "+ $1"
+  bash -c "$1"
+}
+
+
+# execute as a non-privileged user
+exec_nonprv_cmd() {
+  exec_nonprv_cmd_nobail "$1" || bail
+}
 
 
 usage() {
@@ -342,8 +388,14 @@ binfiles()
   echo ""
   inf "Copying binfiles..."
   echo ""
-  mkdir -p "/home/$DEV_USER/bin"
-  cp -R "$PROGDIR/binfiles/." "/home/$DEV_USER/bin"
+
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
+    su -c "cp -R $PROGDIR/binfiles/. /home/$DEV_USER/bin" "$DEV_USER"
+  else
+    exec_nonprv_cmd "mkdir -p /home/$DEV_USER/bin"
+    exec_nonprv_cmd "cp -R $PROGDIR/binfiles/. /home/$DEV_USER/bin"
+  fi
 }
 
 
@@ -357,14 +409,14 @@ dotfiles()
   if [ -f "/home/$DEV_USER/.bashrc" ]; then
     if [ ! -f "/home/$DEV_USER/.bashrc-orig" ]; then
       inf "Backing up .bashrc file"
-      cp "/home/$DEV_USER/.bashrc" "/home/$DEV_USER/.bashrc-orig"
+      exec_nonprv_cmd "cp /home/$DEV_USER/.bashrc /home/$DEV_USER/.bashrc-orig"
 
       if [ -f "$PROGDIR/dotfiles/bashrc" ]; then
         inf "Copying new Debian-based .bashrc file"
-        cp "$PROGDIR/dotfiles/bashrc" "/home/$DEV_USER/.bashrc"
+        exec_nonprv_cmd "cp $PROGDIR/dotfiles/bashrc /home/$DEV_USER/.bashrc"
       fi
     else
-      cp "/home/$DEV_USER/.bashrc" "/home/$DEV_USER/.bashrc-$TODAY"
+      exec_nonprv_cmd "cp /home/$DEV_USER/.bashrc /home/$DEV_USER/.bashrc-$TODAY"
     fi
   fi
 
@@ -384,19 +436,19 @@ dotfiles()
       fi
 
       inf "Backing up .profile file"
-      cp "/home/$DEV_USER/.profile" "/home/$DEV_USER/.profile-orig"
+      exec_nonprv_cmd "cp /home/$DEV_USER/.profile /home/$DEV_USER/.profile-orig"
 
       if [ -f "$PROGDIR/dotfiles/profile" ]; then
         inf "Copying new .profile file"
-        cp "$PROGDIR/dotfiles/profile" "/home/$DEV_USER/.profile"
+        exec_nonprv_cmd "cp $PROGDIR/dotfiles/profile /home/$DEV_USER/.profile"
       fi
     else
-      cp "/home/$DEV_USER/.profile" "/home/$DEV_USER/.profile-$TODAY"
+      exec_nonprv_cmd "cp /home/$DEV_USER/.profile /home/$DEV_USER/.profile-$TODAY"
     fi
   fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
-    chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER"
+    exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
   fi
 }
 
@@ -411,7 +463,7 @@ enable_vim()
   mkdir -p "$inst_dir/autoload" "$inst_dir/colors"
 
   ## not quite sure yet which vim plugin manager to use
-#  $SH_C "curl -fLo $inst_dir/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+#  exec_cmd "curl -fLo $inst_dir/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
   curl -LSso "$inst_dir/autoload/pathogen.vim" https://tpo.pe/pathogen.vim
 
   # some vim colors
@@ -427,9 +479,9 @@ enable_vim()
 
   # some dot files
 #  if [ -d "/home/$DEV_USER/projects/dotfiles" ]; then
-#    $SH_C "cd /home/$DEV_USER/projects/dotfiles; git pull"
+#    exec_cmd "cd /home/$DEV_USER/projects/dotfiles; git pull"
 #  else
-#    $SH_C "git clone https://github.com/fatih/dotfiles /home/$DEV_USER/projects/dotfiles"
+#    exec_cmd "git clone https://github.com/fatih/dotfiles /home/$DEV_USER/projects/dotfiles"
 #  fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
@@ -532,11 +584,20 @@ enable_vim_ycm()
   local ycm_opts=
 
   if command_exists go; then
-    ycm_opts="--gocode-completer --tern-completer"
+    ycm_opts="${ycm_opts} --gocode-completer"
   fi
-    ycm_opts="--all"
 
-  sh -c "$inst_dir/youcompleteme/install.py $ycm_opts"
+  if command_exists node; then
+    ycm_opts="${ycm_opts} --tern-completer"
+  fi
+
+  #ycm_opts="--all"
+
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    su -c "$inst_dir/youcompleteme/install.py $ycm_opts" "$DEV_USER"
+  else
+    exec_nonprv_cmd "$inst_dir/youcompleteme/install.py $ycm_opts"
+  fi
 }
 
 
@@ -624,7 +685,7 @@ install_golang()
     source /tmp/install-golang/utils.sh
 
     if [ "$GOLANG_VER" == "$GOLANG_VERSION" ]; then
-      $SH_C '/tmp/install-golang/install-golang.sh'
+      exec_cmd '/tmp/install-golang/install-golang.sh'
     else
       error "expected golang version (i.e. $GOLANG_VER) doesn't match github.com/pinterb/install-golang.sh version (i.e. $GOLANG_VERSION)"
     fi
@@ -680,7 +741,7 @@ install_habitat()
       install=2
     else
       inf "habitat is already installed...but versions don't match"
-      $SH_C 'rm /usr/local/bin/hab'
+      exec_cmd 'rm /usr/local/bin/hab'
       install=1
     fi
   fi
@@ -691,7 +752,7 @@ install_habitat()
     tar zxvf /tmp/habitat.tar.gz -C /tmp
 
     chmod +x "/tmp/hab-${HABITAT_VER}-${HABITAT_VER_TS}-x86_64-linux/hab"
-    $SH_C "mv /tmp/hab-${HABITAT_VER}-${HABITAT_VER_TS}-x86_64-linux/hab /usr/local/bin/hab"
+    exec_cmd "mv /tmp/hab-${HABITAT_VER}-${HABITAT_VER_TS}-x86_64-linux/hab /usr/local/bin/hab"
 
     rm -rf "/tmp/hab-${HABITAT_VER}-${HABITAT_VER_TS}-x86_64-linux"
     rm /tmp/habitat.tar.gz
@@ -699,16 +760,16 @@ install_habitat()
     # set up hab group and user.
     # also add non-privileged user to hab group
     if [ $install -eq 0 ]; then
-      $SH_C 'groupadd -f hab'
+      exec_cmd 'groupadd -f hab'
       inf "added hab group"
       echo ""
-      $SH_C "useradd -g hab hab"
+      exec_cmd "useradd -g hab hab"
 
       if [ "$DEFAULT_USER" == 'root' ]; then
         chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
         usermod -a -G hab "$DEV_USER"
       else
-        $SH_C "usermod -aG hab $DEV_USER"
+        exec_cmd "usermod -aG hab $DEV_USER"
         inf "added $DEV_USER to group hab"
       fi
 
@@ -720,7 +781,7 @@ install_habitat()
   if [ "$DEFAULT_USER" == 'root' ]; then
     chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
   else
-    $SH_C "chown root:root /usr/local/bin/hab"
+    exec_cmd "chown root:root /usr/local/bin/hab"
   fi
 }
 
@@ -742,14 +803,14 @@ install_terraform()
       install=1
     else
       inf "terraform is already installed...but versions don't match"
-      $SH_C 'rm /usr/local/bin/terraform'
+      exec_cmd 'rm /usr/local/bin/terraform'
     fi
   fi
 
   if [ $install -eq 0 ]; then
     wget -O /tmp/terraform.zip \
       "https://releases.hashicorp.com/terraform/${TERRAFORM_VER}/terraform_${TERRAFORM_VER}_linux_amd64.zip"
-    $SH_C 'unzip /tmp/terraform.zip -d /usr/local/bin'
+    exec_cmd 'unzip /tmp/terraform.zip -d /usr/local/bin'
 
     rm /tmp/terraform.zip
   fi
@@ -783,7 +844,7 @@ install_azure()
   if [ $install -eq 0 ]; then
     wget -O /tmp/azure-cli.sh https://aka.ms/InstallAzureCli
     #chmod +x /tmp/azure-cli.sh
-    $SH_C 'bash /tmp/azure-cli.sh'
+    exec_cmd 'bash /tmp/azure-cli.sh'
 
     rm /tmp/azure-cli.sh
   fi
@@ -853,8 +914,8 @@ install_gcloud()
       install=1
     else
       inf "gcloud is already installed...but versions don't match"
-      $SH_C "rm -rf /home/$DEV_USER/bin/google-cloud-sdk"
-      #$SH_C "rm /home/$DEV_USER/bin/gcloud"
+      exec_cmd "rm -rf /home/$DEV_USER/bin/google-cloud-sdk"
+      #exec_cmd "rm /home/$DEV_USER/bin/gcloud"
     fi
   fi
 
@@ -871,7 +932,7 @@ install_gcloud()
     fi
 
     tar -zxvf /tmp/gcloud.tar.gz -C "/home/$DEV_USER/bin/"
-    #$SH_C 'unzip /tmp/terraform.zip -d /usr/local/bin'
+    #exec_cmd 'unzip /tmp/terraform.zip -d /usr/local/bin'
     "/home/$DEV_USER/bin/google-cloud-sdk/install.sh" --quiet --rc-path "/home/$DEV_USER/.profile" --usage-reporting true --command-completion true --path-update true
 
     rm /tmp/gcloud.tar.gz
@@ -902,8 +963,8 @@ install_ansible()
     return 0
   fi
 
-  $SH_C 'pip install git+git://github.com/ansible/ansible.git@devel'
-  $SH_C 'pip install ansible-lint'
+  exec_cmd 'pip install git+git://github.com/ansible/ansible.git@devel'
+  exec_cmd 'pip install ansible-lint'
 }
 
 
@@ -926,9 +987,9 @@ install_aws()
     #local version="$(aws --version | awk '{ print $2; exit }')"
     local version="$(aws --version)"
     warn "aws cli is already installed...attempting upgrade"
-    $SH_C 'pip install --upgrade awscli'
+    exec_cmd 'pip install --upgrade awscli'
   else
-    $SH_C 'pip install awscli'
+    exec_cmd 'pip install awscli'
   fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
@@ -950,12 +1011,12 @@ install_kops()
 
   if command_exists kops; then
     warn "kops is already installed...will re-install"
-    $SH_C 'rm /usr/local/bin/kops'
+    exec_cmd 'rm /usr/local/bin/kops'
   fi
 
   wget -O /tmp/kops "https://github.com/kubernetes/kops/releases/download/${KOPS_VER}/kops-linux-amd64"
   chmod +x /tmp/kops
-  $SH_C 'mv /tmp/kops /usr/local/bin/kops'
+  exec_cmd 'mv /tmp/kops /usr/local/bin/kops'
 }
 
 
@@ -972,7 +1033,7 @@ install_hyper()
 
   if command_exists hyper; then
     warn "hyper is already installed...will re-install"
-    $SH_C 'rm /usr/local/bin/hyper'
+    exec_cmd 'rm /usr/local/bin/hyper'
   fi
 
   wget -O /tmp/hyper-linux.tar.gz \
@@ -980,7 +1041,7 @@ install_hyper()
   tar zxvf /tmp/hyper-linux.tar.gz -C /tmp
 
   chmod +x /tmp/hyper
-  $SH_C 'mv /tmp/hyper /usr/local/bin/hyper'
+  exec_cmd 'mv /tmp/hyper /usr/local/bin/hyper'
   rm /tmp/hyper-linux.tar.gz
 }
 
@@ -998,7 +1059,7 @@ install_doctl()
 
   if command_exists doctl; then
     warn "doctl is already installed...will re-install"
-    $SH_C 'rm /usr/local/bin/doctl'
+    exec_cmd 'rm /usr/local/bin/doctl'
   fi
 
   wget -O /tmp/doctl-linux.tar.gz \
@@ -1006,7 +1067,7 @@ install_doctl()
   tar zxvf /tmp/doctl-linux.tar.gz -C /tmp
 
   chmod +x /tmp/doctl
-  $SH_C 'mv /tmp/doctl /usr/local/bin/doctl'
+  exec_cmd 'mv /tmp/doctl /usr/local/bin/doctl'
   rm /tmp/doctl-linux.tar.gz
 }
 
@@ -1030,14 +1091,14 @@ install_kube_aws()
 
   if command_exists kube-aws; then
     warn "kube-aws is already installed...will re-install"
-    $SH_C 'rm /usr/local/bin/kube-aws'
+    exec_cmd 'rm /usr/local/bin/kube-aws'
   fi
 
   wget -O /tmp/kube-aws.tar.gz "https://github.com/kubernetes-incubator/kube-aws/releases/download/v${KUBE_AWS_VER}/kube-aws-linux-amd64.tar.gz"
   tar zxvf /tmp/kube-aws.tar.gz -C /tmp
 
   chmod +x /tmp/linux-amd64/kube-aws
-  $SH_C 'mv /tmp/linux-amd64/kube-aws /usr/local/bin/kube-aws'
+  exec_cmd 'mv /tmp/linux-amd64/kube-aws /usr/local/bin/kube-aws'
   rm /tmp/kube-aws.tar.gz
   rm -rf /tmp/linux-amd64
 }
@@ -1068,7 +1129,7 @@ install_kubectl()
       install=1
     else
       inf "kubectl is already installed...but versions don't match"
-      $SH_C 'rm /usr/local/bin/kubectl'
+      exec_cmd 'rm /usr/local/bin/kubectl'
     fi
   fi
 
@@ -1102,8 +1163,8 @@ install_helm()
       install=1
     else
       inf "helm is already installed...but versions don't match"
-      $SH_C 'rm /usr/local/bin/helm'
-      $SH_C 'rm /usr/local/bin/tiller'
+      exec_cmd 'rm /usr/local/bin/helm'
+      exec_cmd 'rm /usr/local/bin/tiller'
     fi
   fi
 
@@ -1111,7 +1172,7 @@ install_helm()
     wget -O /tmp/helm.tar.gz \
       "https://storage.googleapis.com/kubernetes-helm/helm-v${HELM_VER}-linux-amd64.tar.gz"
     tar -zxvf /tmp/helm.tar.gz -C /tmp
-    $SH_C 'cp /tmp/linux-amd64/helm /usr/local/bin/'
+    exec_cmd 'cp /tmp/linux-amd64/helm /usr/local/bin/'
     rm /tmp/helm.tar.gz
     rm -rf "/tmp/linux-amd64"
   fi
@@ -1140,7 +1201,7 @@ install_bosh()
       install=1
     else
       inf "bosh is already installed...but versions don't match"
-      $SH_C 'rm /usr/local/bin/bosh'
+      exec_cmd 'rm /usr/local/bin/bosh'
     fi
   fi
 
@@ -1148,7 +1209,7 @@ install_bosh()
     wget -O /tmp/bosh \
       "https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-${BOSH_VER}-linux-amd64"
     chmod +x /tmp/bosh
-    $SH_C 'mv /tmp/bosh /usr/local/bin/'
+    exec_cmd 'mv /tmp/bosh /usr/local/bin/'
 
     # install 'create-env' dependencies
     bosh_deps_install
@@ -1178,7 +1239,7 @@ install_draft()
       install=1
     else
       inf "draft is already downloaded...but versions don't match"
-      $SH_C 'rm /usr/local/bin/draft'
+      exec_cmd 'rm /usr/local/bin/draft'
     fi
   fi
 
@@ -1186,7 +1247,7 @@ install_draft()
     wget -O /tmp/draft.tar.gz \
       "https://github.com/Azure/draft/releases/download/v${DRAFT_VER}/draft-v${DRAFT_VER}-linux-amd64.tar.gz"
     tar -zxvf /tmp/draft.tar.gz -C /tmp
-    $SH_C 'cp /tmp/linux-amd64/draft /usr/local/bin/'
+    exec_cmd 'cp /tmp/linux-amd64/draft /usr/local/bin/'
     rm /tmp/draft.tar.gz
     rm -rf "/tmp/linux-amd64"
 
@@ -1229,8 +1290,8 @@ install_minikube()
       install=1
     else
       inf "minikube is already installed...but versions don't match"
-      $SH_C 'rm /usr/local/bin/helm'
-      $SH_C 'rm /usr/local/bin/tiller'
+      exec_cmd 'rm /usr/local/bin/helm'
+      exec_cmd 'rm /usr/local/bin/tiller'
     fi
   fi
 
@@ -1238,7 +1299,7 @@ install_minikube()
     wget -O /tmp/minikube \
       "https://storage.googleapis.com/minikube/releases/v${MINIKUBE_VER}/minikube-linux-amd64"
     chmod +x /tmp/minikube
-    $SH_C 'mv /tmp/minikube /usr/local/bin/'
+    exec_cmd 'mv /tmp/minikube /usr/local/bin/'
   fi
 }
 
@@ -1288,7 +1349,7 @@ install_cfssl()
   else
     wget -O /tmp/cfssl_linux-amd64 "https://pkg.cfssl.org/R${CFSSL_VER}/cfssl_linux-amd64"
     chmod +x /tmp/cfssl_linux-amd64
-    $SH_C 'mv /tmp/cfssl_linux-amd64 /usr/local/bin/cfssl'
+    exec_cmd 'mv /tmp/cfssl_linux-amd64 /usr/local/bin/cfssl'
   fi
 
   if command_exists cfssljson; then
@@ -1296,7 +1357,7 @@ install_cfssl()
   else
     wget -O /tmp/cfssljson_linux-amd64 "https://pkg.cfssl.org/R${CFSSL_VER}/cfssljson_linux-amd64"
     chmod +x /tmp/cfssljson_linux-amd64
-    $SH_C 'mv /tmp/cfssljson_linux-amd64 /usr/local/bin/cfssljson'
+    exec_cmd 'mv /tmp/cfssljson_linux-amd64 /usr/local/bin/cfssljson'
   fi
 }
 
@@ -1313,9 +1374,9 @@ install_manuale()
   if command_exists manuale; then
     local version="$(manuale --version)"
     warn "manuale cli is already installed...attempting upgrade"
-    $SH_C 'pip3 install --upgrade manuale'
+    exec_cmd 'pip3 install --upgrade manuale'
   else
-    $SH_C 'pip3 install manuale'
+    exec_cmd 'pip3 install manuale'
   fi
 }
 
@@ -1364,7 +1425,7 @@ install_ngrok()
   if [ $install -eq 0 ]; then
     wget -O /tmp/ngrok.zip \
       "https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip"
-    $SH_C 'unzip /tmp/ngrok.zip -d /usr/local/bin'
+    exec_cmd 'unzip /tmp/ngrok.zip -d /usr/local/bin'
 
     rm /tmp/ngrok.zip
   fi
