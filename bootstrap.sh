@@ -46,6 +46,7 @@ INSTALL_BOSH=
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
+UNINSTALL=
 
 # based on user, determine how commands will be executed
 # ### DEPRECATE THIS???
@@ -149,6 +150,8 @@ usage() {
     --ngrok                create secure tunnels to localhost (ngrok.com)
     --tls-utils            utilities for managing TLS certificates (e.g. letsencrypt, cfssl)
     --vim                  vim-plug & choice plugins (e.g. vim-go)
+
+    --uninstall            uninstall specified package(s) or utilities
 
     -h --help              show this help
 
@@ -283,6 +286,8 @@ cmdline() {
       vim)
         readonly INSTALL_VIM=1
         ;;
+      uninstall)
+        readonly UNINSTALL=1
       h|help)
         usage
         exit 0
@@ -1503,6 +1508,10 @@ main() {
   valid_args
   prerequisites
 
+  if [ -n "$UNINSTALL" ]; then
+    source "${PROGDIR}/uninstall.sh"
+  fi
+
   #install_git_subrepo
 
   # base packages, files, etc.
@@ -1522,7 +1531,11 @@ main() {
 
   # golang handler
   if [ -n "$INSTALL_GOLANG" ]; then
-    install_golang
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_golang
+    else
+      install_golang
+    fi
   fi
 
   # terraform handler

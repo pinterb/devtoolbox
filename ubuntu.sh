@@ -10,6 +10,11 @@ base_setup()
   inf "Performing base setup..."
   echo ""
 
+  # For new bootstrap, start by updating...
+  if [ ! -d "/home/$DEV_USER/.bootstrap" ]; then
+    exec_cmd "apt-get -y update >/dev/null 2>&1"
+  fi
+
   if [ "$DEFAULT_USER" == 'root' ]; then
     su -c "mkdir -p /home/$DEV_USER/.bootstrap" "$DEV_USER"
     su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
