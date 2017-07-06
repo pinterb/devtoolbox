@@ -17,31 +17,31 @@ source "${PROGDIR}/$(echo $DISTRO_ID | tr '[:upper:]' '[:lower:]').sh"
 
 # cli arguments
 DEV_USER=
-ENABLE_BASE=
-ENABLE_DOTFILES=
-ENABLE_TLS=
-ENABLE_ANSIBLE=
-ENABLE_AWS=
-ENABLE_KOPS=
-ENABLE_KUBE_AWS=
-ENABLE_DOCKER=
-ENABLE_GOLANG=
-ENABLE_GCLOUD=
-ENABLE_TERRAFORM=
-ENABLE_VIM=
-ENABLE_PROTO_BUF=
-ENABLE_NODE=
-ENABLE_SERVERLESS=
-ENABLE_HYPER=
-ENABLE_DO=
-ENABLE_HABITAT=
-ENABLE_AZURE=
-ENABLE_NGROK=
-ENABLE_MINIKUBE=
-ENABLE_KUBECTL=
-ENABLE_HELM=
-ENABLE_DRAFT=
-ENABLE_BOSH=
+INSTALL_BASE=
+INSTALL_DOTFILES=
+INSTALL_TLS=
+INSTALL_ANSIBLE=
+INSTALL_AWS=
+INSTALL_KOPS=
+INSTALL_KUBE_AWS=
+INSTALL_DOCKER=
+INSTALL_GOLANG=
+INSTALL_GCLOUD=
+INSTALL_TERRAFORM=
+INSTALL_VIM=
+INSTALL_PROTO_BUF=
+INSTALL_NODE=
+INSTALL_SERVERLESS=
+INSTALL_HYPER=
+INSTALL_DO=
+INSTALL_HABITAT=
+INSTALL_AZURE=
+INSTALL_NGROK=
+INSTALL_MINIKUBE=
+INSTALL_KUBECTL=
+INSTALL_HELM=
+INSTALL_DRAFT=
+INSTALL_BOSH=
 
 # misc. flags
 SHOULD_WARM=0
@@ -209,79 +209,79 @@ cmdline() {
         DEV_USER=$OPTARG
         ;;
       ansible)
-        readonly ENABLE_ANSIBLE=1
+        readonly INSTALL_ANSIBLE=1
         ;;
       azure)
-        readonly ENABLE_AZURE=1
+        readonly INSTALL_AZURE=1
         ;;
       base-setup)
-        readonly ENABLE_BASE=1
+        readonly INSTALL_BASE=1
         ;;
       bosh)
-        readonly ENABLE_BOSH=1
+        readonly INSTALL_BOSH=1
         ;;
       docker)
-        readonly ENABLE_DOCKER=1
+        readonly INSTALL_DOCKER=1
         ;;
       dotfiles)
-        readonly ENABLE_DOTFILES=1
+        readonly INSTALL_DOTFILES=1
         ;;
       draft)
-        readonly ENABLE_DRAFT=1
+        readonly INSTALL_DRAFT=1
         ;;
       golang)
-        readonly ENABLE_GOLANG=1
+        readonly INSTALL_GOLANG=1
         ;;
       digitalocean)
-        readonly ENABLE_DO=1
+        readonly INSTALL_DO=1
         ;;
       aws)
-        readonly ENABLE_AWS=1
+        readonly INSTALL_AWS=1
         ;;
       gcloud)
-        readonly ENABLE_GCLOUD=1
+        readonly INSTALL_GCLOUD=1
         ;;
       habitat)
-        readonly ENABLE_HABITAT=1
+        readonly INSTALL_HABITAT=1
         ;;
       helm)
-        readonly ENABLE_HELM=1
+        readonly INSTALL_HELM=1
         ;;
       hyper)
-        readonly ENABLE_HYPER=1
+        readonly INSTALL_HYPER=1
         ;;
       kops)
-        readonly ENABLE_KOPS=1
+        readonly INSTALL_KOPS=1
         ;;
       kubectl)
-        readonly ENABLE_KUBECTL=1
+        readonly INSTALL_KUBECTL=1
         ;;
       kube-aws)
-        readonly ENABLE_KUBE_AWS=1
+        readonly INSTALL_KUBE_AWS=1
         ;;
       minikube)
-        readonly ENABLE_MINIKUBE=1
+        readonly INSTALL_MINIKUBE=1
         ;;
       ngrok)
-        readonly ENABLE_NGROK=1
+        readonly INSTALL_NGROK=1
         ;;
       node)
-        readonly ENABLE_NODE=1
+        readonly INSTALL_NODE=1
         ;;
       proto-buf)
-        readonly ENABLE_PROTO_BUF=1
+        readonly INSTALL_PROTO_BUF=1
         ;;
       serverless)
-        readonly ENABLE_SERVERLESS=1
+        readonly INSTALL_SERVERLESS=1
         ;;
       terraform)
-        readonly ENABLE_TERRAFORM=1
+        readonly INSTALL_TERRAFORM=1
         ;;
       tls-utils)
-        readonly ENABLE_TLS=1
+        readonly INSTALL_TLS=1
         ;;
       vim)
-        readonly ENABLE_VIM=1
+        readonly INSTALL_VIM=1
         ;;
       h|help)
         usage
@@ -676,13 +676,14 @@ install_golang()
   if command_exists go; then
     if [ $(go version | awk '{ print $3; exit }') == "go$GOLANG_VER" ]; then
       warn "go is already installed."
-      install=1
+      install=2
     else
       inf "go is already installed...but versions don't match"
+      install=1
     fi
   fi
 
-  if [ $install -eq 0 ]; then
+  if [ $install -le 1 ]; then
     git clone https://github.com/pinterb/install-golang.sh /tmp/install-golang
     source /tmp/install-golang/utils.sh
 
@@ -692,35 +693,36 @@ install_golang()
       error "expected golang version (i.e. $GOLANG_VER) doesn't match github.com/pinterb/install-golang.sh version (i.e. $GOLANG_VERSION)"
     fi
 
+    # clean-up
     rm -rf /tmp/install-golang
-  fi
 
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    warn "the non-privileged user will need to create & set their own GOPATH"
-  else
-    local gopath=$(go env GOPATH)
-    if [ -d "$gopath" ]; then
-      inf "Good news...your default GOPATH of \"$gopath\" already exists"
+    if [ "$DEFAULT_USER" == 'root' ]; then
+      warn "the non-privileged user will need to create & set their own GOPATH"
     else
-      inf "your default GOPATH of \"$gopath\" does not exist...creating it now"
-      mkdir -p "$gopath/bin"
-      mkdir -p "$gopath/src"
-      mkdir -p "$gopath/pkg"
+      local gopath=$(go env GOPATH 2> /dev/null || echo "/home/$DEV_USER/go")
+      if [ -d "$gopath" ]; then
+        inf "Good news...your default GOPATH of \"$gopath\" already exists"
+      else
+        inf "your default GOPATH of \"$gopath\" does not exist...creating it now"
+        mkdir -p "$gopath/bin"
+        mkdir -p "$gopath/src"
+        mkdir -p "$gopath/pkg"
 
-      # we don't want to overlay dot files after we modify .profile with GOPATH
-      mark_dotprofile_as_touched golang
+        # we don't want to overlay dot files after we modify .profile with GOPATH
+        mark_dotprofile_as_touched golang
 
-      inf "updating ~/.profile with GOPATH..."
-      echo "" >> "/home/$DEV_USER/.profile"
-      echo "# The following GOPATH was automatically added by $PROGDIR/$PROGNAME" >> "/home/$DEV_USER/.profile"
-      echo "export GOPATH=$gopath" >> "/home/$DEV_USER/.profile"
-      echo 'export PATH=$PATH:$GOPATH/bin' >> "/home/$DEV_USER/.profile"
+        inf "updating ~/.profile with GOPATH..."
+        echo "" >> "/home/$DEV_USER/.profile"
+        echo "# The following GOPATH was automatically added by $PROGDIR/$PROGNAME" >> "/home/$DEV_USER/.profile"
+        echo "export GOPATH=$gopath" >> "/home/$DEV_USER/.profile"
+        echo 'export PATH=$PATH:$GOPATH/bin' >> "/home/$DEV_USER/.profile"
 
-      # User must log off for these changes to take effect
-      LOGOFF_REQ=1
+        # User must log off for these changes to take effect
+        LOGOFF_REQ=1
 
-      # To uninstall, clean-up .profile by:
-      #sed -i.gopath-bak '/GOPATH/d' "/home/$DEV_USER/.profile"
+        # To uninstall, clean-up .profile by:
+        #sed -i.gopath-bak '/GOPATH/d' "/home/$DEV_USER/.profile"
+      fi
     fi
   fi
 }
@@ -1504,120 +1506,120 @@ main() {
   #install_git_subrepo
 
   # base packages, files, etc.
-  if [ -n "$ENABLE_BASE" ]; then
+  if [ -n "$INSTALL_BASE" ]; then
     install_base
   fi
 
   # dot files
-  if [ -n "$ENABLE_DOTFILES" ]; then
+  if [ -n "$INSTALL_DOTFILES" ]; then
     install_dotfiles
   fi
 
   # tls utilities
-  if [ -n "$ENABLE_TLS" ]; then
+  if [ -n "$INSTALL_TLS" ]; then
     install_tls
   fi
 
   # golang handler
-  if [ -n "$ENABLE_GOLANG" ]; then
+  if [ -n "$INSTALL_GOLANG" ]; then
     install_golang
   fi
 
   # terraform handler
-  if [ -n "$ENABLE_TERRAFORM" ]; then
+  if [ -n "$INSTALL_TERRAFORM" ]; then
     install_terraform
   fi
 
   # gcloud handler
-  if [ -n "$ENABLE_GCLOUD" ]; then
+  if [ -n "$INSTALL_GCLOUD" ]; then
     install_gcloud
   fi
 
   # aws handler
-  if [ -n "$ENABLE_AWS" ]; then
+  if [ -n "$INSTALL_AWS" ]; then
     install_aws
   fi
 
   # vim handler
-  if [ -n "$ENABLE_VIM" ]; then
+  if [ -n "$INSTALL_VIM" ]; then
     enable_vim
     enable_pathogen_bundles
   fi
 
   # ansible handler
-  if [ -n "$ENABLE_ANSIBLE" ]; then
+  if [ -n "$INSTALL_ANSIBLE" ]; then
     install_ansible
   fi
 
   # docker handler
-  if [ -n "$ENABLE_DOCKER" ]; then
+  if [ -n "$INSTALL_DOCKER" ]; then
     install_docker
   fi
 
   # kubectl handler
-  if [ -n "$ENABLE_KUBECTL" ]; then
+  if [ -n "$INSTALL_KUBECTL" ]; then
     install_kubectl
   fi
 
   # protobuf support (compile from source)
-  if [ -n "$ENABLE_PROTO_BUF" ]; then
+  if [ -n "$INSTALL_PROTO_BUF" ]; then
     install_protobuf
   fi
 
-  if [ -n "$ENABLE_NODE" ]; then
+  if [ -n "$INSTALL_NODE" ]; then
     install_node
   fi
 
   # kops handler
-  if [ -n "$ENABLE_KOPS" ]; then
+  if [ -n "$INSTALL_KOPS" ]; then
     install_terraform
     install_kops
   fi
 
   # kube-aws handler
-  if [ -n "$ENABLE_KUBE_AWS" ]; then
+  if [ -n "$INSTALL_KUBE_AWS" ]; then
     install_aws
     install_kube_aws
   fi
 
-  if [ -n "$ENABLE_SERVERLESS" ]; then
+  if [ -n "$INSTALL_SERVERLESS" ]; then
     install_node
     install_serverless
   fi
 
-  if [ -n "$ENABLE_HYPER" ]; then
+  if [ -n "$INSTALL_HYPER" ]; then
     install_hyper
   fi
 
-  if [ -n "$ENABLE_DO" ]; then
+  if [ -n "$INSTALL_DO" ]; then
     install_doctl
   fi
 
-  if [ -n "$ENABLE_HABITAT" ]; then
+  if [ -n "$INSTALL_HABITAT" ]; then
     install_habitat
   fi
 
-  if [ -n "$ENABLE_AZURE" ]; then
+  if [ -n "$INSTALL_AZURE" ]; then
     install_azure
   fi
 
-  if [ -n "$ENABLE_NGROK" ]; then
+  if [ -n "$INSTALL_NGROK" ]; then
     install_ngrok
   fi
 
-  if [ -n "$ENABLE_HELM" ]; then
+  if [ -n "$INSTALL_HELM" ]; then
     install_helm
   fi
 
-  if [ -n "$ENABLE_MINIKUBE" ]; then
+  if [ -n "$INSTALL_MINIKUBE" ]; then
     install_minikube
   fi
 
-  if [ -n "$ENABLE_DRAFT" ]; then
+  if [ -n "$INSTALL_DRAFT" ]; then
     install_draft
   fi
 
-  if [ -n "$ENABLE_BOSH" ]; then
+  if [ -n "$INSTALL_BOSH" ]; then
     install_bosh
   fi
 
