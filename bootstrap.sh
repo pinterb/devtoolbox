@@ -288,6 +288,7 @@ cmdline() {
         ;;
       uninstall)
         readonly UNINSTALL=1
+        ;;
       h|help)
         usage
         exit 0
@@ -705,13 +706,13 @@ install_golang()
       warn "the non-privileged user will need to create & set their own GOPATH"
     else
       local gopath=$(go env GOPATH 2> /dev/null || echo "/home/$DEV_USER/go")
-      if [ -d "$gopath" ]; then
-        inf "Good news...your default GOPATH of \"$gopath\" already exists"
+      mkdir -p "$gopath/bin"
+      mkdir -p "$gopath/src"
+      mkdir -p "$gopath/pkg"
+
+      if grep GOPATH "/home/$DEV_USER/.profile"; then
+        inf "/home/$DEV_USER/.profile already modified with GOPATH"
       else
-        inf "your default GOPATH of \"$gopath\" does not exist...creating it now"
-        mkdir -p "$gopath/bin"
-        mkdir -p "$gopath/src"
-        mkdir -p "$gopath/pkg"
 
         # we don't want to overlay dot files after we modify .profile with GOPATH
         mark_dotprofile_as_touched golang
@@ -724,9 +725,6 @@ install_golang()
 
         # User must log off for these changes to take effect
         LOGOFF_REQ=1
-
-        # To uninstall, clean-up .profile by:
-        #sed -i.gopath-bak '/GOPATH/d' "/home/$DEV_USER/.profile"
       fi
     fi
   fi
