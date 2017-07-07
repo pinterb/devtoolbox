@@ -1,111 +1,41 @@
-#!/bin/bash
 
 # vim: filetype=sh:tabstop=2:shiftwidth=2:expandtab
 
-# http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/
 
-base_setup()
+uninstall_letsencrypt()
 {
   echo ""
-  inf "Performing base setup..."
+  inf "Uninstalling Lets Encrypt package for Ubuntu..."
   echo ""
 
-  # For new bootstrap, start by updating...
-  if [ ! -d "/home/$DEV_USER/.bootstrap" ]; then
-    exec_cmd "apt-get -y update >/dev/null 2>&1"
-  fi
-
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    su -c "mkdir -p /home/$DEV_USER/.bootstrap" "$DEV_USER"
-    su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
-  else
-    mkdir -p "/home/$DEV_USER/.bootstrap"
-    mkdir -p "/home/$DEV_USER/bin"
-  fi
-
-  # in case a previous update failed
-  if [ -d "/var/lib/dpkg/updates" ]; then
-    exec_cmd 'cd /var/lib/dpkg/updates; rm -f *'
-  fi
-
-  # for asciinema support
-  exec_cmd 'apt-add-repository -y ppa:zanchey/asciinema >/dev/null 2>&1'
-
-  exec_cmd 'apt-get install -yq --allow-unauthenticated software-properties-common git mercurial subversion wget curl jq unzip vim gnupg2 \
-  build-essential autoconf automake libtool make g++ cmake make ssh gcc openssh-client python-dev python3-dev libssl-dev libffi-dev asciinema tree >/dev/null 2>&1'
-
-  exec_cmd 'apt-get -y update >/dev/null 2>&1'
-
-  if ! command_exists pip; then
-    echo ""
-    inf "replacing python-pip with easy_install pip"
-    echo ""
-    exec_cmd 'apt-get remove -y python-pip >/dev/null 2>&1'
-    exec_cmd 'apt-get install -y python-setuptools >/dev/null 2>&1'
-    exec_cmd 'easy_install pip >/dev/null 2>&1'
-    echo ""
-  fi
-
-  exec_cmd 'pip install --upgrade pyyaml >/dev/null 2>&1'
-  exec_cmd 'pip install --upgrade cookiecutter >/dev/null 2>&1'
-
-  if ! command_exists pip3; then
-    echo ""
-    inf "replacing python3-pip with easy_install pip3"
-    echo ""
-    exec_cmd 'apt-get install -y python3-setuptools >/dev/null 2>&1'
-    exec_cmd 'easy_install3 pip >/dev/null 2>&1'
-    echo ""
-  fi
-
-  exec_cmd 'pip3 install --upgrade pyyaml >/dev/null 2>&1'
-  exec_cmd 'pip3 install --upgrade cookiecutter >/dev/null 2>&1'
-
-  exec_cmd 'apt-get -y autoremove >/dev/null 2>&1'
-}
-
-
-install_letsencrypt()
-{
+  exec_cmd 'apt-get purge -yq letsencrypt >/dev/null 2>&1'
+  exec_cmd 'apt-get autoremove -yq >/dev/null 2>&1'
   echo ""
-  inf "Installing Lets Encrypt package for Ubuntu..."
-  echo ""
-
-  exec_cmd 'apt-get install -yq --allow-unauthenticated letsencrypt >/dev/null 2>&1'
-  exec_cmd 'apt-get -y update >/dev/null 2>&1'
 }
 
 
 ### certbot
 # https://certbot.eff.org/all-instructions/#ubuntu-16-04-xenial-none-of-the-above
 ###
-install_certbot()
+uninstall_certbot()
 {
   echo ""
-  inf "Installing certbot package for Ubuntu..."
+  inf "Uninstalling certbot package for Ubuntu..."
   echo ""
 
-  exec_cmd 'apt-add-repository -y ppa:certbot/certbot >/dev/null 2>&1'
-  exec_cmd 'apt-get -y update >/dev/null 2>&1'
-  exec_cmd 'apt-get install -yq --allow-unauthenticated certbot >/dev/null 2>&1'
+  exec_cmd 'pip uninstall -y certbot-s3front >/dev/null 2>&1'
+  exec_cmd 'apt-get purge -yq certbot >/dev/null 2>&1'
+  exec_cmd 'rm apt-get purge -yq certbot >/dev/null 2>&1'
 
-  echo ""
-  inf "   installing certbot plugin for Gandi..."
-  git clone https://github.com/Gandi/letsencrypt-gandi.git /tmp/letsencrypt-gandi
+  local release=$(lsb_release -cs)
 
-  if [ ! -d /tmp/letsencrypt-gandi ]; then
-    error "   failed to git clone gandi plugin repository"
-    exit 1
-  else
-    cd /tmp/letsencrypt-gandi
-    exec_cmd 'pip install -e . >/dev/null 2>&1'
-    cd -
-    exec_cmd 'rm -rf /tmp/letsencrypt-gandi'
+  if [ -f "/etc/apt/sources.list.d/certbot-ubuntu-certbot-$release.list" ]; then
+    exec_cmd "rm /etc/apt/sources.list.d/certbot-ubuntu-certbot-$release.list"
   fi
 
-  echo ""
-  inf "   installing certbot plugin for S3/CloudFront..."
-  exec_cmd 'pip install certbot-s3front >/dev/null 2>&1'
+  if [ -f "/etc/apt/sources.list.d/certbot-ubuntu-certbot-$release.save" ]; then
+    exec_cmd "rm /etc/apt/sources.list.d/certbot-ubuntu-certbot-$release.save"
+  fi
 
   echo ""
 }

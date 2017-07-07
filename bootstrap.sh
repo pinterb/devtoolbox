@@ -12,11 +12,13 @@ readonly TODAY=$(date +%Y%m%d%H%M%S)
 # pull in utils
 source "${PROGDIR}/utils.sh"
 
-# pull in distro-specific functions
-source "${PROGDIR}/$(echo $DISTRO_ID | tr '[:upper:]' '[:lower:]').sh"
+## pull in distro-specific install / uninstall functions
+#source "${PROGDIR}/dist/$(echo $DISTRO_ID | tr '[:upper:]' '[:lower:]')/install.sh"
+#source "${PROGDIR}/dist/$(echo $DISTRO_ID | tr '[:upper:]' '[:lower:]')/uninstall.sh"
 
 # cli arguments
 DEV_USER=
+UNINSTALL=
 INSTALL_BASE=
 INSTALL_DOTFILES=
 INSTALL_TLS=
@@ -46,7 +48,9 @@ INSTALL_BOSH=
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
-UNINSTALL=
+
+# list of packages with "uninstall" support
+UNINST_SUPPORT="tls, and golang"
 
 # based on user, determine how commands will be executed
 # ### DEPRECATE THIS???
@@ -151,7 +155,7 @@ usage() {
     --tls-utils            utilities for managing TLS certificates (e.g. letsencrypt, cfssl)
     --vim                  vim-plug & choice plugins (e.g. vim-go)
 
-    --uninstall            uninstall specified package(s) or utilities
+    --uninstall            uninstall specified package(s) or utilities (incl. $UNINST_SUPPORT)
 
     -h --help              show this help
 
@@ -342,6 +346,11 @@ distro_check()
     ;;
 
   esac
+
+  # pull in distro-specific install / uninstall functions
+  source "${PROGDIR}/dist/$(echo $DISTRO_ID | tr '[:upper:]' '[:lower:]')/install.sh"
+  source "${PROGDIR}/dist/$(echo $DISTRO_ID | tr '[:upper:]' '[:lower:]')/uninstall.sh"
+
 }
 
 
@@ -389,6 +398,22 @@ prerequisites() {
 }
 
 
+###
+# baseline packages and files
+###
+install_base()
+{
+  if function_exists base_setup; then
+    base_setup
+  else
+    error "baseline install function doesn't exist."
+    exit 1
+  fi
+
+  binfiles
+}
+
+
 binfiles()
 {
   echo ""
@@ -401,6 +426,20 @@ binfiles()
   else
     exec_nonprv_cmd "mkdir -p /home/$DEV_USER/bin"
     exec_nonprv_cmd "cp -R $PROGDIR/binfiles/. /home/$DEV_USER/bin"
+  fi
+}
+
+
+###
+# install opinionated dot files
+###
+install_dotfiles()
+{
+  if function_exists dotfiles; then
+    dotfiles
+  else
+    error "dot files install function doesn't exist."
+    exit 1
   fi
 }
 
@@ -628,105 +667,6 @@ install_git_subrepo()
   else
     inf "Setting up .profile"
     grep -q -F 'git-subrepo' "/home/$DEV_USER/.profile" || echo 'source "$HOME/projects/git-subrepo/.rc"' >> "/home/$DEV_USER/.profile"
-  fi
-}
-
-
-###
-# baseline packages and files
-###
-install_base()
-{
-  if function_exists base_setup; then
-    base_setup
-  else
-    error "baseline install function doesn't exist."
-    exit 1
-  fi
-
-  if function_exists binfiles; then
-    binfiles
-  else
-    error "bin files install function doesn't exist."
-    exit 1
-  fi
-}
-
-
-###
-# install opinionated dot files
-###
-install_dotfiles()
-{
-  if function_exists dotfiles; then
-    dotfiles
-  else
-    error "dot files install function doesn't exist."
-    exit 1
-  fi
-}
-
-
-
-### Golang
-# https://golang.org
-###
-install_golang()
-{
-  echo ""
-  inf "Installing Golang.."
-  echo ""
-
-  local install=0
-
-  if command_exists go; then
-    if [ $(go version | awk '{ print $3; exit }') == "go$GOLANG_VER" ]; then
-      warn "go is already installed."
-      install=2
-    else
-      inf "go is already installed...but versions don't match"
-      install=1
-    fi
-  fi
-
-  if [ $install -le 1 ]; then
-    git clone https://github.com/pinterb/install-golang.sh /tmp/install-golang
-    source /tmp/install-golang/utils.sh
-
-    if [ "$GOLANG_VER" == "$GOLANG_VERSION" ]; then
-      exec_cmd '/tmp/install-golang/install-golang.sh'
-    else
-      error "expected golang version (i.e. $GOLANG_VER) doesn't match github.com/pinterb/install-golang.sh version (i.e. $GOLANG_VERSION)"
-    fi
-
-    # clean-up
-    rm -rf /tmp/install-golang
-
-    if [ "$DEFAULT_USER" == 'root' ]; then
-      warn "the non-privileged user will need to create & set their own GOPATH"
-    else
-      local gopath=$(go env GOPATH 2> /dev/null || echo "/home/$DEV_USER/go")
-      mkdir -p "$gopath/bin"
-      mkdir -p "$gopath/src"
-      mkdir -p "$gopath/pkg"
-
-      if grep GOPATH "/home/$DEV_USER/.profile"; then
-        inf "/home/$DEV_USER/.profile already modified with GOPATH"
-      else
-
-        # we don't want to overlay dot files after we modify .profile with GOPATH
-        mark_dotprofile_as_touched golang
-
-        inf "updating ~/.profile with GOPATH..."
-        echo "" >> "/home/$DEV_USER/.profile"
-        echo "# The following GOPATH was automatically added by $PROGDIR/$PROGNAME" >> "/home/$DEV_USER/.profile"
-        echo "export GOPATH=$gopath" >> "/home/$DEV_USER/.profile"
-        echo 'export PATH=$PATH:$GOPATH/bin' >> "/home/$DEV_USER/.profile"
-
-        # User must log off for these changes to take effect
-        LOGOFF_REQ=1
-      fi
-    fi
   fi
 }
 
@@ -1311,101 +1251,6 @@ install_minikube()
 }
 
 
-###
-# TLS utilities
-###
-install_tls()
-{
-  if function_exists install_cfssl; then
-    install_cfssl
-  else
-    warn "cfssl install function doesn't exist."
-  fi
-
-  if function_exists install_letsencrypt; then
-    install_letsencrypt
-  else
-    warn "letsencrypt install function doesn't exist."
-  fi
-
-  if function_exists install_certbot; then
-    install_certbot
-  else
-    warn "certbot install function doesn't exist."
-  fi
-
-  install_manuale
-
-  # lego install using "go get -u" doesn't seem to work.  And dependencies are
-  # not defined in the project.
-  #install_lego
-}
-
-
-### cfssl cli
-# https://cfssl.org/
-###
-install_cfssl()
-{
-  echo ""
-  inf "Installing CloudFlare's PKI toolkit..."
-  echo ""
-
-  if command_exists cfssl; then
-    warn "cfssl is already installed."
-  else
-    wget -O /tmp/cfssl_linux-amd64 "https://pkg.cfssl.org/R${CFSSL_VER}/cfssl_linux-amd64"
-    chmod +x /tmp/cfssl_linux-amd64
-    exec_cmd 'mv /tmp/cfssl_linux-amd64 /usr/local/bin/cfssl'
-  fi
-
-  if command_exists cfssljson; then
-    warn "cfssljson is already installed."
-  else
-    wget -O /tmp/cfssljson_linux-amd64 "https://pkg.cfssl.org/R${CFSSL_VER}/cfssljson_linux-amd64"
-    chmod +x /tmp/cfssljson_linux-amd64
-    exec_cmd 'mv /tmp/cfssljson_linux-amd64 /usr/local/bin/cfssljson'
-  fi
-}
-
-
-### manuaLE (A python Lets Encrypt client)
-# https://github.com/veeti/manuale
-###
-install_manuale()
-{
-  echo ""
-  inf "Installing manuaLE Lets Encrypt client..."
-  echo ""
-
-  if command_exists manuale; then
-    local version="$(manuale --version)"
-    warn "manuale cli is already installed...attempting upgrade"
-    exec_cmd 'pip3 install --upgrade manuale'
-  else
-    exec_cmd 'pip3 install manuale'
-  fi
-}
-
-
-### lego (A golang Lets Encrypt client)
-# https://github.com/xenolf/lego
-###
-install_lego()
-{
-  echo ""
-  inf "Installing lego Lets Encrypt client..."
-  echo ""
-
-  if ! command_exists go; then
-    warn "golang is required to install this utility.  But golang doesn't appear to be installed.  So skipping install"
-  else
-    rm -rf "$GOPATH/src/github.com/xenolf/lego"
-    go get -u github.com/xenolf/lego
-  fi
-}
-
-
 ### ngrok
 # https://ngrok.com
 ###
@@ -1506,12 +1351,6 @@ main() {
   valid_args
   prerequisites
 
-  if [ -n "$UNINSTALL" ]; then
-    source "${PROGDIR}/uninstall.sh"
-  fi
-
-  #install_git_subrepo
-
   # base packages, files, etc.
   if [ -n "$INSTALL_BASE" ]; then
     install_base
@@ -1524,11 +1363,17 @@ main() {
 
   # tls utilities
   if [ -n "$INSTALL_TLS" ]; then
-    install_tls
+    source "${PROGDIR}/security/tls.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_tls
+    else
+      install_tls
+    fi
   fi
 
   # golang handler
   if [ -n "$INSTALL_GOLANG" ]; then
+    source "${PROGDIR}/lang/golang.sh"
     if [ -n "$UNINSTALL" ]; then
       uninstall_golang
     else
