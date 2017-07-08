@@ -2,6 +2,50 @@
 # vim: filetype=sh:tabstop=2:shiftwidth=2:expandtab
 
 
+base_restore()
+{
+  echo ""
+  inf "  restoring from base backup of packages, sources, keys, etc..."
+  echo ""
+
+  if [ -f "/home/$DEV_USER/.bootstrap/backup/$1/dotprofile" ]; then
+    exec_cmd "cp /home/$DEV_USER/.bootstrap/backup/$1/dotprofile /home/$DEV_USER/.profile"
+    exec_cmd "chown $DEV_USER:$DEV_USER /home/$DEV_USER/.profile"
+  fi
+
+  if [ -f "/home/$DEV_USER/.bootstrap/backup/$1/dotbashrc" ]; then
+    exec_cmd "cp /home/$DEV_USER/.bootstrap/backup/$1/dotbashrc /home/$DEV_USER/.bashrc"
+    exec_cmd "chown $DEV_USER:$DEV_USER /home/$DEV_USER/.bashrc"
+  fi
+
+  if [ -f "/home/$DEV_USER/.bootstrap/backup/$1/dotvimrc" ]; then
+    exec_cmd "cp /home/$DEV_USER/.bootstrap/backup/$1/dotvimrc /home/$DEV_USER/.vimrc"
+    exec_cmd "chown $DEV_USER:$DEV_USER /home/$DEV_USER/.vimrc"
+  fi
+
+  if [ -d "/home/$DEV_USER/.bootstrap/backup/$1/dotvim" ]; then
+    exec_cmd "rm -rf /home/$DEV_USER/.vim"
+    exec_cmd "cp -R /home/$DEV_USER/.bootstrap/backup/$1/dotvim /home/$DEV_USER/.vim"
+    exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER/.vim"
+  fi
+
+  exec_cmd "apt-key add /home/$DEV_USER/.bootstrap/backup/$1/Repo.keys"
+  exec_cmd "cp -R /home/$DEV_USER/.bootstrap/backup/$1/sources.list* /etc/apt/"
+  exec_cmd "chmod +r /etc/apt/sources.list* -R"
+  exec_cmd "apt-get update -y"
+  exec_cmd "apt-get install dselect"
+#  exec_cmd "dselect update"
+
+  if [ -f "/home/$DEV_USER/.bootstrap/backup/$1/Package.list" ]; then
+    exec_cmd "dpkg --clear-selections"
+    exec_cmd "dpkg --set-selections < /home/$DEV_USER/.bootstrap/backup/$1/Package.list"
+    exec_cmd "apt-get dselect-upgrade -y"
+  fi
+
+  echo ""
+}
+
+
 uninstall_letsencrypt()
 {
   echo ""
