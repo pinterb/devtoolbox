@@ -14,62 +14,76 @@ base_setup()
   if [ ! -d "/home/$DEV_USER/.bootstrap" ]; then
     exec_cmd "apt-get -y update >/dev/null 2>&1"
     # ...and then backup
+    # NOTE: base_backup should create .bootstrap directory
     base_backup
-  fi
-
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    su -c "mkdir -p /home/$DEV_USER/.bootstrap" "$DEV_USER"
-    su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
   else
-    mkdir -p "/home/$DEV_USER/.bootstrap"
-    mkdir -p "/home/$DEV_USER/bin"
+    inf "  \"/home/$DEV_USER/.bootstrap\" already created"
   fi
 
-  # in case a previous update failed
-  if [ -d "/var/lib/dpkg/updates" ]; then
-    exec_cmd 'cd /var/lib/dpkg/updates; rm -f *'
+  if [ ! -f "/home/$DEV_USER/.bootstrap/basepkgs" ]; then
+    base_packages
+  else
+    inf "  base packages already added"
   fi
 
-  # for asciinema support
-  exec_cmd 'apt-add-repository -y ppa:zanchey/asciinema >/dev/null 2>&1'
-
-  exec_cmd 'apt-get install -yq --allow-unauthenticated software-properties-common git mercurial subversion wget curl jq unzip vim gnupg2 \
-  build-essential autoconf automake libtool make g++ cmake make ssh gcc openssh-client python-dev python3-dev libssl-dev libffi-dev asciinema tree >/dev/null 2>&1'
-
-  exec_cmd 'apt-get -y update >/dev/null 2>&1'
-
-  if ! command_exists lsb_release; then
-    echo ""
-    inf "installing lsb_release..."
-    exec_cmd 'apt-get install -yq lsb-release'
-  fi
-
-  if ! command_exists pip; then
-    echo ""
-    inf "replacing python-pip with easy_install pip"
-    echo ""
-    exec_cmd 'apt-get remove -y python-pip >/dev/null 2>&1'
-    exec_cmd 'apt-get install -y python-setuptools >/dev/null 2>&1'
-    exec_cmd 'easy_install pip >/dev/null 2>&1'
-    echo ""
-  fi
-
-  exec_cmd 'pip install --upgrade pyyaml >/dev/null 2>&1'
-  exec_cmd 'pip install --upgrade cookiecutter >/dev/null 2>&1'
-
-  if ! command_exists pip3; then
-    echo ""
-    inf "replacing python3-pip with easy_install pip3"
-    echo ""
-    exec_cmd 'apt-get install -y python3-setuptools >/dev/null 2>&1'
-    exec_cmd 'easy_install3 pip >/dev/null 2>&1'
-    echo ""
-  fi
-
-  exec_cmd 'pip3 install --upgrade pyyaml >/dev/null 2>&1'
-  exec_cmd 'pip3 install --upgrade cookiecutter >/dev/null 2>&1'
-
-  exec_cmd 'apt-get -y autoremove >/dev/null 2>&1'
+#  if [ ! -f "/home/$DEV_USER/bin" ]; then
+#    if [ "$DEFAULT_USER" == 'root' ]; then
+#      su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
+#    else
+#      mkdir -p "/home/$DEV_USER/bin"
+#    fi
+#  else
+#    inf "  \"/home/$DEV_USER/bin\" already created"
+#  fi
+#
+#  local pkgs="software-properties-common jq unzip gnupg2 build-essential autoconf automake libtool g++ cmake gcc openssh-client python-dev python3-dev libssl-dev libffi-dev tree"
+#
+#  exec_cmd 'apt-get install -yq --allow-unauthenticated software-properties-common jq unzip gnupg2 \
+#  build-essential autoconf automake libtool g++ cmake gcc openssh-client python-dev python3-dev libssl-dev libffi-dev asciinema tree >/dev/null 2>&1'
+#
+#  exec_cmd 'apt-get -y update >/dev/null 2>&1'
+#
+#  # for asciinema support
+#  if ! command_exists asciinema; then
+#    echo ""
+#    inf "installing asciinema..."
+#    exec_cmd 'apt-add-repository -y ppa:zanchey/asciinema >/dev/null 2>&1'
+#    pkgs="$pkgs asciinema"
+#  fi
+#
+#  # for lsb_release support
+#  if ! command_exists lsb_release; then
+#    echo ""
+#    inf "installing lsb_release..."
+#    exec_cmd 'apt-get install -yq lsb-release'
+#  fi
+#
+#  if ! command_exists pip; then
+#    echo ""
+#    inf "replacing python-pip with easy_install pip"
+#    echo ""
+#    exec_cmd 'apt-get remove -y python-pip >/dev/null 2>&1'
+#    exec_cmd 'apt-get install -y python-setuptools >/dev/null 2>&1'
+#    exec_cmd 'easy_install pip >/dev/null 2>&1'
+#    echo ""
+#  fi
+#
+#  exec_cmd 'pip install --upgrade pyyaml >/dev/null 2>&1'
+#  exec_cmd 'pip install --upgrade cookiecutter >/dev/null 2>&1'
+#
+#  if ! command_exists pip3; then
+#    echo ""
+#    inf "replacing python3-pip with easy_install pip3"
+#    echo ""
+#    exec_cmd 'apt-get install -y python3-setuptools >/dev/null 2>&1'
+#    exec_cmd 'easy_install3 pip >/dev/null 2>&1'
+#    echo ""
+#  fi
+#
+#  exec_cmd 'pip3 install --upgrade pyyaml >/dev/null 2>&1'
+#  exec_cmd 'pip3 install --upgrade cookiecutter >/dev/null 2>&1'
+#
+#  exec_cmd 'apt-get -y autoremove >/dev/null 2>&1'
 }
 
 
@@ -78,8 +92,91 @@ base_backup()
   echo ""
   inf "  performing base backup of packages, sources, keys, etc..."
   echo ""
+  _backup "orig"
+}
 
-  local bkup="orig"
+
+base_packages()
+{
+  echo ""
+  inf "  adding base packages, sources, utilities, etc..."
+  echo ""
+
+  if [ -f "/home/$DEV_USER/.bootstrap/basepkgs" ]; then
+    error "base packages already installed"
+    exit 1
+  fi
+
+  # in case a previous update failed
+  if [ -d "/var/lib/dpkg/updates" ]; then
+    #exec_cmd 'cd /var/lib/dpkg/updates && rm -f *'
+    exec_cmd 'rm -f /var/lib/dpkg/updates/*'
+  fi
+
+  local pkgs="software-properties-common jq unzip gnupg2 build-essential make autoconf automake"
+  pkgs="$pkgs libtool g++ cmake gcc openssh-client python-dev python3-dev libssl-dev libffi-dev tree"
+
+  # for asciinema support
+  if ! command_exists asciinema; then
+    exec_cmd 'apt-add-repository -y ppa:zanchey/asciinema >/dev/null 2>&1'
+    exec_cmd 'apt-get -yq update >/dev/null 2>&1'
+    pkgs="$pkgs asciinema"
+  fi
+
+  # for lsb_release support
+  if ! command_exists lsb_release; then
+    pkgs="$pkgs lsb-release"
+  fi
+
+  inf "    installing base packages..."
+  exec_cmd "apt-get install -yq --allow-unauthenticated $pkgs >/dev/null 2>&1"
+
+  if ! command_exists pip; then
+    echo ""
+    inf "    replacing python-pip with easy_install pip"
+    echo ""
+    exec_cmd 'apt-get remove -y python-pip >/dev/null 2>&1'
+    exec_cmd 'apt-get install -y python-setuptools >/dev/null 2>&1'
+    exec_cmd 'easy_install pip >/dev/null 2>&1'
+    echo ""
+  fi
+
+  if ! command_exists pip3; then
+    echo ""
+    inf "    replacing python3-pip with easy_install pip3"
+    echo ""
+    exec_cmd 'apt-get install -y python3-setuptools >/dev/null 2>&1'
+    exec_cmd 'easy_install3 pip >/dev/null 2>&1'
+    echo ""
+  fi
+
+  local pippkgs="pyyaml cookiecutter"
+  exec_cmd "pip install --upgrade $pippkgs >/dev/null 2>&1"
+  exec_cmd "pip3 install --upgrade $pippkgs >/dev/null 2>&1"
+
+  exec_cmd 'apt-get -y autoremove >/dev/null 2>&1'
+
+  exec_nonprv_cmd "touch /home/$DEV_USER/.bootstrap/basepkgs"
+}
+
+
+backup()
+{
+  if [[ -z $1 ]]; then
+    error "backup requires a 'name' param"
+    exit 1
+  fi
+
+  echo ""
+  inf "  performing base backup of packages, sources, keys, etc..."
+  echo ""
+  _backup $1
+}
+
+
+_backup()
+{
+  local bkup="${1:-orig}"
   if [ -d "/home/$DEV_USER/.bootstrap/backup/$bkup" ]; then
     bkup=$(date +"%Y%m%d%s")
   fi
