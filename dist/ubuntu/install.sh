@@ -13,6 +13,8 @@ base_setup()
   # For new bootstrap, start by updating...
   if [ ! -d "/home/$DEV_USER/.bootstrap" ]; then
     exec_cmd "apt-get -y update >/dev/null 2>&1"
+    # ...and then backup
+    base_backup
   fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
@@ -68,6 +70,47 @@ base_setup()
   exec_cmd 'pip3 install --upgrade cookiecutter >/dev/null 2>&1'
 
   exec_cmd 'apt-get -y autoremove >/dev/null 2>&1'
+}
+
+
+base_backup()
+{
+  echo ""
+  inf "  performing base backup of packages, sources, keys, etc..."
+  echo ""
+
+  local bkup="orig"
+  if [ -d "/home/$DEV_USER/.bootstrap/backup/$bkup" ]; then
+    bkup=$(date +"%Y%m%d%s")
+  fi
+
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    su -c "mkdir -p /home/$DEV_USER/.bootstrap/backup/$bkup" "$DEV_USER"
+  else
+    mkdir -p "/home/$DEV_USER/.bootstrap/backup/$bkup"
+  fi
+
+  exec_cmd "dpkg --get-selections > /home/$DEV_USER/.bootstrap/backup/$bkup/Package.list"
+  exec_cmd "cp -R /etc/apt/sources.list* /home/$DEV_USER/.bootstrap/backup/$bkup/"
+  exec_cmd "apt-key exportall > /home/$DEV_USER/.bootstrap/backup/$bkup/Repo.keys"
+
+  if [ -f "/home/$DEV_USER/.profile" ]; then
+    exec_cmd "cp /home/$DEV_USER/.profile /home/$DEV_USER/.bootstrap/backup/$bkup/dotprofile"
+  fi
+
+  if [ -f "/home/$DEV_USER/.bashrc" ]; then
+    exec_cmd "cp /home/$DEV_USER/.bashrc /home/$DEV_USER/.bootstrap/backup/$bkup/dotbashrc"
+  fi
+
+  if [ -f "/home/$DEV_USER/.vimrc" ]; then
+    exec_cmd "cp /home/$DEV_USER/.vimrc /home/$DEV_USER/.bootstrap/backup/$bkup/dotvimrc"
+  fi
+
+  if [ -d "/home/$DEV_USER/.vim" ]; then
+    exec_cmd "cp -R /home/$DEV_USER/.vim /home/$DEV_USER/.bootstrap/backup/$bkup/dotvim"
+  fi
+
+  echo ""
 }
 
 
