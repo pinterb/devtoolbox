@@ -7,23 +7,23 @@
 base_setup()
 {
   echo ""
-  inf "Performing base setup..."
+  hdr "Performing base setup..."
   echo ""
 
   # For new bootstrap, start by updating...
-  if [ ! -d "/home/$DEV_USER/.bootstrap" ]; then
+  if ! is_backed_up; then
+#  if [ ! -d "/home/$DEV_USER/.bootstrap" ]; then
     exec_cmd "apt-get -y update >/dev/null 2>&1"
     # ...and then backup
     # NOTE: base_backup should create .bootstrap directory
     base_backup
-  else
-    inf "  \"/home/$DEV_USER/.bootstrap\" already created"
   fi
 
-  if [ ! -f "/home/$DEV_USER/.bootstrap/basepkgs" ]; then
+  if ! is_installed basepkgs; then
+#  if [ ! -f "/home/$DEV_USER/.bootstrap/basepkgs" ]; then
     base_packages
   else
-    inf "  base packages already added"
+    inf "base packages already added"
   fi
 
 #  if [ ! -f "/home/$DEV_USER/bin" ]; then
@@ -33,7 +33,7 @@ base_setup()
 #      mkdir -p "/home/$DEV_USER/bin"
 #    fi
 #  else
-#    inf "  \"/home/$DEV_USER/bin\" already created"
+#    inf "\"/home/$DEV_USER/bin\" already created"
 #  fi
 #
 #  local pkgs="software-properties-common jq unzip gnupg2 build-essential autoconf automake libtool g++ cmake gcc openssh-client python-dev python3-dev libssl-dev libffi-dev tree"
@@ -90,7 +90,7 @@ base_setup()
 base_backup()
 {
   echo ""
-  inf "  performing base backup of packages, sources, keys, etc..."
+  inf "performing base backup of packages, sources, keys, etc..."
   echo ""
   _backup "orig"
 }
@@ -99,10 +99,10 @@ base_backup()
 base_packages()
 {
   echo ""
-  inf "  adding base packages, sources, utilities, etc..."
+  inf "adding base packages, sources, utilities, etc..."
   echo ""
 
-  if [ -f "/home/$DEV_USER/.bootstrap/basepkgs" ]; then
+  if is_installed basepkgs; then
     error "base packages already installed"
     exit 1
   fi
@@ -128,12 +128,12 @@ base_packages()
     pkgs="$pkgs lsb-release"
   fi
 
-  inf "    installing base packages..."
+  inf "installing base packages..."
   exec_cmd "apt-get install -yq --allow-unauthenticated $pkgs >/dev/null 2>&1"
 
   if ! command_exists pip; then
     echo ""
-    inf "    replacing python-pip with easy_install pip"
+    inf "replacing python-pip with easy_install pip"
     echo ""
     exec_cmd 'apt-get remove -y python-pip >/dev/null 2>&1'
     exec_cmd 'apt-get install -y python-setuptools >/dev/null 2>&1'
@@ -143,7 +143,7 @@ base_packages()
 
   if ! command_exists pip3; then
     echo ""
-    inf "    replacing python3-pip with easy_install pip3"
+    inf "replacing python3-pip with easy_install pip3"
     echo ""
     exec_cmd 'apt-get install -y python3-setuptools >/dev/null 2>&1'
     exec_cmd 'easy_install3 pip >/dev/null 2>&1'
@@ -156,7 +156,8 @@ base_packages()
 
   exec_cmd 'apt-get -y autoremove >/dev/null 2>&1'
 
-  exec_nonprv_cmd "touch /home/$DEV_USER/.bootstrap/basepkgs"
+  #exec_nonprv_cmd "touch /home/$DEV_USER/.bootstrap/basepkgs"
+  mark_install_as_touched basepkgs
 }
 
 
@@ -168,7 +169,7 @@ backup()
   fi
 
   echo ""
-  inf "  performing base backup of packages, sources, keys, etc..."
+  inf "performing base backup of packages, sources, keys, etc..."
   echo ""
   _backup $1
 }
@@ -214,7 +215,7 @@ _backup()
 install_letsencrypt()
 {
   echo ""
-  inf "Installing Lets Encrypt package for Ubuntu..."
+  inf "installing Lets Encrypt package for Ubuntu..."
   echo ""
 
   if ! command_exists letsencrypt; then
@@ -233,7 +234,7 @@ install_letsencrypt()
 install_certbot()
 {
   echo ""
-  inf "Installing certbot package for Ubuntu..."
+  inf "installing certbot package for Ubuntu..."
   echo ""
 
   local install=0
@@ -249,11 +250,11 @@ install_certbot()
   fi
 
   echo ""
-  inf "   installing certbot plugin for Gandi..."
+  inf "installing certbot plugin for Gandi..."
   git clone https://github.com/Gandi/letsencrypt-gandi.git /tmp/letsencrypt-gandi
 
   if [ ! -d /tmp/letsencrypt-gandi ]; then
-    error "   failed to git clone gandi plugin repository"
+    error "failed to git clone gandi plugin repository"
     exit 1
   else
     cd /tmp/letsencrypt-gandi
@@ -263,7 +264,7 @@ install_certbot()
   fi
 
   echo ""
-  inf "   installing certbot plugin for S3/CloudFront..."
+  inf "installing certbot plugin for S3/CloudFront..."
   exec_cmd 'pip install certbot-s3front >/dev/null 2>&1'
 
   echo ""

@@ -5,14 +5,14 @@
 install_golang()
 {
   echo ""
-  inf "Installing Golang.."
+  hdr "Installing Golang.."
   echo ""
 
   local install=0
 
   if command_exists go; then
     if [ $(go version | awk '{ print $3; exit }') == "go$GOLANG_VER" ]; then
-      warn "go is already installed."
+      warn "go is already installed"
       install=2
     else
       inf "go is already installed...but versions don't match"
@@ -56,16 +56,19 @@ install_golang()
 
         # User must log off for these changes to take effect
         LOGOFF_REQ=1
-      fi
-    fi
-  fi
+      fi # .profile contains GOPATH
+    fi # DEFAULT_USER == root
+
+    mark_install_as_touched golang
+  fi # install or upgrade
+
 }
 
 
 uninstall_golang()
 {
   echo ""
-  inf "Uninstalling Golang.."
+  hdr "Uninstalling Golang.."
   echo ""
 
   if command_exists go; then
@@ -87,6 +90,6 @@ uninstall_golang()
     fi
 
   else
-    warn "go is not installed."
+    warn "go is not installed"
   fi
 }

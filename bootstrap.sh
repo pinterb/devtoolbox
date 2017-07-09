@@ -54,18 +54,18 @@ UNINST_SUPPORT="tls, and golang"
 
 # based on user, determine how commands will be executed
 # ### DEPRECATE THIS???
-SH_C='bash -c'
-if [ "$DEFAULT_USER" != 'root' ]; then
-  if command_exists sudo; then
-    SH_C='sudo -E bash -c'
-  elif command_exists su; then
-    SH_C='su -c'
-  else
-    error "This installer needs the ability to run commands as root."
-    error "We are unable to find either "sudo" or "su" available to make this happen."
-    exit 1
-  fi
-fi
+#SH_C='bash -c'
+#if [ "$DEFAULT_USER" != 'root' ]; then
+#  if command_exists sudo; then
+#    SH_C='sudo -E bash -c'
+#  elif command_exists su; then
+#    SH_C='su -c'
+#  else
+#    error "This installer needs the ability to run commands as root."
+#    error "We are unable to find either "sudo" or "su" available to make this happen."
+#    exit 1
+#  fi
+#fi
 
 
 bail() {
@@ -77,7 +77,7 @@ bail() {
 # execute a bash with sudo or su
 # ...without failure
 exec_cmd_nobail() {
-  inf "+ $1"
+  cmd_inf "$1"
 
   if [ "$DEFAULT_USER" != 'root' ]; then
     if command_exists sudo; then
@@ -104,7 +104,7 @@ exec_cmd() {
 # execute as a non-privileged user
 # ...without failure
 exec_nonprv_cmd_nobail() {
-  inf "+ $1"
+  cmd_inf "$1"
   bash -c "$1"
 }
 
@@ -316,8 +316,8 @@ distro_check()
 {
   case "$DISTRO_ID" in
     Ubuntu)
-      inf "Configuring $DISTRO_ID $DISTRO_VER..."
-      inf ""
+      hdr "Configuring $DISTRO_ID $DISTRO_VER..."
+      echo ""
       sleep 4
     ;;
 
@@ -417,16 +417,20 @@ install_base()
 binfiles()
 {
   echo ""
-  inf "Copying binfiles..."
-  echo ""
+  inf "copying binfiles..."
 
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
-    su -c "cp -R $PROGDIR/binfiles/. /home/$DEV_USER/bin" "$DEV_USER"
-  else
-    exec_nonprv_cmd "mkdir -p /home/$DEV_USER/bin"
-    exec_nonprv_cmd "cp -R $PROGDIR/binfiles/. /home/$DEV_USER/bin"
-  fi
+#  if [ "$DEFAULT_USER" == 'root' ]; then
+#    su -c "mkdir -p /home/$DEV_USER/bin" "$DEV_USER"
+#    su -c "cp -R $PROGDIR/binfiles/. /home/$DEV_USER/bin" "$DEV_USER"
+#  else
+#    exec_nonprv_cmd "mkdir -p /home/$DEV_USER/bin"
+#    exec_nonprv_cmd "cp -R $PROGDIR/binfiles/. /home/$DEV_USER/bin"
+#  fi
+
+  exec_cmd "mkdir -p /home/$DEV_USER/bin"
+  exec_cmd "cp -R $PROGDIR/binfiles/. /home/$DEV_USER/bin"
+  exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER/bin"
+
 }
 
 
@@ -1354,6 +1358,10 @@ main() {
   # base packages, files, etc.
   if [ -n "$INSTALL_BASE" ]; then
     install_base
+  fi
+
+  if ! is_installed basepkgs; then
+    error "base setup should be performed before installing anything else"
   fi
 
   # dot files

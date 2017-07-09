@@ -57,16 +57,38 @@ readonly MEM_TOTAL_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
 # For non-privileged users, this may be our default user
 DEFAULT_USER="$(id -un 2>/dev/null || true)"
 
+MYINDENT="  "
+bump_indent() {
+  MYINDENT="  $MYINDENT"
+}
+
+reset_indent() {
+  MYINDENT="  "
+}
+
+set_indent() {
+  MYINDENT="$1"
+}
+
 warn() {
-  echo -e "\033[1;33mWARNING: $1\033[0m"
+  echo -e "\033[1;33m$MYINDENT+ WARNING: $1\033[0m"
 }
 
 error() {
-  echo -e "\033[0;31mERROR: $1\033[0m"
+  echo -e "\033[0;31m$MYINDENT+ ERROR: $1\033[0m"
 }
 
 inf() {
+  echo -e "\033[0;32m$MYINDENT+ $1\033[0m"
+}
+
+cmd_inf() {
+  echo -e "\033[0;32m$MYINDENT  ++ $1\033[0m"
+}
+
+hdr() {
   echo -e "\033[0;32m$1\033[0m"
+  reset_indent
 }
 
 follow() {
@@ -108,6 +130,49 @@ mark_dotprofile_as_touched() {
     mkdir -p "/home/$DEV_USER/.bootstrap/touched-dotprofile"
     echo 'modified by install script' > "/home/$DEV_USER/.bootstrap/touched-dotprofile/$@"
   fi
+}
+
+is_backed_up() {
+  local bkup="${1:-orig}"
+
+  if [ -d "/home/$DEV_USER/.bootstrap/backup/$bkup" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+is_installed() {
+  if [ ! -d "/home/$DEV_USER/.bootstrap/installed" ]; then
+    return 1
+  fi
+
+  if [ -f "/home/$DEV_USER/.bootstrap/installed/$1" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+mark_install_as_touched() {
+
+  if [ ! -d "/home/$DEV_USER/.bootstrap/installed" ]; then
+   # if [ "$DEFAULT_USER" == 'root' ]; then
+   #   su -c "mkdir -p /home/$DEV_USER/.bootstrap/installed" "$DEV_USER"
+   # else
+   #   bash -c "mkdir -p /home/$DEV_USER/.bootstrap/installed"
+   # fi
+    exec_cmd "mkdir -p /home/$DEV_USER/.bootstrap/installed"
+  fi
+
+  exec_cmd "touch /home/$DEV_USER/.bootstrap/installed/$1"
+  exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER/.bootstrap/installed/$1"
+
+#  if [ "$DEFAULT_USER" == 'root' ]; then
+#    su -c "touch /home/$DEV_USER/.bootstrap/installed/$1" "$DEV_USER"
+#  else
+#    bash -c "touch /home/$DEV_USER/.bootstrap/installed/$1"
+#  fi
 }
 
 semverParse() {
