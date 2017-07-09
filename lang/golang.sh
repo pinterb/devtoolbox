@@ -59,7 +59,7 @@ install_golang()
       fi # .profile contains GOPATH
     fi # DEFAULT_USER == root
 
-    mark_install_as_touched golang
+    mark_as_installed golang
   fi # install or upgrade
 
 }
@@ -89,6 +89,7 @@ uninstall_golang()
       warn "if you no longer want this directory, you'll need to remove it yourself"
     fi
 
+    mark_as_uninstalled golang
   else
     warn "go is not installed"
   fi

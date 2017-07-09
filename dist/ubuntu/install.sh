@@ -156,8 +156,7 @@ base_packages()
 
   exec_cmd 'apt-get -y autoremove >/dev/null 2>&1'
 
-  #exec_nonprv_cmd "touch /home/$DEV_USER/.bootstrap/basepkgs"
-  mark_install_as_touched basepkgs
+  mark_as_installed basepkgs
 }
 
 

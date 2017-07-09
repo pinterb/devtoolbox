@@ -154,7 +154,7 @@ is_installed() {
   fi
 }
 
-mark_install_as_touched() {
+mark_as_installed() {
 
   if [ ! -d "/home/$DEV_USER/.bootstrap/installed" ]; then
    # if [ "$DEFAULT_USER" == 'root' ]; then
@@ -173,6 +173,10 @@ mark_install_as_touched() {
 #  else
 #    bash -c "touch /home/$DEV_USER/.bootstrap/installed/$1"
 #  fi
+}
+
+mark_as_uninstalled() {
+  exec_cmd "rm -rf /home/$DEV_USER/.bootstrap/installed/$1"
 }
 
 semverParse() {

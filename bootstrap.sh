@@ -431,6 +431,8 @@ binfiles()
   exec_cmd "cp -R $PROGDIR/binfiles/. /home/$DEV_USER/bin"
   exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER/bin"
 
+  mark_as_installed binfiles
+
 }
 
 
@@ -501,17 +503,19 @@ dotfiles()
   if [ "$DEFAULT_USER" == 'root' ]; then
     exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
   fi
+
+  mark_as_installed dotfiles
 }
 
 
 enable_vim()
 {
   echo ""
-  inf "Enabling vim & pathogen..."
+  hdr "Enabling vim & pathogen..."
   echo ""
 
   local inst_dir="/home/$DEV_USER/.vim"
-  mkdir -p "$inst_dir/autoload" "$inst_dir/colors"
+  exec_cmd "mkdir -p $inst_dir/autoload $inst_dir/colors"
 
   ## not quite sure yet which vim plugin manager to use
 #  exec_cmd "curl -fLo $inst_dir/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
@@ -519,13 +523,13 @@ enable_vim()
 
   # some vim colors
   if [ -d "/home/$DEV_USER/projects/vim-colors-molokai" ]; then
-    cd /home/$DEV_USER/projects/vim-colors-molokai; git pull
+    exec_cmd "cd /home/$DEV_USER/projects/vim-colors-molokai; git pull"
   else
-    git clone https://github.com/fatih/molokai "/home/$DEV_USER/projects/vim-colors-molokai"
+    exec_cmd "git clone https://github.com/fatih/molokai /home/$DEV_USER/projects/vim-colors-molokai"
   fi
 
   if [ -f "/home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim" ]; then
-    cp "/home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim" "$inst_dir/colors/molokai.vim"
+    exec_cmd "cp /home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim $inst_dir/colors/molokai.vim"
   fi
 
   # some dot files
@@ -535,17 +539,14 @@ enable_vim()
 #    exec_cmd "git clone https://github.com/fatih/dotfiles /home/$DEV_USER/projects/dotfiles"
 #  fi
 
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER"
-#    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
-  fi
+  exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
 }
 
 
 enable_pathogen_bundles()
 {
   echo ""
-  inf "Enabling vim & pathogen bundles..."
+  hdr "Enabling vim & pathogen bundles..."
   echo ""
 
   local inst_dir="/home/$DEV_USER/.vim/bundle"
@@ -623,7 +624,7 @@ enable_pathogen_bundles()
 enable_vim_ycm()
 {
   echo ""
-  inf "Installing the YouCompleteMe vim plugin..."
+  hdr "Installing the YouCompleteMe vim plugin..."
   echo ""
 
   local inst_dir="/home/$DEV_USER/.vim/bundle"
@@ -655,7 +656,7 @@ enable_vim_ycm()
 install_git_subrepo()
 {
   echo ""
-  inf "Installing git-subrepo..."
+  hdr "Installing git-subrepo..."
   echo ""
 
   # pull down git-subrepo
