@@ -7,19 +7,19 @@ install_tls()
   if function_exists install_cfssl; then
     install_cfssl
   else
-    warn "cfssl install function doesn't exist."
+    warn "cfssl install function doesn't exist"
   fi
 
   if function_exists install_letsencrypt; then
     install_letsencrypt
   else
-    warn "letsencrypt install function doesn't exist."
+    warn "letsencrypt install function doesn't exist"
   fi
 
   if function_exists install_certbot; then
     install_certbot
   else
-    warn "certbot install function doesn't exist."
+    warn "certbot install function doesn't exist"
   fi
 
   install_manuale
@@ -34,19 +34,19 @@ uninstall_tls()
   if function_exists uninstall_cfssl; then
     uinstall_cfssl
   else
-    warn "cfssl uninstall function doesn't exist."
+    warn "cfssl uninstall function doesn't exist"
   fi
 
   if function_exists uninstall_letsencrypt; then
     uninstall_letsencrypt
   else
-    warn "letsencrypt uninstall function doesn't exist."
+    warn "letsencrypt uninstall function doesn't exist"
   fi
 
   if function_exists uninstall_certbot; then
     uninstall_certbot
   else
-    warn "certbot uninstall function doesn't exist."
+    warn "certbot uninstall function doesn't exist"
   fi
 
   uninstall_manuale
@@ -63,11 +63,11 @@ uninstall_tls()
 install_cfssl()
 {
   echo ""
-  inf "Installing CloudFlare's PKI toolkit..."
+  hdr "Installing CloudFlare's PKI toolkit..."
   echo ""
 
   if command_exists cfssl; then
-    warn "cfssl is already installed."
+    warn "cfssl is already installed"
   else
     wget -O /tmp/cfssl_linux-amd64 "https://pkg.cfssl.org/R${CFSSL_VER}/cfssl_linux-amd64"
     chmod +x /tmp/cfssl_linux-amd64
@@ -75,7 +75,7 @@ install_cfssl()
   fi
 
   if command_exists cfssljson; then
-    warn "cfssljson is already installed."
+    warn "cfssljson is already installed"
   else
     wget -O /tmp/cfssljson_linux-amd64 "https://pkg.cfssl.org/R${CFSSL_VER}/cfssljson_linux-amd64"
     chmod +x /tmp/cfssljson_linux-amd64
@@ -87,7 +87,7 @@ install_cfssl()
 uninstall_cfssl()
 {
   echo ""
-  inf "Uninstalling CloudFlare's PKI toolkit..."
+  hdr "Uninstalling CloudFlare's PKI toolkit..."
   echo ""
 
   if command_exists cfssl; then
@@ -110,7 +110,7 @@ uninstall_cfssl()
 install_manuale()
 {
   echo ""
-  inf "Installing manuaLE Lets Encrypt client..."
+  hdr "Installing manuaLE Lets Encrypt client..."
   echo ""
 
   if command_exists manuale; then
@@ -126,7 +126,7 @@ install_manuale()
 uninstall_manuale()
 {
   echo ""
-  inf "Uninstalling manuaLE Lets Encrypt client..."
+  hdr "Uninstalling manuaLE Lets Encrypt client..."
   echo ""
 
   if command_exists manuale; then
@@ -146,7 +146,7 @@ uninstall_manuale()
 install_lego()
 {
   echo ""
-  inf "Installing lego Lets Encrypt client..."
+  hdr "Installing lego Lets Encrypt client..."
   echo ""
 
   if ! command_exists go; then

@@ -451,7 +451,7 @@ install_dotfiles()
 dotfiles()
 {
   echo ""
-  inf "Copying dotfiles..."
+  hdr "Copying dotfiles..."
   echo ""
 
   # handle .bashrc
