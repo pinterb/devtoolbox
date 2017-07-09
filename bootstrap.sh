@@ -1362,6 +1362,7 @@ main() {
 
   if ! is_installed basepkgs; then
     error "base setup should be performed before installing anything else"
+    exit 1
   fi
 
   # dot files
