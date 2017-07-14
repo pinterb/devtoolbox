@@ -50,7 +50,7 @@ SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="gcloud, terraform, node.js, ngrok, tls, and golang"
 
 # based on user, determine how commands will be executed
 # ### DEPRECATE THIS???
@@ -772,97 +772,6 @@ install_azure()
 }
 
 
-### google cloud platform cli
-# https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
-###
-enable_gcloud()
-{
-  echo ""
-  inf "Enabling Google Cloud SDK..."
-  echo ""
-
-  local inst_dir="/home/$DEV_USER/.bootstrap/gcloud"
-
-  rm -rf "$inst_dir"
-  cp -R "$PROGDIR/gcloud" "$inst_dir"
-
-  cp "$inst_dir/gcloud_profile" "/home/$DEV_USER/.gcloud_profile"
-  cp "$inst_dir/gcloud_verify" "/home/$DEV_USER/.gcloud_verify"
-  sed -i -e "s@###MY_PROJECT_DIR###@/home/${DEV_USER}/.bootstrap/gcloud@" /home/$DEV_USER/.gcloud_verify
-  sed -i -e "s@###MY_BIN_DIR###@/home/${DEV_USER}/bin@" /home/$DEV_USER/.gcloud_verify
-
-  if [ -f "/home/$DEV_USER/.bash_profile" ]; then
-    inf "Setting up .bash_profile"
-    grep -q -F 'source "$HOME/.gcloud_profile"' "/home/$DEV_USER/.bash_profile" || echo 'source "$HOME/.gcloud_profile"' >> "/home/$DEV_USER/.bash_profile"
-    grep -q -F 'source "$HOME/.gcloud_verify"' "/home/$DEV_USER/.bash_profile" || echo 'source "$HOME/.gcloud_verify"' >> "/home/$DEV_USER/.bash_profile"
-  else
-    inf "Setting up .profile"
-    grep -q -F 'source "$HOME/.gcloud_profile"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.gcloud_profile"' >> "/home/$DEV_USER/.profile"
-    grep -q -F 'source "$HOME/.gcloud_verify"' "/home/$DEV_USER/.profile" || echo 'source "$HOME/.gcloud_verify"' >> "/home/$DEV_USER/.profile"
-  fi
-
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
-    chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_profile"
-    chown "$DEV_USER:$DEV_USER" "/home/$DEV_USER/.gcloud_verify"
-  else
-    echo ""
-    inf "Okay...Verifying Google Cloud SDK..."
-    echo ""
-    sh "$HOME/.gcloud_verify"
-  fi
-}
-
-
-### google cloud platform cli
-# https://cloud.google.com/sdk/downloads#versioned
-###
-install_gcloud()
-{
-  echo ""
-  inf "Installing google cloud sdk (aka gcloud)..."
-  echo ""
-
-  local install=0
-
-  if command_exists gcloud; then
-    if [ $(gcloud version | awk '{ print $4; exit }') == "$GCLOUD_VER" ]; then
-      warn "gcloud is already installed."
-      install=1
-    else
-      inf "gcloud is already installed...but versions don't match"
-      exec_cmd "rm -rf /home/$DEV_USER/bin/google-cloud-sdk"
-      #exec_cmd "rm /home/$DEV_USER/bin/gcloud"
-    fi
-  fi
-
-  if [ $install -eq 0 ]; then
-    wget -O /tmp/gcloud.tar.gz \
-      "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_VER}-linux-x86_64.tar.gz"
-
-    local checksum=$(sha256sum /tmp/gcloud.tar.gz | awk '{ print $1 }')
-    if [ "$checksum" != "$GCLOUD_CHECKSUM" ]; then
-      error "checksum verification failed:"
-      error "  expected: $GCLOUD_CHECKSUM"
-      error "    actual: $checksum"
-      exit 1
-    fi
-
-    tar -zxvf /tmp/gcloud.tar.gz -C "/home/$DEV_USER/bin/"
-    #exec_cmd 'unzip /tmp/terraform.zip -d /usr/local/bin'
-    "/home/$DEV_USER/bin/google-cloud-sdk/install.sh" --quiet --rc-path "/home/$DEV_USER/.profile" --usage-reporting true --command-completion true --path-update true
-
-    rm /tmp/gcloud.tar.gz
-
-    # we don't want to overlay dot files after we modify .profile with gcloud
-    mark_dotprofile_as_touched gcloud
-
-    # User must log off for these changes to take effect
-    LOGOFF_REQ=1
-  fi
-}
-
-
 
 ### ansible
 # http://docs.ansible.com/ansible/intro_installation.html#latest-releases-via-pip
@@ -1353,7 +1262,12 @@ main() {
 
   # gcloud handler
   if [ -n "$INSTALL_GCLOUD" ]; then
-    install_gcloud
+    source "${PROGDIR}/cloud/gcloud.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_gcloud
+    else
+      install_gcloud
+    fi
   fi
 
   # aws handler

@@ -20,8 +20,9 @@ DRAFT_VER="0.5.0"
 BOSH_VER="2.0.26"
 
 # https://cloud.google.com/sdk/downloads#versioned
-GCLOUD_VER="160.0.0"
-GCLOUD_CHECKSUM="e799bfbc35ee75f2b7c2181a9e090be28e7a1a73b92953e9087b77bc7fc7a894"
+GCLOUD_VER="162.0.1"
+GCLOUD_CHECKSUM="a3aec4fc769a00fb4f7525e471c04ad8e0c394193c1af7ca546095f9f72e314a"
+#GCLOUD_CHECKSUM="e799bfbc35ee75f2b7c2181a9e090be28e7a1a73b92953e9087b77bc7fc7a894"
 
 
 # Get distro data from /etc/os-release
