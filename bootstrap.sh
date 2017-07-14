@@ -50,7 +50,7 @@ SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="aws, gcloud, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 # based on user, determine how commands will be executed
 # ### DEPRECATE THIS???
@@ -842,32 +842,6 @@ install_hyper()
 }
 
 
-### DigitalOcean doctl
-# https://www.digitalocean.com/community/tutorials/how-to-use-doctl-the-official-digitalocean-command-line-client
-###
-install_doctl()
-{
-  echo ""
-  inf "Installing DigitalOcean doctl..."
-  echo ""
-
-  local inst_dir="/usr/local/bin"
-
-  if command_exists doctl; then
-    warn "doctl is already installed...will re-install"
-    exec_cmd 'rm /usr/local/bin/doctl'
-  fi
-
-  wget -O /tmp/doctl-linux.tar.gz \
-    https://github.com/digitalocean/doctl/releases/download/v${DOCTL_VER}/doctl-${DOCTL_VER}-linux-amd64.tar.gz
-  tar zxvf /tmp/doctl-linux.tar.gz -C /tmp
-
-  chmod +x /tmp/doctl
-  exec_cmd 'mv /tmp/doctl /usr/local/bin/doctl'
-  rm /tmp/doctl-linux.tar.gz
-}
-
-
 ### CoreOS kube-aws
 # https://coreos.com/kubernetes/docs/latest/kubernetes-on-aws.html#download-kube-aws
 ###
@@ -1259,6 +1233,17 @@ main() {
     fi
   fi
 
+  # digitalocean handler
+  if [ -n "$INSTALL_DO" ]; then
+    source "${PROGDIR}/cloud/digitalocean.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_doctl
+    else
+      install_doctl
+    fi
+  fi
+
+
 
   # vim handler
   if [ -n "$INSTALL_VIM" ]; then
@@ -1305,10 +1290,6 @@ main() {
 
   if [ -n "$INSTALL_HYPER" ]; then
     install_hyper
-  fi
-
-  if [ -n "$INSTALL_DO" ]; then
-    install_doctl
   fi
 
   if [ -n "$INSTALL_HABITAT" ]; then
