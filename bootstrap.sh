@@ -50,7 +50,7 @@ SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="tls, and golang"
+UNINST_SUPPORT="terraform, node.js, ngrok, tls, and golang"
 
 # based on user, determine how commands will be executed
 # ### DEPRECATE THIS???
@@ -738,41 +738,6 @@ install_habitat()
 }
 
 
-### Terraform
-# https://www.terraform.io/intro/getting-started/install.html
-###
-install_terraform()
-{
-  echo ""
-  inf "Installing Terraform..."
-  echo ""
-
-  local install=0
-
-  if command_exists terraform; then
-    if [ $(terraform version | awk '{ print $2; exit }') == "v$TERRAFORM_VER" ]; then
-      warn "terraform is already installed."
-      install=1
-    else
-      inf "terraform is already installed...but versions don't match"
-      exec_cmd 'rm /usr/local/bin/terraform'
-    fi
-  fi
-
-  if [ $install -eq 0 ]; then
-    wget -O /tmp/terraform.zip \
-      "https://releases.hashicorp.com/terraform/${TERRAFORM_VER}/terraform_${TERRAFORM_VER}_linux_amd64.zip"
-    exec_cmd 'unzip /tmp/terraform.zip -d /usr/local/bin'
-
-    rm /tmp/terraform.zip
-  fi
-
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
-  fi
-}
-
-
 ### Azure cli
 # https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
 ###
@@ -1256,40 +1221,6 @@ install_minikube()
 }
 
 
-### ngrok
-# https://ngrok.com
-###
-install_ngrok()
-{
-  echo ""
-  inf "Installing ngrok..."
-  echo ""
-
-  local install=0
-  local inst_dir="/usr/local/bin"
-
-  if command_exists ngrok; then
-    if [ $(ngrok version | awk '{ print $3; exit }') == "$NGROK_VER" ]; then
-      warn "ngrok is already installed."
-      install=1
-    else
-      inf "ngrok is already installed...but versions don't match. Will update in-place..."
-      install=2
-      ngrok update
-    fi
-  fi
-
-  if [ $install -eq 0 ]; then
-    wget -O /tmp/ngrok.zip \
-      "https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip"
-    exec_cmd 'unzip /tmp/ngrok.zip -d /usr/local/bin'
-
-    rm /tmp/ngrok.zip
-  fi
-
-}
-
-
 ### protocol buffers
 # https://developers.google.com/protocol-buffers/
 ###
@@ -1391,9 +1322,33 @@ main() {
     fi
   fi
 
+  # node.js handler
+  if [ -n "$INSTALL_NODE" ]; then
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_node
+    else
+      install_node
+    fi
+  fi
+
+  # ngrok handler
+  if [ -n "$INSTALL_NGROK" ]; then
+    source "${PROGDIR}/misc/ngrok.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_ngrok
+    else
+      install_ngrok
+    fi
+  fi
+
   # terraform handler
   if [ -n "$INSTALL_TERRAFORM" ]; then
-    install_terraform
+    source "${PROGDIR}/misc/terraform.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_terraform
+    else
+      install_terraform
+    fi
   fi
 
   # gcloud handler
@@ -1432,10 +1387,6 @@ main() {
     install_protobuf
   fi
 
-  if [ -n "$INSTALL_NODE" ]; then
-    install_node
-  fi
-
   # kops handler
   if [ -n "$INSTALL_KOPS" ]; then
     install_terraform
@@ -1449,7 +1400,7 @@ main() {
   fi
 
   if [ -n "$INSTALL_SERVERLESS" ]; then
-    install_node
+    #install_node
     install_serverless
   fi
 
@@ -1467,10 +1418,6 @@ main() {
 
   if [ -n "$INSTALL_AZURE" ]; then
     install_azure
-  fi
-
-  if [ -n "$INSTALL_NGROK" ]; then
-    install_ngrok
   fi
 
   if [ -n "$INSTALL_HELM" ]; then

@@ -220,6 +220,7 @@ install_letsencrypt()
   if ! command_exists letsencrypt; then
     exec_cmd 'apt-get install -yq --allow-unauthenticated letsencrypt >/dev/null 2>&1'
     exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    mark_as_installed letsencrypt
   else
     exec_cmd 'apt-get install --only-upgrade -yq letsencrypt >/dev/null'
   fi
@@ -246,6 +247,7 @@ install_certbot()
     exec_cmd 'apt-add-repository -y ppa:certbot/certbot >/dev/null 2>&1'
     exec_cmd 'apt-get -y update >/dev/null 2>&1'
     exec_cmd 'apt-get install -yq --allow-unauthenticated certbot >/dev/null 2>&1'
+    mark_as_installed certbot
   fi
 
   echo ""
@@ -276,7 +278,7 @@ install_certbot()
 install_node()
 {
   echo ""
-  inf "Installing Node.js..."
+  hdr "Installing Node.js..."
   echo ""
 
   local install=0
@@ -287,7 +289,7 @@ install_node()
     install=1
   fi
 
-  # Only need to install docker ppa for new installs
+  # Only need to install packages, download files, etc. for new installs
   if [ $install -eq 0 ]; then
     exec_cmd 'apt-get install -y python-software-properties apt-transport-https ca-certificates curl software-properties-common >/dev/null'
     exec_nonprv_cmd "wget -O /tmp/node-install.sh https://deb.nodesource.com/setup_8.x"
@@ -296,6 +298,7 @@ install_node()
     exec_cmd 'apt-get install -y nodejs >/dev/null'
     exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER/.config"
     exec_cmd "rm /tmp/node-install.sh"
+    mark_as_installed node
   fi
 
   if command_exists yarn; then
@@ -303,6 +306,7 @@ install_node()
     exec_cmd 'npm upgrade --global yarn >/dev/null'
   else
     exec_cmd 'npm install -g yarn >/dev/null'
+    mark_as_installed yarn
   fi
 }
 

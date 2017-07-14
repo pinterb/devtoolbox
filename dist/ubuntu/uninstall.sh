@@ -54,6 +54,7 @@ uninstall_letsencrypt()
 
   exec_cmd 'apt-get purge -yq letsencrypt >/dev/null 2>&1'
   exec_cmd 'apt-get autoremove -yq >/dev/null 2>&1'
+  mark_as_uninstalled letsencrypt
   echo ""
 }
 
@@ -69,7 +70,8 @@ uninstall_certbot()
 
   exec_cmd 'pip uninstall -y certbot-s3front >/dev/null 2>&1'
   exec_cmd 'apt-get purge -yq certbot >/dev/null 2>&1'
-  exec_cmd 'rm apt-get purge -yq certbot >/dev/null 2>&1'
+  exec_cmd 'apt-get autoremove -yq >/dev/null 2>&1'
+  mark_as_uninstalled certbot
 
   local release=$(lsb_release -cs)
 
@@ -88,38 +90,38 @@ uninstall_certbot()
 ### node.js
 # http://tecadmin.net/install-latest-nodejs-npm-on-ubuntu/#
 ###
-install_node()
+uninstall_node()
 {
   echo ""
-  inf "Installing Node.js..."
+  hdr "Uninstalling Node.js..."
   echo ""
 
-  local install=0
+  if command_exists yarn; then
+    exec_cmd 'npm uninstall -g yarn >/dev/null'
+    mark_as_uninstalled yarn
+  else
+    warn "yarn is not installed"
+  fi
 
   if command_exists node; then
-    inf "node.js is already installed. Will attempt to upgrade..."
-    exec_cmd 'apt-get install --only-upgrade -y nodejs >/dev/null'
-    install=1
-  fi
-
-  # Only need to install docker ppa for new installs
-  if [ $install -eq 0 ]; then
-    exec_cmd 'apt-get install -y python-software-properties apt-transport-https ca-certificates curl software-properties-common >/dev/null'
-    exec_nonprv_cmd "wget -O /tmp/node-install.sh https://deb.nodesource.com/setup_8.x"
-    exec_nonprv_cmd "chmod +x /tmp/node-install.sh"
-    exec_cmd "/tmp/node-install.sh"
-    exec_cmd 'apt-get install -y nodejs >/dev/null'
-    exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER/.config"
-    exec_cmd "rm /tmp/node-install.sh"
-  fi
-
-  if command_exists yarn; then
-    inf "yarn (nodejs package mgr) is already installed. Will attempt to upgrade..."
-    exec_cmd 'npm upgrade --global yarn >/dev/null'
+    exec_cmd 'apt-get purge -y nodejs >/dev/null'
+    mark_as_uninstalled node
   else
-    exec_cmd 'npm install -g yarn >/dev/null'
+    warn "node.js is not installed"
+  fi
+
+  if [ -f "/etc/apt/sources.list.d/nodesource.list" ]; then
+    exec_cmd 'rm /etc/apt/sources.list.d/nodesource.list'
+  fi
+
+  if [ -f "rm /etc/apt/sources.list.d/nodesource.save" ]; then
+    exec_cmd 'rm /etc/apt/sources.list.d/nodesource.save'
   fi
 }
+
+
+
+
 
 
 ### serverless
