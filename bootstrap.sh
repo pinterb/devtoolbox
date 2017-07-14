@@ -741,35 +741,35 @@ install_habitat()
 ### Azure cli
 # https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
 ###
-install_azure()
-{
-  echo ""
-  inf "Installing Azure cli..."
-  echo ""
-
-  local install=0
-
-  if command_exists az; then
-    if [ $(az --version | awk '{ print $2; exit }') == "($AZURE_VER)" ]; then
-      warn "azure cli is already installed."
-      install=1
-    else
-      inf "azure cli is already installed...but versions don't match"
-    fi
-  fi
-
-  if [ $install -eq 0 ]; then
-    wget -O /tmp/azure-cli.sh https://aka.ms/InstallAzureCli
-    #chmod +x /tmp/azure-cli.sh
-    exec_cmd 'bash /tmp/azure-cli.sh'
-
-    rm /tmp/azure-cli.sh
-  fi
-
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
-  fi
-}
+#install_azure_orig()
+#{
+#  echo ""
+#  inf "Installing Azure cli..."
+#  echo ""
+#
+#  local install=0
+#
+#  if command_exists az; then
+#    if [ $(az --version | awk '{ print $2; exit }') == "($AZURE_VER)" ]; then
+#      warn "azure cli is already installed."
+#      install=1
+#    else
+#      inf "azure cli is already installed...but versions don't match"
+#    fi
+#  fi
+#
+#  if [ $install -eq 0 ]; then
+#    wget -O /tmp/azure-cli.sh https://aka.ms/InstallAzureCli
+#    #chmod +x /tmp/azure-cli.sh
+#    exec_cmd 'bash /tmp/azure-cli.sh'
+#
+#    rm /tmp/azure-cli.sh
+#  fi
+#
+#  if [ "$DEFAULT_USER" == 'root' ]; then
+#    chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
+#  fi
+#}
 
 
 
@@ -1250,6 +1250,16 @@ main() {
     fi
   fi
 
+  # azure cli handler
+  if [ -n "$INSTALL_AZURE" ]; then
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_azure
+    else
+      install_azure
+    fi
+  fi
+
+
   # vim handler
   if [ -n "$INSTALL_VIM" ]; then
     enable_vim
@@ -1303,10 +1313,6 @@ main() {
 
   if [ -n "$INSTALL_HABITAT" ]; then
     install_habitat
-  fi
-
-  if [ -n "$INSTALL_AZURE" ]; then
-    install_azure
   fi
 
   if [ -n "$INSTALL_HELM" ]; then

@@ -119,6 +119,28 @@ uninstall_node()
   fi
 }
 
+uninstall_azure()
+{
+  echo ""
+  hdr "Uninstalling Azure cli..."
+  echo ""
+
+  if command_exists az; then
+    exec_cmd 'apt-get purge -y azure-cli >/dev/null'
+    mark_as_uninstalled azure-cli
+  else
+    warn "azure cli is not installed"
+  fi
+
+  if [ -f "/etc/apt/sources.list.d/azure-cli.list" ]; then
+    exec_cmd 'rm /etc/apt/sources.list.d/azure-cli.list'
+  fi
+
+  if [ -f "rm /etc/apt/sources.list.d/azure-cli.save" ]; then
+    exec_cmd 'rm /etc/apt/sources.list.d/azure-cli.save'
+  fi
+}
+
 
 
 

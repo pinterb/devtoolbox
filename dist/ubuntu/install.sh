@@ -250,6 +250,40 @@ install_node()
 }
 
 
+### Azure cli
+# https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
+###
+install_azure()
+{
+  echo ""
+  hdr "Installing Azure cli..."
+  echo ""
+
+  local install=0
+
+  if command_exists az; then
+    if [ $(az --version | awk '{ print $2; exit }') == "($AZURE_VER)" ]; then
+      warn "azure cli is already installed"
+      install=2
+    else
+      inf "azure cli is already installed...but versions don't match"
+      install=1
+      exec_cmd 'apt-get -y update >/dev/null 2>&1'
+      exec_cmd 'apt-get install -yq --allow-unauthenticated azure-cli >/dev/null 2>&1'
+    fi
+  fi
+
+  if [ $install -eq 0 ]; then
+    #exec_cmd 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/azure-cli.list'
+    exec_cmd 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ wheezy main" > /etc/apt/sources.list.d/azure-cli.list'
+    exec_cmd 'apt-key adv --keyserver packages.microsoft.com --recv-keys 417A0893'
+    exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    exec_cmd 'apt-get install -yq --allow-unauthenticated azure-cli >/dev/null 2>&1'
+    mark_as_installed azure-cli
+  fi
+}
+
+
 ### serverless
 #
 ###
