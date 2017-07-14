@@ -50,7 +50,7 @@ SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="gcloud, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="aws, gcloud, terraform, node.js, ngrok, tls, and golang"
 
 # based on user, determine how commands will be executed
 # ### DEPRECATE THIS???
@@ -794,36 +794,6 @@ install_ansible()
 }
 
 
-### aws cli
-# http://docs.aws.amazon.com/cli/latest/userguide/installing.html
-###
-install_aws()
-{
-  echo ""
-  inf "Installing AWS CLI..."
-  echo ""
-
-  local inst_dir="/home/$DEV_USER/.aws"
-
-  mkdir -p "$inst_dir"
-  cp "$PROGDIR/aws/config.tpl" "$inst_dir/"
-  cp "$PROGDIR/aws/credentials.tpl" "$inst_dir/"
-
-  if command_exists aws; then
-    #local version="$(aws --version | awk '{ print $2; exit }')"
-    local version="$(aws --version)"
-    warn "aws cli is already installed...attempting upgrade"
-    exec_cmd 'pip install --upgrade awscli'
-  else
-    exec_cmd 'pip install awscli'
-  fi
-
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
-  fi
-}
-
-
 ### kops
 # https://github.com/kubernetes/kops#linux
 ###
@@ -1272,7 +1242,12 @@ main() {
 
   # aws handler
   if [ -n "$INSTALL_AWS" ]; then
-    install_aws
+    source "${PROGDIR}/cloud/aws.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_aws
+    else
+      install_aws
+    fi
   fi
 
   # vim handler
