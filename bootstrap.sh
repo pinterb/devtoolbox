@@ -519,7 +519,7 @@ enable_vim()
 
   ## not quite sure yet which vim plugin manager to use
 #  exec_cmd "curl -fLo $inst_dir/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
-  curl -LSso "$inst_dir/autoload/pathogen.vim" https://tpo.pe/pathogen.vim
+  exec_cmd "curl -LSso $inst_dir/autoload/pathogen.vim https://tpo.pe/pathogen.vim"
 
   # some vim colors
   if [ -d "/home/$DEV_USER/projects/vim-colors-molokai" ]; then
@@ -614,10 +614,11 @@ enable_pathogen_bundles()
     cp "$PROGDIR/dotfiles/vimrc" "/home/$DEV_USER/.vimrc"
   fi
 
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER"
-    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
-  fi
+#  if [ "$DEFAULT_USER" == 'root' ]; then
+#    chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER"
+#    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
+#  fi
+  exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
 }
 
 
@@ -770,28 +771,6 @@ install_habitat()
 #    chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
 #  fi
 #}
-
-
-
-### ansible
-# http://docs.ansible.com/ansible/intro_installation.html#latest-releases-via-pip
-###
-install_ansible()
-{
-  echo ""
-  inf "Installing Ansible..."
-  echo ""
-
- if command_exists ansible; then
-    local version="$(ansible --version | awk '{ print $2; exit }')"
-    semverParse $version
-    warn "Ansible $version is already installed...skipping installation"
-    return 0
-  fi
-
-  exec_cmd 'pip install git+git://github.com/ansible/ansible.git@devel'
-  exec_cmd 'pip install ansible-lint'
-}
 
 
 ### kops
@@ -1243,8 +1222,6 @@ main() {
     fi
   fi
 
-
-
   # vim handler
   if [ -n "$INSTALL_VIM" ]; then
     enable_vim
@@ -1253,13 +1230,24 @@ main() {
 
   # ansible handler
   if [ -n "$INSTALL_ANSIBLE" ]; then
-    install_ansible
+    source "${PROGDIR}/cfgmgmt/ansible.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_ansible
+    else
+      install_ansible
+    fi
   fi
 
   # docker handler
   if [ -n "$INSTALL_DOCKER" ]; then
-    install_docker
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_docker
+    else
+      install_docker
+    fi
   fi
+
+
 
   # kubectl handler
   if [ -n "$INSTALL_KUBECTL" ]; then

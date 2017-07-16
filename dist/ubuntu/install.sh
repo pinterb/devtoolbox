@@ -336,10 +336,10 @@ install_serverless()
 install_docker()
 {
   echo ""
-  inf "Installing Docker Community Edition..."
+  hdr "Installing Docker Community Edition..."
   echo ""
 
-  inf "  removing any old Docker packages"
+  inf "removing any old Docker packages"
   exec_cmd 'apt-get remove docker docker-engine >/dev/null'
 
   local install=0
@@ -347,11 +347,11 @@ install_docker()
 
   if command_exists docker; then
     if [ $(docker -v | awk -F '[ ,]+' '{ print $3 }') == "$docker_ce_ver" ]; then
-      warn "  docker-ce is already installed...skipping installation"
+      warn "docker-ce is already installed...skipping installation"
       echo ""
       install=2
     else
-      inf "  docker-ce is already installed. But versions don't match, so will attempt to upgrade..."
+      inf "docker-ce is already installed. But versions don't match, so will attempt to upgrade..."
       echo ""
       install=1
     fi
@@ -367,10 +367,11 @@ install_docker()
   if [ $install -le 1 ]; then
     # Note: You can run "sudo apt-cache madison docker-ce" to see what versions
     # are available
-    local target_ver="$DOCKER_VER~ce-0~ubuntu-$(lsb_release -cs)"
+    #local target_ver="$DOCKER_VER~ce-0~ubuntu-$(lsb_release -cs)" #NOTE: This was valid prior to 17.0.6
+    local target_ver="$DOCKER_VER~ce-0~ubuntu"
 
     echo ""
-    inf "  installing / upgrading docker-ce"
+    inf "installing / upgrading docker-ce"
     echo ""
 
     exec_cmd 'apt-get -y update >/dev/null'
@@ -393,7 +394,7 @@ install_docker()
     echo "$DEV_USER" > /tmp/bootstrap_usermod_feh || exit 1
     exec_cmd 'usermod -aG docker $(cat /tmp/bootstrap_usermod_feh)'
     rm -f /tmp/bootstrap_usermod_feh || exit 1
-    inf "  added $DEV_USER to group docker"
+    inf "added $DEV_USER to group docker"
     echo ""
 
    ## Start Docker
@@ -403,33 +404,37 @@ install_docker()
      if [ ! -f "/var/run/docker.pid" ]; then
        exec_cmd 'systemctl start docker'
      else
-       inf "  Docker appears to already be running...will restart"
+       inf "Docker appears to already be running...will restart"
        echo ""
        exec_cmd 'systemctl restart docker'
      fi
 
     else
-     inf "  no systemctl found...assuming this OS is not using systemd (yet)"
+     inf "no systemctl found...assuming this OS is not using systemd (yet)"
      echo ""
 
      if [ ! -f "/var/run/docker.pid" ]; then
        exec_cmd 'service docker start'
      else
-       inf "  Docker appears to already be running"
+       inf "Docker appears to already be running"
        echo ""
      fi
-    fi
+    fi # systemctl
+
+    mark_as_installed docker
   fi
 
-  # User must log off for these changes to take effect
-  LOGOFF_REQ=1
+  if [ $install -eq 0 ]; then
+    # User must log off for these changes to take effect
+    LOGOFF_REQ=1
+  fi
 }
 
 
 install_docker_deps()
 {
   echo ""
-  inf "  adding ppa key and other prerequisites"
+  inf "adding ppa key and other prerequisites"
   echo ""
   exec_cmd 'apt-get install -y apt-transport-https ca-certificates curl software-properties-common >/dev/null'
   exec_cmd 'apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D >/dev/null'
