@@ -50,7 +50,7 @@ SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 # based on user, determine how commands will be executed
 # ### DEPRECATE THIS???
@@ -853,81 +853,6 @@ install_kube_aws()
 }
 
 
-### kubectl cli
-# http://kubernetes.io/docs/user-guide/prereqs/
-###
-install_kubectl()
-{
-  echo ""
-  inf "Installing kubectl CLI..."
-  echo ""
-
-  local install=0
-
-  if command_exists kubectl; then
-    local kubectl_loc=$(which kubectl)
-    if [ "$kubectl_loc" == "/home/$DEV_USER/bin/google-cloud-sdk/bin/kubectl" ]; then
-      error "it appears kubectl was installed using the google cloud sdk."
-      error "if you want to install using this --kubectl option;"
-      error "  then first uninstall gcloud version using 'gcloud components remove kubectl'"
-      exit 1
-    fi
-
-    if [ $(kubectl version | awk '{ print $5; exit }' | grep "v$KUBE_VER") ]; then
-      warn "kubectl is already installed."
-      install=1
-    else
-      inf "kubectl is already installed...but versions don't match"
-      exec_cmd 'rm /usr/local/bin/kubectl'
-    fi
-  fi
-
-  if [ $install -eq 0 ]; then
-    wget -O "/tmp/kubernetes.tar.gz" \
-      "https://github.com/kubernetes/kubernetes/releases/download/v${KUBE_VER}/kubernetes.tar.gz"
-    tar -zxvf /tmp/kubernetes.tar.gz -C /tmp
-    "/tmp/kubernetes/cluster/get-kube-binaries.sh"
-    cp /tmp/kubernetes/client/bin/kube* "/home/$DEV_USER/bin/"
-
-    rm /tmp/kubernetes.tar.gz
-    rm -rf /tmp/kubernetes
-  fi
-}
-
-
-### helm cli
-# https://github.com/kubernetes/helm
-###
-install_helm()
-{
-  echo ""
-  inf "Installing helm CLI..."
-  echo ""
-
-  local install=0
-
-  if command_exists helm; then
-    if [ $(helm version | awk -F: '{ print $3; exit }' | awk -F, '{ print $1; exit }' 2>/dev/null | grep "v${HELM_VER}") ]; then
-      warn "helm is already installed."
-      install=1
-    else
-      inf "helm is already installed...but versions don't match"
-      exec_cmd 'rm /usr/local/bin/helm'
-      exec_cmd 'rm /usr/local/bin/tiller'
-    fi
-  fi
-
-  if [ $install -eq 0 ]; then
-    wget -O /tmp/helm.tar.gz \
-      "https://storage.googleapis.com/kubernetes-helm/helm-v${HELM_VER}-linux-amd64.tar.gz"
-    tar -zxvf /tmp/helm.tar.gz -C /tmp
-    exec_cmd 'cp /tmp/linux-amd64/helm /usr/local/bin/'
-    rm /tmp/helm.tar.gz
-    rm -rf "/tmp/linux-amd64"
-  fi
-}
-
-
 ### bosh cli
 # https://bosh.io
 ###
@@ -1247,11 +1172,23 @@ main() {
     fi
   fi
 
-
-
   # kubectl handler
   if [ -n "$INSTALL_KUBECTL" ]; then
-    install_kubectl
+    source "${PROGDIR}/k8s/kubectl.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_kubectl
+    else
+      install_kubectl
+    fi
+  fi
+
+  if [ -n "$INSTALL_HELM" ]; then
+    source "${PROGDIR}/k8s/helm.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_helm
+    else
+      install_helm
+    fi
   fi
 
   # protobuf support (compile from source)
@@ -1282,10 +1219,6 @@ main() {
 
   if [ -n "$INSTALL_HABITAT" ]; then
     install_habitat
-  fi
-
-  if [ -n "$INSTALL_HELM" ]; then
-    install_helm
   fi
 
   if [ -n "$INSTALL_MINIKUBE" ]; then

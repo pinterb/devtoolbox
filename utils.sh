@@ -1,6 +1,6 @@
 
 
-HELM_VER="2.5.0"
+HELM_VER="2.5.1"
 TERRAFORM_VER="0.10.0-beta2"
 CFSSL_VER="1.2"
 KUBE_VER="1.6.6"
@@ -54,6 +54,21 @@ readonly CLOUD_PROVIDER=$([ -f /sys/class/dmi/id/bios_vendor ] && cat /sys/class
 
 # physical memory
 readonly MEM_TOTAL_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+
+# sys_arch discovers the architecture for this system.
+sys_arch() {
+  ARCH=$(uname -m)
+  case $ARCH in
+    armv5*) ARCH="armv5";;
+    armv6*) ARCH="armv6";;
+    armv7*) ARCH="armv7";;
+    aarch64) ARCH="arm64";;
+    x86) ARCH="386";;
+    x86_64) ARCH="amd64";;
+    i686) ARCH="386";;
+    i386) ARCH="386";;
+  esac
+}
 
 # For non-privileged users, this may be our default user
 DEFAULT_USER="$(id -un 2>/dev/null || true)"
