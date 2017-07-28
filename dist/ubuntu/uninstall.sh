@@ -41,6 +41,8 @@ base_restore()
     exec_cmd "dpkg --set-selections < /home/$DEV_USER/.bootstrap/backup/$1/Package.list"
     exec_cmd "apt-get dselect-upgrade -y"
   fi
+  
+  mark_as_uninstalled basepkgs
 
   echo ""
 }
