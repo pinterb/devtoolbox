@@ -44,13 +44,14 @@ INSTALL_KUBECTL=
 INSTALL_HELM=
 INSTALL_DRAFT=
 INSTALL_BOSH=
+INSTALL_XFCE=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 # based on user, determine how commands will be executed
 # ### DEPRECATE THIS???
@@ -154,6 +155,8 @@ usage() {
     --ngrok                create secure tunnels to localhost (ngrok.com)
     --tls-utils            utilities for managing TLS certificates (e.g. letsencrypt, cfssl)
     --vim                  vim-plug & choice plugins (e.g. vim-go)
+
+    --xfce                 XFCE window manager on Windows WSL
 
     --uninstall            uninstall specified package(s) or utilities (incl. $UNINST_SUPPORT)
 
@@ -289,6 +292,9 @@ cmdline() {
         ;;
       vim)
         readonly INSTALL_VIM=1
+        ;;
+      xfce)
+        readonly INSTALL_XFCE=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -455,6 +461,12 @@ dotfiles()
   echo ""
   hdr "Copying dotfiles..."
   echo ""
+
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    su -c "mkdir -p /home/$DEV_USER/.bootstrap/profile.d" "$DEV_USER"
+  else
+    mkdir -p "/home/$DEV_USER/.bootstrap/profile.d"
+  fi
 
   # handle .bashrc
   if [ -f "/home/$DEV_USER/.bashrc" ]; then
@@ -1190,6 +1202,16 @@ main() {
       install_helm
     fi
   fi
+
+  # xfce handler (only for windows wsl!)
+  if [ -n "$INSTALL_XFCE" ]; then
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_xfce
+    else
+      install_xfce
+    fi
+  fi
+
 
   # protobuf support (compile from source)
   if [ -n "$INSTALL_PROTO_BUF" ]; then

@@ -66,11 +66,6 @@ base_packages()
     pkgs="$pkgs lsb-release"
   fi
 
-  if microsoft_wsl; then
-    inf "this appears to be running on a Windows 10 device"
-    pkgs="$pkgs realpath xfce4"
-  fi
-
   inf "installing base packages..."
   exec_cmd "apt-get install -yq --allow-unauthenticated $pkgs >/dev/null 2>&1"
 
@@ -450,6 +445,27 @@ install_docker_deps()
   if [ "$DISTRO_VER" == "14.04" ]; then
     exec_cmd 'apt-get install -y "linux-image-extra-$(uname -r)" linux-image-extra-virtual >/dev/null'
   fi
+}
+
+
+### Install the XFCE window manager
+# https://xfce.org/
+#
+# NOTE: Currently, this is only intended for Ubuntu running from Windows' WSL (aka Bash on Windows)
+###
+install_xfce()
+{
+  echo ""
+  hdr "Installing XFCE window manager..."
+  echo ""
+
+  if ! microsoft_wsl; then
+    error "this doesn't appear to be a Windows WSL distribution of Ubuntu"
+    exit 1
+  fi
+
+  exec_cmd 'apt-get install -y realpath xfce4 >/dev/null'
+  mark_as_installed xfce
 }
 
 

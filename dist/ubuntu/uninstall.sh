@@ -119,6 +119,7 @@ uninstall_node()
   fi
 }
 
+
 uninstall_azure()
 {
   echo ""
@@ -138,50 +139,6 @@ uninstall_azure()
 
   if [ -f "rm /etc/apt/sources.list.d/azure-cli.save" ]; then
     exec_cmd 'rm /etc/apt/sources.list.d/azure-cli.save'
-  fi
-}
-
-
-### serverless
-#
-###
-install_serverless()
-{
-  echo ""
-  inf "Installing serverless utilities..."
-  echo ""
-
-  if command_exists serverless; then
-    echo "serverless client is already installed. Will attempt to upgrade..."
-    exec_cmd 'yarn global upgrade serverless >/dev/null'
-  else
-    exec_cmd 'yarn global add serverless >/dev/null'
-  fi
-
-  if command_exists apex; then
-    echo "apex client is already installed. Will attempt to upgrade..."
-    exec_cmd 'apex upgrade >/dev/null'
-  else
-    rm -rf /tmp/apex-install.sh
-    wget -O /tmp/apex-install.sh \
-      https://raw.githubusercontent.com/apex/apex/master/install.sh
-    chmod +x /tmp/apex-install.sh
-    exec_cmd '/tmp/apex-install.sh'
-  fi
-
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    chown "$DEV_USER":"$DEV_USER" -R "/home/$DEV_USER/.config/yarn/global/"
-    chown "$DEV_USER":"$DEV_USER" -R "/home/$DEV_USER/.cache"
-  else
-    sudo chown "$DEFAULT_USER":"$DEFAULT_USER" -R "/home/$DEFAULT_USER/.config/yarn/global/"
-    sudo chown "$DEFAULT_USER":"$DEFAULT_USER" -R "/home/$DEFAULT_USER/.cache"
-  fi
-
-  if command_exists functions; then
-    echo "google cloud functions emulator is already installed. Will attempt to upgrade..."
-    exec_cmd 'npm update -g @google-cloud/functions-emulator >/dev/null'
-  else
-    exec_cmd 'npm install -g @google-cloud/functions-emulator >/dev/null'
   fi
 }
 
@@ -223,52 +180,26 @@ uninstall_docker()
 }
 
 
-
-### Install libvirt and qemu-kvm
-# https://???
+### Uninstall the XFCE window manager
+# https://xfce.org/
+#
+# NOTE: Currently, this is only intended for Ubuntu running from Windows' WSL (aka Bash on Windows)
 ###
-install_kvm()
+uninstall_xfce()
 {
   echo ""
-  inf "Installing libvirt and qemu-kvm..."
+  hdr "Uninstalling XFCE window manager..."
   echo ""
 
-  if ! command_exists kvm-ok; then
-    exec_cmd 'apt-get install -yq cpu-checker'
-  fi
-  kvm-ok > /dev/null || error "kvm is not supported on this machine" && exit 1
-
-  exec_cmd 'apt-get install -yq qemu-kvm libvirt-bin virtinst bridge-utils'
-
-  # Add $DEV_USER to the libvirtd group (use libvirt group for rpm based
-  # distros) so you don't need to sudo
-  # Debian/Ubuntu (NOTE: For Ubuntu 17.04 change the group to `libvirt`)
-  if [ "$DISTRO_VER" > "16.10" ]; then
-    exec_cmd "usermod -a -G libvirt $DEV_USER"
-  else
-    exec_cmd "usermod -a -G libvirtd $DEV_USER"
+  if ! microsoft_wsl; then
+    error "this doesn't appear to be a Windows WSL distribution of Ubuntu"
+    exit 1
   fi
 
-  # Update your current session for the group change to take effect
-  # Debian/Ubuntu (NOTE: For Ubuntu 17.04 change the group to `libvirt`)
-  if [ "$DISTRO_VER" > "16.10" ]; then
-    exec_cmd 'newgrp libvirt'
-  else
-    exec_cmd 'newgrp libvirtd'
-  fi
+  exec_cmd 'apt-get purge -y realpath xfce4 >/dev/null'
+  exec_cmd 'apt-get autoremove -yq >/dev/null 2>&1'
+  mark_as_uninstalled xfce
 }
 
 
-### bosh dependencies
-# https://bosh.io/docs/cli-env-deps.html
-###
-bosh_deps_install()
-{
-  echo ""
-  inf "Installing ubuntu dependencies for bosh CLI..."
-  echo ""
 
-  exec_cmd 'apt-get install -yq zlibc zlib1g-dev ruby ruby-dev openssl libxslt-dev \
-    libxml2-dev libreadline6 libreadline6-dev libyaml-dev libsqlite3-dev sqlite3 >/dev/null 2>&1'
-  exec_cmd 'apt-get -y update >/dev/null 2>&1'
-}

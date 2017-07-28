@@ -38,6 +38,10 @@ install_kubectl()
 
     rm /tmp/kubernetes.tar.gz
     rm -rf /tmp/kubernetes
+
+    inf "updating ~/.bootstrap/profile.d/ with kubectl.."
+    echo "# The following was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/kubectl.sh"
+    echo "<(kubectl completion bash)"
     mark_as_installed kubectl
   fi
 }
@@ -51,6 +55,11 @@ uninstall_kubectl()
 
   if command_exists kubectl; then
     exec_cmd 'rm /usr/local/bin/kubectl'
+
+    if [ -f "/home/$DEV_USER/.bootstrap/profile.d/kubectl.sh" ]; then
+      exec_cmd "rm /home/$DEV_USER/.bootstrap/profile.d/kubectl.sh"
+    fi
+
     mark_as_uninstalled kubectl
   else
     warn "kubectl is not installed"

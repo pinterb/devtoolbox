@@ -41,23 +41,14 @@ install_golang()
       mkdir -p "$gopath/src"
       mkdir -p "$gopath/pkg"
 
-      if grep GOPATH "/home/$DEV_USER/.profile"; then
-        inf "/home/$DEV_USER/.profile already modified with GOPATH"
-      else
+      inf "updating ~/.bootstrap/profile.d/ with GOPATH..."
+      echo "# The following GOPATH was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
+      echo "export GOPATH=$gopath" >> "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
+      echo 'export PATH=$PATH:$GOPATH/bin' >> "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
 
-        # we don't want to overlay dot files after we modify .profile with GOPATH
-        mark_dotprofile_as_touched golang
-
-        inf "updating ~/.profile with GOPATH..."
-        echo "" >> "/home/$DEV_USER/.profile"
-        echo "# The following GOPATH was automatically added by $PROGDIR/$PROGNAME" >> "/home/$DEV_USER/.profile"
-        echo "export GOPATH=$gopath" >> "/home/$DEV_USER/.profile"
-        echo 'export PATH=$PATH:$GOPATH/bin' >> "/home/$DEV_USER/.profile"
-
-        # User must log off for these changes to take effect
-        LOGOFF_REQ=1
-      fi # .profile contains GOPATH
-    fi # DEFAULT_USER == root
+      # User must log off for these changes to take effect
+      LOGOFF_REQ=1
+    fi
 
     mark_as_installed golang
   fi # install or upgrade
@@ -78,7 +69,9 @@ uninstall_golang()
     exec_cmd '/tmp/install-golang/uninstall-golang.sh'
     rm -rf /tmp/install-golang
 
-    exec_cmd "sed -i.gopath-bak '/GOPATH/d' /home/$DEV_USER/.profile"
+    if [ -f "/home/$DEV_USER/.bootstrap/profile.d/golang.sh" ]; then
+      exec_cmd "rm /home/$DEV_USER/.bootstrap/profile.d/golang.sh"
+    fi
 
     if [ -f "/home/$DEV_USER/.bootstrap/touched-dotprofile/golang" ]; then
       exec_cmd "rm /home/$DEV_USER/.bootstrap/touched-dotprofile/golang"
