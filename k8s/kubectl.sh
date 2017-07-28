@@ -25,7 +25,7 @@ install_kubectl()
       install=1
     else
       inf "kubectl is already installed...but versions don't match"
-      exec_cmd 'rm /usr/local/bin/kubectl'
+      exec_cmd "rm /home/$DEV_USER/bin/kube*"
     fi
   fi
 
@@ -41,7 +41,7 @@ install_kubectl()
 
     inf "updating ~/.bootstrap/profile.d/ with kubectl.."
     echo "# The following was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/kubectl.sh"
-    echo "<(kubectl completion bash)"
+    echo "source <(kubectl completion bash)" >> "/home/$DEV_USER/.bootstrap/profile.d/kubectl.sh"
     mark_as_installed kubectl
   fi
 }
@@ -54,7 +54,7 @@ uninstall_kubectl()
   echo ""
 
   if command_exists kubectl; then
-    exec_cmd 'rm /usr/local/bin/kubectl'
+    exec_cmd "rm /home/$DEV_USER/bin/kube*"
 
     if [ -f "/home/$DEV_USER/.bootstrap/profile.d/kubectl.sh" ]; then
       exec_cmd "rm /home/$DEV_USER/.bootstrap/profile.d/kubectl.sh"
