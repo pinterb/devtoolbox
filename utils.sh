@@ -70,6 +70,13 @@ sys_arch() {
   esac
 }
 
+##
+# determine if this script is running on a Microsoft WSL version of Linux
+# https://stackoverflow.com/questions/38086185/how-to-check-if-a-program-is-run-in-bash-on-ubuntu-on-windows-and-not-just-plain
+microsoft_wsl() {
+  grep -qE "(Microsoft|WSL)" /proc/version &> /dev/null
+}
+
 # For non-privileged users, this may be our default user
 DEFAULT_USER="$(id -un 2>/dev/null || true)"
 

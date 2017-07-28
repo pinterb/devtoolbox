@@ -48,12 +48,11 @@ base_packages()
 
   # in case a previous update failed
   if [ -d "/var/lib/dpkg/updates" ]; then
-    #exec_cmd 'cd /var/lib/dpkg/updates && rm -f *'
     exec_cmd 'rm -f /var/lib/dpkg/updates/*'
   fi
 
   local pkgs="software-properties-common jq unzip gnupg2 build-essential make autoconf automake"
-  pkgs="$pkgs libtool g++ cmake gcc openssh-client python-dev python3-dev libssl-dev libffi-dev tree"
+  pkgs="$pkgs libtool g++ ctags cmake gcc openssh-client python-dev python3-dev libssl-dev libffi-dev tree"
 
   # for asciinema support
   if ! command_exists asciinema; then
@@ -65,6 +64,11 @@ base_packages()
   # for lsb_release support
   if ! command_exists lsb_release; then
     pkgs="$pkgs lsb-release"
+  fi
+
+  if microsoft_wsl; then
+    inf "this appears to be running on a Windows 10 device"
+    pkgs="$pkgs realpath xfce4"
   fi
 
   inf "installing base packages..."
