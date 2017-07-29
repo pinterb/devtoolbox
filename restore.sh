@@ -443,6 +443,10 @@ uninstall_deltas()
         xfce)
           uninstall_xfce
           ;;
+        protobuf)
+          source "${PROGDIR}/misc/protobuf.sh"
+          uninstall_protobuf
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

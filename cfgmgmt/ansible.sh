@@ -1,10 +1,9 @@
-
-# vim: filetype=sh:tabstop=2:shiftwidth=2:expandtab
-
 ### ansible
 # vim: filetype=sh:tabstop=2:shiftwidth=2:expandtab
 # http://docs.ansible.com/ansible/intro_installation.html#latest-releases-via-pip
 ###
+
+# vim: filetype=sh:tabstop=2:shiftwidth=2:expandtab
 
 
 install_ansible()

@@ -2,6 +2,9 @@
 # TLS utilities
 ###
 
+# vim: filetype=sh:tabstop=2:shiftwidth=2:expandtab
+
+
 install_tls()
 {
   if function_exists install_cfssl; then

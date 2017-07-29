@@ -2,6 +2,9 @@
 # https://www.terraform.io/intro/getting-started/install.html
 ###
 
+# vim: filetype=sh:tabstop=2:shiftwidth=2:expandtab
+
+
 install_terraform()
 {
   echo ""

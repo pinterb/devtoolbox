@@ -2,6 +2,8 @@
 # http://kubernetes.io/docs/user-guide/prereqs/
 ###
 
+# vim: filetype=sh:tabstop=2:shiftwidth=2:expandtab
+
 
 install_kubectl()
 {

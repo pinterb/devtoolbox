@@ -2,6 +2,9 @@
 # https://cloud.google.com/sdk/downloads#versioned
 ###
 
+# vim: filetype=sh:tabstop=2:shiftwidth=2:expandtab
+
+
 install_gcloud()
 {
   echo ""

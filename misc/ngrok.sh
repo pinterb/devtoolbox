@@ -2,6 +2,8 @@
 # https://ngrok.com
 ###
 
+# vim: filetype=sh:tabstop=2:shiftwidth=2:expandtab
+
 
 install_ngrok()
 {

@@ -2,6 +2,9 @@
 # http://docs.aws.amazon.com/cli/latest/userguide/installing.html
 ###
 
+# vim: filetype=sh:tabstop=2:shiftwidth=2:expandtab
+
+
 install_aws()
 {
   echo ""

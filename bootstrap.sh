@@ -836,49 +836,6 @@ install_minikube()
 }
 
 
-### protocol buffers
-# https://developers.google.com/protocol-buffers/
-###
-install_protobuf()
-{
-  echo ""
-  inf "Installing protocol buffers..."
-  echo ""
-  local install_proto=0
-
-  if command_exists protoc; then
-    if [ $(protoc --version | awk '{ print $2; exit }') == "$PROTOBUF_VER" ]; then
-      warn "protoc is already installed."
-      install_proto=1
-    else
-      inf "protoc is already installed...but versions don't match"
-    fi
-  fi
-
-  if [ $install_proto -eq 0 ]; then
-    wget -O /tmp/protoc.tar.gz "https://github.com/google/protobuf/archive/v${PROTOBUF_VER}.tar.gz"
-    tar -zxvf /tmp/protoc.tar.gz -C /tmp
-    rm /tmp/protoc.tar.gz
-    cd "/tmp/protobuf-${PROTOBUF_VER}" || exit 1
-    ./autogen.sh
-    ./configure
-    make
-    make check
-
-    if [ "$DEFAULT_USER" != 'root' ]; then
-      sudo make install
-      sudo ldconfig
-    else
-      make install
-      ldconfig
-    fi
-
-    rm -rf "/tmp/linux-amd64"
-    cd -
-  fi
-}
-
-
 ### ssh key generation for gce
 # https://cloud.google.com/compute/docs/instances/adding-removing-ssh-keys#project-wide
 ###
@@ -1064,11 +1021,17 @@ main() {
     fi
   fi
 
-
   # protobuf support (compile from source)
   if [ -n "$INSTALL_PROTO_BUF" ]; then
-    install_protobuf
+    source "${PROGDIR}/misc/protobuf.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_protobuf
+    else
+      install_protobuf
+    fi
   fi
+
+
 
   # kops handler
   if [ -n "$INSTALL_KOPS" ]; then
