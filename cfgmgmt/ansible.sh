@@ -26,6 +26,7 @@ install_ansible()
       exec_cmd 'pip install cryptography --upgrade'
       exec_cmd 'pip install git+git://github.com/ansible/ansible.git@devel --upgrade'
       exec_cmd 'pip install ansible-lint --upgrade'
+      mark_as_installed ansible
     fi
   fi
 

@@ -21,6 +21,9 @@ DEV_USER=
 UNINSTALL=
 EXCLUDE_BASE=
 
+# misc. flags
+LOGOFF_REQ=0
+
 # list of packages with "uninstall" support
 UNINST_SUPPORT="xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
@@ -79,7 +82,7 @@ usage() {
   It first attempts to uninstall any CLI's and other executables. It then restores base packages to original state.
 
   OPTIONS:
-    --user <userid>        non-privileged user account to be bootstrapped (NOTE: invalid option when running as non-privileged user)
+    --user <userid>        non-privileged user account to be restored (NOTE: this is an invalid option when running as non-privileged user)
 
     --exclude-base-setup   exclude base setup modifications from restore. Remove all other third-party utilities (incl. $UNINST_SUPPORT).
 
@@ -87,7 +90,8 @@ usage() {
 
 
   Examples:
-    $PROGNAME --user pinterb --golang
+    $PROGNAME --exclude-base-setup
+
 EOF
 }
 
@@ -347,7 +351,7 @@ uninstall_dotfiles()
       inf "Restoring up .profile file"
       exec_nonprv_cmd "cp /home/$DEV_USER/.profile-orig /home/$DEV_USER/.profile"
       exec_nonprv_cmd "rm /home/$DEV_USER/.profile-orig"
-    
+
     else
       warn ".profile backup file doesn't exist"
     fi
@@ -362,154 +366,8 @@ uninstall_dotfiles()
 }
 
 
-enable_vim()
-{
-  echo ""
-  hdr "Enabling vim & pathogen..."
-  echo ""
-
-  local inst_dir="/home/$DEV_USER/.vim"
-  exec_cmd "mkdir -p $inst_dir/autoload $inst_dir/colors"
-
-  ## not quite sure yet which vim plugin manager to use
-#  exec_cmd "curl -fLo $inst_dir/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
-  exec_cmd "curl -LSso $inst_dir/autoload/pathogen.vim https://tpo.pe/pathogen.vim"
-
-  # some vim colors
-  if [ -d "/home/$DEV_USER/projects/vim-colors-molokai" ]; then
-    exec_cmd "cd /home/$DEV_USER/projects/vim-colors-molokai; git pull"
-  else
-    exec_cmd "git clone https://github.com/fatih/molokai /home/$DEV_USER/projects/vim-colors-molokai"
-  fi
-
-  if [ -f "/home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim" ]; then
-    exec_cmd "cp /home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim $inst_dir/colors/molokai.vim"
-  fi
-
-  # some dot files
-#  if [ -d "/home/$DEV_USER/projects/dotfiles" ]; then
-#    exec_cmd "cd /home/$DEV_USER/projects/dotfiles; git pull"
-#  else
-#    exec_cmd "git clone https://github.com/fatih/dotfiles /home/$DEV_USER/projects/dotfiles"
-#  fi
-
-  exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
-}
-
-
-enable_pathogen_bundles()
-{
-  echo ""
-  hdr "Enabling vim & pathogen bundles..."
-  echo ""
-
-  local inst_dir="/home/$DEV_USER/.vim/bundle"
-  rm -rf "$inst_dir"; mkdir -p "$inst_dir"
-  cd "$inst_dir" || exit 1
-
-  inf "Re-populating pathogen bundles..."
-
-  ## colors
-  git clone git://github.com/altercation/vim-colors-solarized.git
-
-  ## golang
-  git clone https://github.com/fatih/vim-go.git
-
-  ## json
-  git clone https://github.com/elzr/vim-json.git
-
-  ## yaml
-  git clone https://github.com/avakhov/vim-yaml
-
-  ## Ansible
-  git clone https://github.com/pearofducks/ansible-vim
-
-  ## Dockerfile
-  git clone https://github.com/ekalinin/Dockerfile.vim.git \
-  "$inst_dir/Dockerfile"
-
-  ## Nerdtree
-  git clone https://github.com/scrooloose/nerdtree.git
-
-  ## Ruby
-  git clone git://github.com/vim-ruby/vim-ruby.git
-
-  ## Python
-  git clone https://github.com/klen/python-mode.git
-
-  ## Whitespace (hint: to see whitespace just :ToggleWhitespace)
-  git clone git://github.com/ntpeters/vim-better-whitespace.git
-
-  ## Git
-  git clone http://github.com/tpope/vim-git
-
-  ## Terraform
-  git clone http://github.com/hashivim/vim-terraform
-
-  ## gotests
-  git clone https://github.com/buoto/gotests-vim
-
-  if [ $MEM_TOTAL_KB -ge 1500000 ]; then
-    enable_vim_ycm
-    cd "$inst_dir"
-  else
-    warn "Your system requires at least 1.5 GB of memory to "
-    warn "install the YouCompleteMe vim plugin. Skipping... "
-  fi
-
-  # handle .vimrc
-  if [ -f "/home/$DEV_USER/.vimrc" ]; then
-    inf "Backing up .vimrc file"
-    cp "/home/$DEV_USER/.vimrc" "/home/$DEV_USER/.vimrc-$TODAY"
-  fi
-
-  if [ -f "$PROGDIR/dotfiles/vimrc" ]; then
-    inf "Copying new .vimrc file"
-    cp "$PROGDIR/dotfiles/vimrc" "/home/$DEV_USER/.vimrc"
-  fi
-
-#  if [ "$DEFAULT_USER" == 'root' ]; then
-#    chown -R "$DEV_USER:$DEV_USER" "/home/$DEV_USER"
-#    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
-#  fi
-  exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
-}
-
-
-enable_vim_ycm()
-{
-  echo ""
-  hdr "Installing the YouCompleteMe vim plugin..."
-  echo ""
-
-  local inst_dir="/home/$DEV_USER/.vim/bundle"
-
-  ## YouCompleteMe
-  git clone https://github.com/valloric/youcompleteme
-  cd "$inst_dir/youcompleteme"
-  git submodule update --init --recursive
-  local ycm_opts=
-
-  if command_exists go; then
-    ycm_opts="${ycm_opts} --gocode-completer"
-  fi
-
-  if command_exists node; then
-    ycm_opts="${ycm_opts} --tern-completer"
-  fi
-
-  #ycm_opts="--all"
-
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    su -c "$inst_dir/youcompleteme/install.py $ycm_opts" "$DEV_USER"
-  else
-    exec_nonprv_cmd "$inst_dir/youcompleteme/install.py $ycm_opts"
-  fi
-}
-
-
 ## Remove everything under ~/.bootstrap/installed
-remove_clis()
+uninstall_deltas()
 {
   echo ""
   inf "Uninstalling all third party cli's, utilities, etc..."
@@ -525,13 +383,65 @@ remove_clis()
           ;;
         dotfiles)
           ;;
+        tls)
+          source "${PROGDIR}/security/tls.sh"
+          uninstall_tls
+          ;;
         golang)
           source "${PROGDIR}/lang/golang.sh"
           uninstall_golang
           ;;
+        node)
+          uninstall_node
+          ;;
+        ngrok)
+          source "${PROGDIR}/misc/ngrok.sh"
+          uninstall_ngrok
+          ;;
+        terraform)
+          source "${PROGDIR}/misc/terraform.sh"
+          uninstall_terraform
+          ;;
+        gcloud)
+          source "${PROGDIR}/cloud/gcloud.sh"
+          uninstall_gcloud
+          ;;
+        awscli)
+          source "${PROGDIR}/cloud/aws.sh"
+          uninstall_aws
+          ;;
+        azurecli)
+          uninstall_azure
+          ;;
+        doctl)
+          source "${PROGDIR}/cloud/digitalocean.sh"
+          uninstall_doctl
+          ;;
+        vimmods)
+          source "${PROGDIR}/misc/vim.sh"
+          uninstall_vim_mods
+          ;;
+        vimbundles)
+          source "${PROGDIR}/misc/vim.sh"
+          restore_vim_bundles
+          ;;
+        ansible)
+          source "${PROGDIR}/cfgmgmt/ansible.sh"
+          uninstall_ansible
+          ;;
+        docker)
+          uninstall_docker
+          ;;
         kubectl)
           source "${PROGDIR}/k8s/kubectl.sh"
           uninstall_kubectl
+          ;;
+        helm)
+          source "${PROGDIR}/k8s/helm.sh"
+          uninstall_helm
+          ;;
+        xfce)
+          uninstall_xfce
           ;;
         *)
           error "no uninstall handler found for \"$file\""
@@ -553,206 +463,15 @@ main() {
   valid_args
   prerequisites
 
-  remove_clis
+  uninstall_deltas
 
   # restore base packages, files, etc.
   if [ -z "$EXCLUDE_BASE" ]; then
-    if ! is_installed basepkgs; then
-      error "base setup should be performed before installing anything else"
-      exit 1
-    fi
+#    if ! is_installed basepkgs; then
+#      error "base setup should be performed before installing anything else"
+#      exit 1
+#    fi
     restore_baseline
-  fi
-
-  exit 0 
-
-  # dot files
-  if [ -n "$INSTALL_DOTFILES" ]; then
-    install_dotfiles
-  fi
-
-  # tls utilities
-  if [ -n "$INSTALL_TLS" ]; then
-    source "${PROGDIR}/security/tls.sh"
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_tls
-    else
-      install_tls
-    fi
-  fi
-
-  # golang handler
-  if [ -n "$INSTALL_GOLANG" ]; then
-    source "${PROGDIR}/lang/golang.sh"
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_golang
-    else
-      install_golang
-    fi
-  fi
-
-  # node.js handler
-  if [ -n "$INSTALL_NODE" ]; then
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_node
-    else
-      install_node
-    fi
-  fi
-
-  # ngrok handler
-  if [ -n "$INSTALL_NGROK" ]; then
-    source "${PROGDIR}/misc/ngrok.sh"
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_ngrok
-    else
-      install_ngrok
-    fi
-  fi
-
-  # terraform handler
-  if [ -n "$INSTALL_TERRAFORM" ]; then
-    source "${PROGDIR}/misc/terraform.sh"
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_terraform
-    else
-      install_terraform
-    fi
-  fi
-
-  # gcloud handler
-  if [ -n "$INSTALL_GCLOUD" ]; then
-    source "${PROGDIR}/cloud/gcloud.sh"
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_gcloud
-    else
-      install_gcloud
-    fi
-  fi
-
-  # aws handler
-  if [ -n "$INSTALL_AWS" ]; then
-    source "${PROGDIR}/cloud/aws.sh"
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_aws
-    else
-      install_aws
-    fi
-  fi
-
-  # azure cli handler
-  if [ -n "$INSTALL_AZURE" ]; then
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_azure
-    else
-      install_azure
-    fi
-  fi
-
-  # digitalocean handler
-  if [ -n "$INSTALL_DO" ]; then
-    source "${PROGDIR}/cloud/digitalocean.sh"
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_doctl
-    else
-      install_doctl
-    fi
-  fi
-
-  # vim handler
-  if [ -n "$INSTALL_VIM" ]; then
-    enable_vim
-    enable_pathogen_bundles
-  fi
-
-  # ansible handler
-  if [ -n "$INSTALL_ANSIBLE" ]; then
-    source "${PROGDIR}/cfgmgmt/ansible.sh"
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_ansible
-    else
-      install_ansible
-    fi
-  fi
-
-  # docker handler
-  if [ -n "$INSTALL_DOCKER" ]; then
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_docker
-    else
-      install_docker
-    fi
-  fi
-
-  # kubectl handler
-  if [ -n "$INSTALL_KUBECTL" ]; then
-    source "${PROGDIR}/k8s/kubectl.sh"
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_kubectl
-    else
-      install_kubectl
-    fi
-  fi
-
-  if [ -n "$INSTALL_HELM" ]; then
-    source "${PROGDIR}/k8s/helm.sh"
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_helm
-    else
-      install_helm
-    fi
-  fi
-
-  # xfce handler (only for windows wsl!)
-  if [ -n "$INSTALL_XFCE" ]; then
-    if [ -n "$UNINSTALL" ]; then
-      uninstall_xfce
-    else
-      install_xfce
-    fi
-  fi
-
-
-  # protobuf support (compile from source)
-  if [ -n "$INSTALL_PROTO_BUF" ]; then
-    install_protobuf
-  fi
-
-  # kops handler
-  if [ -n "$INSTALL_KOPS" ]; then
-    install_terraform
-    install_kops
-  fi
-
-  # kube-aws handler
-  if [ -n "$INSTALL_KUBE_AWS" ]; then
-    install_aws
-    install_kube_aws
-  fi
-
-  if [ -n "$INSTALL_SERVERLESS" ]; then
-    #install_node
-    install_serverless
-  fi
-
-  if [ -n "$INSTALL_HYPER" ]; then
-    install_hyper
-  fi
-
-  if [ -n "$INSTALL_HABITAT" ]; then
-    install_habitat
-  fi
-
-  if [ -n "$INSTALL_MINIKUBE" ]; then
-    install_minikube
-  fi
-
-  if [ -n "$INSTALL_DRAFT" ]; then
-    install_draft
-  fi
-
-  if [ -n "$INSTALL_BOSH" ]; then
-    install_bosh
   fi
 
   # always the last step, notify use to logoff for changes to take affect

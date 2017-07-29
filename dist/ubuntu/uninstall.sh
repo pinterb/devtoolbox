@@ -41,7 +41,7 @@ base_restore()
     exec_cmd "dpkg --set-selections < /home/$DEV_USER/.bootstrap/backup/$1/Package.list"
     exec_cmd "apt-get dselect-upgrade -y"
   fi
-  
+
   mark_as_uninstalled basepkgs
 
   echo ""
@@ -100,7 +100,6 @@ uninstall_node()
 
   if command_exists yarn; then
     exec_cmd 'npm uninstall -g yarn >/dev/null'
-    mark_as_uninstalled yarn
   else
     warn "yarn is not installed"
   fi
@@ -130,7 +129,7 @@ uninstall_azure()
 
   if command_exists az; then
     exec_cmd 'apt-get purge -y azure-cli >/dev/null'
-    mark_as_uninstalled azure-cli
+    mark_as_uninstalled azurecli
   else
     warn "azure cli is not installed"
   fi

@@ -27,6 +27,8 @@ install_tls()
   # lego install using "go get -u" doesn't seem to work.  And dependencies are
   # not defined in the project.
   #install_lego
+
+  mark_as_installed tls
 }
 
 uninstall_tls()
@@ -54,6 +56,8 @@ uninstall_tls()
   # lego install using "go get -u" doesn't seem to work.  And dependencies are
   # not defined in the project.
   #uninstall_lego
+
+  mark_as_uninstalled tls
 }
 
 

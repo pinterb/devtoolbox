@@ -224,6 +224,7 @@ install_node()
   if command_exists node; then
     inf "node.js is already installed. Will attempt to upgrade..."
     exec_cmd 'apt-get install --only-upgrade -y nodejs >/dev/null'
+    mark_as_installed node
     install=1
   fi
 
@@ -244,7 +245,6 @@ install_node()
     exec_cmd 'npm upgrade --global yarn >/dev/null'
   else
     exec_cmd 'npm install -g yarn >/dev/null'
-    mark_as_installed yarn
   fi
 }
 
@@ -269,6 +269,7 @@ install_azure()
       install=1
       exec_cmd 'apt-get -y update >/dev/null 2>&1'
       exec_cmd 'apt-get install -yq --allow-unauthenticated azure-cli >/dev/null 2>&1'
+      mark_as_installed azurecli
     fi
   fi
 
@@ -278,7 +279,7 @@ install_azure()
     exec_cmd 'apt-key adv --keyserver packages.microsoft.com --recv-keys 417A0893'
     exec_cmd 'apt-get -y update >/dev/null 2>&1'
     exec_cmd 'apt-get install -yq --allow-unauthenticated azure-cli >/dev/null 2>&1'
-    mark_as_installed azure-cli
+    mark_as_installed azurecli
   fi
 }
 
@@ -337,6 +338,11 @@ install_docker()
   echo ""
   hdr "Installing Docker Community Edition..."
   echo ""
+
+  if microsoft_wsl; then
+    error "this appears to be a Windows WSL distribution of Ubuntu. Sorry, can't install Docker!"
+    exit 1
+  fi
 
   inf "removing any old Docker packages"
   exec_cmd 'apt-get remove docker docker-engine >/dev/null'

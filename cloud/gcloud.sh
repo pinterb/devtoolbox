@@ -33,9 +33,7 @@ install_gcloud()
     fi
 
     exec_nonprv_cmd "tar -zxvf /tmp/gcloud.tar.gz -C /home/$DEV_USER/bin/"
-    #"/home/$DEV_USER/bin/google-cloud-sdk/install.sh" --quiet --rc-path "/home/$DEV_USER/.profile" --usage-reporting true --command-completion true --path-update true
     exec_nonprv_cmd "/home/$DEV_USER/bin/google-cloud-sdk/install.sh --quiet --rc-path /home/$DEV_USER/.profile --usage-reporting true --command-completion true --path-update true"
-
     exec_nonprv_cmd "rm /tmp/gcloud.tar.gz"
 
     # we don't want to overlay dot files after we modify .profile with gcloud
