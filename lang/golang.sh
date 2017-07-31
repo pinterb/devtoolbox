@@ -13,6 +13,12 @@ install_golang()
 
   local install=0
 
+  if ! is_installed dotfiles ; then
+    error "this installation requires the customized version of dot files"
+    error "  run this script with the --dofiles option first"
+    exit 1
+  fi
+
   if command_exists go; then
     if [ $(go version | awk '{ print $3; exit }') == "go$GOLANG_VER" ]; then
       warn "go is already installed"

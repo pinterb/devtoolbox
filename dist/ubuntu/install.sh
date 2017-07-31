@@ -18,6 +18,12 @@ base_setup()
     base_backup
   fi
 
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    su -c "mkdir -p /home/$DEV_USER/.bootstrap/profile.d" "$DEV_USER"
+  else
+    mkdir -p "/home/$DEV_USER/.bootstrap/profile.d"
+  fi
+
   if ! is_installed basepkgs; then
     base_packages
   else
@@ -226,6 +232,12 @@ install_node()
     exec_cmd 'apt-get install --only-upgrade -y nodejs >/dev/null'
     mark_as_installed node
     install=1
+  fi
+
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    su -c "mkdir -p /home/$DEV_USER/.config" "$DEV_USER"
+  else
+    mkdir -p "/home/$DEV_USER/.config"
   fi
 
   # Only need to install packages, download files, etc. for new installs

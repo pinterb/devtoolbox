@@ -142,7 +142,7 @@ usage() {
     --golang               golang (incl. third-party utilities)
     --habitat              habitat.sh (Habitat enables you to build and run your applications in a Cloud Native manner.)
     --node                 node.js
-    --proto-buf            protocol buffers (i.e. protoc)
+    --protobuf             protocol buffers (i.e. protoc)
     --serverless           various serverless utilities (e.g. serverless, apex, sparta)
 
     --minikube             opinionated local development workflow for applications deployed to Kubernetes (github.com/Azure/draft)
@@ -278,7 +278,7 @@ cmdline() {
       node)
         readonly INSTALL_NODE=1
         ;;
-      proto-buf)
+      protobuf)
         readonly INSTALL_PROTO_BUF=1
         ;;
       serverless)
