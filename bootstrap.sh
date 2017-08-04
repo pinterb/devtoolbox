@@ -45,6 +45,7 @@ INSTALL_HELM=
 INSTALL_DRAFT=
 INSTALL_BOSH=
 INSTALL_XFCE=
+INSTALL_JFROG=
 
 # misc. flags
 SHOULD_WARM=0
@@ -153,6 +154,7 @@ usage() {
     --kube-aws             kube-aws (a kubernetes provisioning tool)
 
     --ngrok                create secure tunnels to localhost (ngrok.com)
+    --jfrog                the universial cli to JFrog products (e.g. Artifactory, Bintray)
     --tls-utils            utilities for managing TLS certificates (e.g. letsencrypt, cfssl)
     --vim                  vim-plug & choice plugins (e.g. vim-go)
 
@@ -295,6 +297,9 @@ cmdline() {
         ;;
       xfce)
         readonly INSTALL_XFCE=1
+        ;;
+      jfrog)
+        readonly INSTALL_JFROG=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -1028,6 +1033,16 @@ main() {
       uninstall_protobuf
     else
       install_protobuf
+    fi
+  fi
+
+  # jfrog handler
+  if [ -n "$INSTALL_JFROG" ]; then
+    source "${PROGDIR}/misc/jfrog.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_jfrog
+    else
+      install_jfrog
     fi
   fi
 

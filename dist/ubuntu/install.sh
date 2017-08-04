@@ -58,7 +58,8 @@ base_packages()
   fi
 
   local pkgs="software-properties-common jq unzip gnupg2 build-essential make autoconf automake"
-  pkgs="$pkgs libtool g++ ctags cmake gcc openssh-client python-dev python3-dev libssl-dev libffi-dev tree"
+  pkgs="$pkgs libtool g++ ctags cmake gcc openssh-client python-dev python3-dev libssl-dev libffi-dev"
+  pkgs="$pkgs tree libncurses-dev"
 
   # for asciinema support
   if ! command_exists asciinema; then
@@ -357,7 +358,7 @@ install_docker()
   fi
 
   inf "removing any old Docker packages"
-  exec_cmd 'apt-get remove docker docker-engine >/dev/null'
+  exec_cmd 'apt-get remove docker docker-engine docker.io >/dev/null'
 
   local install=0
   local docker_ce_ver="$DOCKER_VER-ce"

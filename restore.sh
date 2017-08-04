@@ -447,6 +447,9 @@ uninstall_deltas()
           source "${PROGDIR}/misc/protobuf.sh"
           uninstall_protobuf
           ;;
+        jfrog)
+          source "${PROGDIR}/misc/jfrog.sh"
+          uninstall_jfrog
         *)
           error "no uninstall handler found for \"$file\""
           ;;
