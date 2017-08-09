@@ -1,46 +1,20 @@
 [user]
-    name = Brad Pinter
-    email = brad.pinter@gmail.com
-[alias]
-    st = status -sb
-    ci = commit
-    all = commit -am
-    br = branch
-    co = checkout
-    di = diff
-    dic = diff --cached
-    lg = log -p
-    lol = log --graph --decorate --pretty=oneline --abbrev-commit
-    lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
-    ls = ls-files
-    bclean = "!f() { git branch --merged ${1-master} | grep -v \
-" ${1-master}$" | xargs -r git branch -d; }; f"
-
-# Show files ignored by git:
-    ign = ls-files -o -i --exclude-standard
-
-    shoot = push origin --delete
-    unstage = reset HEAD --
-    prev = checkout -
-    discard = checkout --
-
-[color]
-    ui = auto
-[color "branch"]
-    current = yellow reverse
-    local = yellow
-    remote = green
-[color "status"]
-    added = yellow
-    changed = green
-    untracked = cyan
+	email = brad.pinter@gmail.com
+	name = Brad Pinter
 [core]
-    whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
-    editor = vim
-    quotepath = false
-[github]
-    user = pinterb
-[mergetool]
-    keepBackup = true
+  editor = vim
+  quotepath = false
 [push]
-    default = simple
+	default = simple
+[github]
+	user = pinterb
+[color]
+  ui = auto
+[color "branch"]
+  current = yellow reverse
+  local = yellow
+  remote = green
+[color "status"]
+  added = yellow
+  changed = green
+  untracked = cyan

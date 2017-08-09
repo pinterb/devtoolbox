@@ -509,6 +509,21 @@ dotfiles()
     echo ""
   fi
 
+  # handle .gitconfig
+  if [ -f "/home/$DEV_USER/.gitconfig" ]; then
+    if [ ! -f "/home/$DEV_USER/.bootstrap/backup/orig/dotgitconfig" ]; then
+      inf "Backing up .gitconfig file"
+      exec_nonprv_cmd "cp /home/$DEV_USER/.gitconfig /home/$DEV_USER/.bootstrap/backup/orig/dotgitconfig"
+    else
+      exec_nonprv_cmd "cp /home/$DEV_USER/.gitconfig /home/$DEV_USER/.gitconfig-$TODAY"
+    fi
+  fi
+
+  if [ -f "$PROGDIR/dotfiles/gitconfig" ]; then
+    inf "Copying new .gitconfig file"
+    exec_nonprv_cmd "cp $PROGDIR/dotfiles/gitconfig /home/$DEV_USER/.gitconfig"
+  fi
+
   if [ "$DEFAULT_USER" == 'root' ]; then
     exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
   fi

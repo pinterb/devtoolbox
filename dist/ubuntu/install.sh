@@ -59,7 +59,13 @@ base_packages()
 
   local pkgs="software-properties-common jq unzip gnupg2 build-essential make autoconf automake"
   pkgs="$pkgs libtool g++ ctags cmake gcc openssh-client python-dev python3-dev libssl-dev libffi-dev"
-  pkgs="$pkgs tree libncurses-dev"
+  pkgs="$pkgs tree"
+
+  # ncurses is required for building kris-nova/kubicorn
+  pkgs="$pkgs libncurses-dev"
+
+  # libvirt is required for building docker/infrakit
+  pkgs="$pkgs libvirt-dev"
 
   # for asciinema support
   if ! command_exists asciinema; then
@@ -146,6 +152,10 @@ _backup()
 
   if [ -f "/home/$DEV_USER/.vimrc" ]; then
     exec_cmd "cp /home/$DEV_USER/.vimrc /home/$DEV_USER/.bootstrap/backup/$bkup/dotvimrc"
+  fi
+
+  if [ -f "/home/$DEV_USER/.gitconfig" ]; then
+    exec_cmd "cp /home/$DEV_USER/.gitconfig /home/$DEV_USER/.bootstrap/backup/$bkup/dotgitconfig"
   fi
 
   if [ -d "/home/$DEV_USER/.vim" ]; then

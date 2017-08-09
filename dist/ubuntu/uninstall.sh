@@ -18,6 +18,11 @@ base_restore()
     exec_cmd "chown $DEV_USER:$DEV_USER /home/$DEV_USER/.bashrc"
   fi
 
+  if [ -f "/home/$DEV_USER/.bootstrap/backup/$1/dotgitconfig" ]; then
+    exec_cmd "cp /home/$DEV_USER/.bootstrap/backup/$1/dotgitconfig /home/$DEV_USER/.gitconfig"
+    exec_cmd "chown $DEV_USER:$DEV_USER /home/$DEV_USER/.gitconfig"
+  fi
+
   if [ -f "/home/$DEV_USER/.bootstrap/backup/$1/dotvimrc" ]; then
     exec_cmd "cp /home/$DEV_USER/.bootstrap/backup/$1/dotvimrc /home/$DEV_USER/.vimrc"
     exec_cmd "chown $DEV_USER:$DEV_USER /home/$DEV_USER/.vimrc"

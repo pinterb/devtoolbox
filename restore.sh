@@ -358,6 +358,11 @@ uninstall_dotfiles()
     echo ""
   fi
 
+  # handle .gitconfig
+  if [ -f "/home/$DEV_USER/.bootstrap/backup/orig/dotgitconfig" ]; then
+    exec_cmd "cp /home/$DEV_USER/.bootstrap/backup/orig/dotgitconfig /home/$DEV_USER/.gitconfig"
+  fi
+
   if [ "$DEFAULT_USER" == 'root' ]; then
     exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
   fi
