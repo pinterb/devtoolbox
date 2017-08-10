@@ -223,6 +223,8 @@ restore_vim_bundles()
   # handle .vimrc
   if [ -f "/home/$DEV_USER/.bootstrap/backup/orig/dotvimrc" ]; then
     exec_cmd "cp /home/$DEV_USER/.bootstrap/backup/orig/dotvimrc /home/$DEV_USER/.vimrc"
+  else
+    exec_cmd "rm -rf /home/$DEV_USER/.vimrc"
   fi
 
   exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
