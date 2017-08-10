@@ -422,6 +422,10 @@ uninstall_deltas()
           source "${PROGDIR}/cloud/digitalocean.sh"
           uninstall_doctl
           ;;
+        vimsrc)
+          source "${PROGDIR}/misc/vim.sh"
+          uninstall_vim
+          ;;
         vimmods)
           source "${PROGDIR}/misc/vim.sh"
           uninstall_vim_mods

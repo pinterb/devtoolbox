@@ -163,7 +163,7 @@ uninstall_docker()
   if command_exists docker; then
     exec_cmd 'apt-get purge -yq docker-ce >/dev/null 2>&1'
     exec_cmd 'apt-get autoremove -yq >/dev/null 2>&1'
-    mark_as_uninstalled azure-cli
+    mark_as_uninstalled docker
   else
     warn "docker-ce is not installed"
   fi
@@ -182,6 +182,10 @@ uninstall_docker()
 
   if [ -f "/var/lib/docker" ]; then
     inf "NOTE: the \"/var/lib/docker\" directory was not deleted"
+  fi
+
+  if [ -f "/home/$DEV_USER/.bootstrap/profile.d/docker.sh" ]; then
+    exec_cmd "rm /home/$DEV_USER/.bootstrap/profile.d/docker.sh"
   fi
 }
 

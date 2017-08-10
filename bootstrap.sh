@@ -986,9 +986,11 @@ main() {
   if [ -n "$INSTALL_VIM" ]; then
     source "${PROGDIR}/misc/vim.sh"
     if [ -n "$UNINSTALL" ]; then
+      uninstall_vim
       uninstall_vim_mods
       restore_vim_bundles
     else
+      install_vim
       install_vim_mods
       enable_pathogen_bundles
     fi

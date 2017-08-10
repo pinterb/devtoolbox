@@ -363,7 +363,9 @@ install_docker()
   echo ""
 
   if microsoft_wsl; then
-    error "this appears to be a Windows WSL distribution of Ubuntu. Sorry, can't install Docker!"
+    warn "This appears to be a Windows WSL distribution of Ubuntu. "
+    warn "Will attempt to install Docker without enabling & starting the Docker service."
+    warn "  And instead, the DOCKER_HOST environment variable will point to native Windows Docker."
     exit 1
   fi
 
@@ -425,29 +427,41 @@ install_docker()
     inf "added $DEV_USER to group docker"
     echo ""
 
-   ## Start Docker
-   if command_exists systemctl; then
-     exec_cmd 'systemctl daemon-reload'
-     exec_cmd 'systemctl enable docker'
-     if [ ! -f "/var/run/docker.pid" ]; then
-       exec_cmd 'systemctl start docker'
-     else
-       inf "Docker appears to already be running...will restart"
-       echo ""
-       exec_cmd 'systemctl restart docker'
-     fi
+    ## Start Docker
+    if microsoft_wsl; then
+
+      inf "Since this appears to be a Windows WSL distribution of Ubuntu... "
+      inf "   updating ~/.bootstrap/profile.d/ with DOCKER_HOST"
+      echo "# The following DOCKER_HOST was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/docker.sh"
+
+      echo "# This configuration is based on: https://taoofmac.com/space/blog/2017/05/07/1920 " >> "/home/$DEV_USER/.bootstrap/profile.d/docker.sh"
+      echo "export DOCKER_HOST='localhost:2375'" >> "/home/$DEV_USER/.bootstrap/profile.d/docker.sh"
+
+      #echo "# This configuration is based on: https://blog.jayway.com/2017/04/19/running-docker-on-bash-on-windows/ " >> "/home/$DEV_USER/.bootstrap/profile.d/docker.sh"
+      #echo "export DOCKER_HOST='tcp://0.0.0.0:2375'" >> "/home/$DEV_USER/.bootstrap/profile.d/docker.sh"
+
+    elif command_exists systemctl; then
+      exec_cmd 'systemctl daemon-reload'
+      exec_cmd 'systemctl enable docker'
+      if [ ! -f "/var/run/docker.pid" ]; then
+        exec_cmd 'systemctl start docker'
+      else
+        inf "Docker appears to already be running...will restart"
+        echo ""
+        exec_cmd 'systemctl restart docker'
+      fi
 
     else
-     inf "no systemctl found...assuming this OS is not using systemd (yet)"
-     echo ""
+      inf "no systemctl found...assuming this OS is not using systemd (yet)"
+      echo ""
 
-     if [ ! -f "/var/run/docker.pid" ]; then
-       exec_cmd 'service docker start'
-     else
-       inf "Docker appears to already be running"
-       echo ""
-     fi
-    fi # systemctl
+      if [ ! -f "/var/run/docker.pid" ]; then
+        exec_cmd 'service docker start'
+      else
+        inf "Docker appears to already be running"
+        echo ""
+      fi
+    fi # ms wsl, or systemctl
 
     mark_as_installed docker
   fi
