@@ -459,6 +459,7 @@ uninstall_deltas()
         jfrog)
           source "${PROGDIR}/misc/jfrog.sh"
           uninstall_jfrog
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;
