@@ -25,8 +25,13 @@ install_vim()
   exec_cmd "rm -rf /usr/local/bin/vim /usr/bin/vim"
   exec_nonprv_cmd "git clone https://github.com/vim/vim /home/$DEV_USER/vim"
 
-  pushd "/home/$DEV_USER/vim"
-  pushd "src"
+  if [ ! "/home/$DEV_USER/vim/src" ]; then
+    error "didn't clone vim repo correctly"
+    exit 1
+  fi
+
+  local curdir="$PWD"
+  cd "/home/$DEV_USER/vim/src"
   ./configure \
     --with-features=huge \
     --enable-rubyinterp \
@@ -36,7 +41,7 @@ install_vim()
     --enable-cscope --prefix=/usr
 
   exec_cmd "make install"
-  popd
+  cd "$curdir"
   exec_cmd "rm -rf /home/$DEV_USER/vim"
 
   mark_as_installed vimsrc

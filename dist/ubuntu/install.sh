@@ -20,8 +20,10 @@ base_setup()
 
   if [ "$DEFAULT_USER" == 'root' ]; then
     su -c "mkdir -p /home/$DEV_USER/.bootstrap/profile.d" "$DEV_USER"
+    su -c "mkdir -p /home/$DEV_USER/projects" "$DEV_USER"
   else
     mkdir -p "/home/$DEV_USER/.bootstrap/profile.d"
+    mkdir -p "/home/$DEV_USER/projects"
   fi
 
   if ! is_installed basepkgs; then
@@ -441,6 +443,7 @@ install_docker()
       #echo "export DOCKER_HOST='tcp://0.0.0.0:2375'" >> "/home/$DEV_USER/.bootstrap/profile.d/docker.sh"
 
     elif command_exists systemctl; then
+
       exec_cmd 'systemctl daemon-reload'
       exec_cmd 'systemctl enable docker'
       if [ ! -f "/var/run/docker.pid" ]; then
