@@ -5,9 +5,9 @@
 # Base packages for building vim from source.
 # NOTE: git, build-essential, cmake, python-dev, python3-dev are also required packages,
 # but they are included as part of this bootstraps base package install.
-VIM_NEW_BASE_PKGS="vim-nox liblua5.1-dev luajit libluajit-5.1"
+VIM_NEW_BASE_PKGS="vim-nox"
 
-VIM_OLD_PKGS="vim vim-runtime gvim vim-tiny vim-common vim-gui-common"
+VIM_OLD_PKGS="vim vim-runtime vim-tiny vim-common vim-gui-common"
 
 
 install_vim()
@@ -23,11 +23,9 @@ install_vim()
   exec_cmd "apt-get remove -yq $VIM_OLD_PKGS >/dev/null 2>&1"
 
   exec_cmd "rm -rf /usr/local/bin/vim /usr/bin/vim"
-  exec_cmd "mkdir /usr/include/lua5.1/include"
-  exec_cmd "mv /usr/include/lua5.1/*.h /usr/include/lua5.1/include/"
-  exec_nonprv_cmd "git clone https://github.com/vim/vim $DEV_USER/vim"
+  exec_nonprv_cmd "git clone https://github.com/vim/vim /home/$DEV_USER/vim"
 
-  pushd "$DEV_USER/vim"
+  pushd "/home/$DEV_USER/vim"
   pushd "src"
   ./configure \
     --with-features=huge \
@@ -35,15 +33,11 @@ install_vim()
     --enable-pythoninterp \
     --with-python-config-dir=/usr/lib/python2.7-config \
     --enable-perlinterp \
-    --enable-cscope --prefix=/usr \
-    --enable-luainterp \
-    --with-luajit \
-    --with-lua-prefix=/usr/include/lua5.1
-  make -j4 VIMRUNTIMEDIR=/usr/share/vim/vim74
+    --enable-cscope --prefix=/usr
 
   exec_cmd "make install"
   popd
-  exec_nonprv_cmd "rm -rf $DEV_USER/vim"
+  exec_cmd "rm -rf /home/$DEV_USER/vim"
 
   mark_as_installed vimsrc
 }
@@ -51,7 +45,6 @@ install_vim()
 
 uninstall_vim()
 {
-  if is_installed vimsrc
   echo ""
   hdr "Uninstall vim (from source)..."
   echo ""
