@@ -460,6 +460,13 @@ uninstall_deltas()
           source "${PROGDIR}/misc/jfrog.sh"
           uninstall_jfrog
           ;;
+        serverless)
+          uninstall_serverless
+          ;;
+        bosh)
+          source "${PROGDIR}/misc/bosh.sh"
+          uninstall_bosh
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

@@ -16,14 +16,17 @@ GOLANG_VER="1.9"
 NGROK_VER="2.2.6"
 MINIKUBE_VER="0.21.0"
 DRAFT_VER="0.5.1"
-BOSH_VER="2.0.28"
 ANSIBLE_VER="2.4.0"
 JFROG_VER="1.10.1"
+UP_VER="0.2.1"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="162.0.1"
 GCLOUD_CHECKSUM="a3aec4fc769a00fb4f7525e471c04ad8e0c394193c1af7ca546095f9f72e314a"
-#GCLOUD_CHECKSUM="e799bfbc35ee75f2b7c2181a9e090be28e7a1a73b92953e9087b77bc7fc7a894"
+
+# https://bosh.io/docs/cli-v2#install
+BOSH_VER="2.0.28"
+BOSH_CHECKSUM="7b7629fcdf8839cf29bf25d97e8ea6beb3b9a7b2"
 
 # Candidates for removal
 KUBE_AWS_VER="0.9.7-rc.2"

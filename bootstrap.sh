@@ -52,7 +52,7 @@ SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 # based on user, determine how commands will be executed
 # ### DEPRECATE THIS???
@@ -131,7 +131,6 @@ usage() {
 
     --aws                  aws cli
     --azure                azure cli
-    --bosh                 bosh cli
     --digitalocean         digitalocean cli
     --gcloud               gcloud cli
     --hyper                hyper.sh (Hyper.sh is a hypervisor-agnostic Docker runtime)
@@ -139,6 +138,7 @@ usage() {
     --ansible              ansible
     --docker               docker
     --terraform            terraform
+    --bosh                 bosh cli
 
     --golang               golang (incl. third-party utilities)
     --habitat              habitat.sh (Habitat enables you to build and run your applications in a Cloud Native manner.)
@@ -731,44 +731,6 @@ install_kube_aws()
 }
 
 
-### bosh cli
-# https://bosh.io
-###
-install_bosh()
-{
-  echo ""
-  inf "Installing bosh CLI..."
-  echo ""
-
-  local install=0
-
-  if ! function_exists bosh_deps_install; then
-    error "bosh 'create-env' dependency install function doesn't exist."
-    exit 1
-  fi
-
-  if command_exists bosh; then
-    if [ $(bosh --version | awk '{ print $2; exit }' | awk -F- '{ print $1; exit }' 2>/dev/null | grep "${BOSH_VER}") ]; then
-      warn "bosh is already installed."
-      install=1
-    else
-      inf "bosh is already installed...but versions don't match"
-      exec_cmd 'rm /usr/local/bin/bosh'
-    fi
-  fi
-
-  if [ $install -eq 0 ]; then
-    wget -O /tmp/bosh \
-      "https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-${BOSH_VER}-linux-amd64"
-    chmod +x /tmp/bosh
-    exec_cmd 'mv /tmp/bosh /usr/local/bin/'
-
-    # install 'create-env' dependencies
-    bosh_deps_install
-  fi
-}
-
-
 ### draft
 # https://github.com/kubernetes/helm
 ###
@@ -1063,6 +1025,26 @@ main() {
     fi
   fi
 
+  # serverless utilies & various frameworks
+  if [ -n "$INSTALL_SERVERLESS" ]; then
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_serverless
+    else
+      install_serverless
+    fi
+  fi
+
+  # BOSH cli handler
+  if [ -n "$INSTALL_BOSH" ]; then
+    source "${PROGDIR}/misc/bosh.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_bosh
+    else
+      install_bosh
+    fi
+  fi
+
+
 
 
   # kops handler
@@ -1075,11 +1057,6 @@ main() {
   if [ -n "$INSTALL_KUBE_AWS" ]; then
     install_aws
     install_kube_aws
-  fi
-
-  if [ -n "$INSTALL_SERVERLESS" ]; then
-    #install_node
-    install_serverless
   fi
 
   if [ -n "$INSTALL_HYPER" ]; then
@@ -1098,9 +1075,6 @@ main() {
     install_draft
   fi
 
-  if [ -n "$INSTALL_BOSH" ]; then
-    install_bosh
-  fi
 
   # always the last step, notify use to logoff for changes to take affect
   if [ $LOGOFF_REQ -eq 1 ]; then

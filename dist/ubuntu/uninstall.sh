@@ -176,7 +176,7 @@ uninstall_docker()
     exec_cmd 'rm /etc/apt/sources.list.d/docker.list'
   fi
 
-  if [ -f "rm /etc/apt/sources.list.d/docker.save" ]; then
+  if [ -f "/etc/apt/sources.list.d/docker.save" ]; then
     exec_cmd 'rm /etc/apt/sources.list.d/docker.save'
   fi
 
@@ -212,4 +212,45 @@ uninstall_xfce()
 }
 
 
+### serverless
+#
+###
+uninstall_serverless()
+{
+  echo ""
+  hdr "Uninstalling serverless utilities..."
+  echo ""
+
+  if command_exists functions; then
+    inf "google cloud functions emulator is installed. Will attempt to remove..."
+    exec_cmd 'npm uninstall -g @google-cloud/functions-emulator >/dev/null'
+  fi
+
+  if command_exists up; then
+    inf "up client is installed. Will attempt to remove..."
+    if [ -f "rm /usr/local/bin/up" ]; then
+      exec_cmd 'rm /usr/local/bin/up'
+    else
+      error "expecting up command to be located under /usr/local/bin"
+      exit 1
+    fi
+  fi
+
+  if command_exists apex; then
+    inf "apex client is installed. Will attempt to remove..."
+    if [ -f "rm /usr/local/bin/apex" ]; then
+      exec_cmd 'rm /usr/local/bin/apex'
+    else
+      error "expecting apex command to be located under /usr/local/bin"
+      exit 1
+    fi
+  fi
+
+  if command_exists serverless; then
+    inf "serverless client is installed. Will attempt to remove..."
+    exec_cmd 'yarn global remove serverless >/dev/null'
+  fi
+
+  mark_as_uninstalled serverless
+}
 

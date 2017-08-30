@@ -69,6 +69,10 @@ base_packages()
   # libvirt is required for building docker/infrakit
   pkgs="$pkgs libvirt-dev"
 
+  # direnv can be used for managing cloud credentials (e.g. AWS prod vs. stage)
+  # http://direnv.net/
+  pkgs="$pkgs direnv"
+
   # for asciinema support
   if ! command_exists asciinema; then
     exec_cmd 'apt-add-repository -y ppa:zanchey/asciinema >/dev/null 2>&1'
@@ -315,18 +319,18 @@ install_azure()
 install_serverless()
 {
   echo ""
-  inf "Installing serverless utilities..."
+  hdr "Installing serverless utilities..."
   echo ""
 
   if command_exists serverless; then
-    echo "serverless client is already installed. Will attempt to upgrade..."
+    inf "serverless client is already installed. Will attempt to upgrade..."
     exec_cmd 'yarn global upgrade serverless >/dev/null'
   else
     exec_cmd 'yarn global add serverless >/dev/null'
   fi
 
   if command_exists apex; then
-    echo "apex client is already installed. Will attempt to upgrade..."
+    inf "apex client is already installed. Will attempt to upgrade..."
     exec_cmd 'apex upgrade >/dev/null'
   else
     rm -rf /tmp/apex-install.sh
@@ -334,6 +338,17 @@ install_serverless()
       https://raw.githubusercontent.com/apex/apex/master/install.sh
     chmod +x /tmp/apex-install.sh
     exec_cmd '/tmp/apex-install.sh'
+  fi
+
+  if command_exists up; then
+    inf "up client is already installed. Will attempt to upgrade..."
+    exec_cmd 'up upgrade >/dev/null'
+  else
+    rm -rf /tmp/up-install.sh
+    wget -O /tmp/up-install.sh \
+      https://raw.githubusercontent.com/apex/up/master/install.sh
+    chmod +x /tmp/up-install.sh
+    exec_cmd '/tmp/up-install.sh'
   fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
@@ -345,11 +360,13 @@ install_serverless()
   fi
 
   if command_exists functions; then
-    echo "google cloud functions emulator is already installed. Will attempt to upgrade..."
+    inf "google cloud functions emulator is already installed. Will attempt to upgrade..."
     exec_cmd 'npm update -g @google-cloud/functions-emulator >/dev/null'
   else
     exec_cmd 'npm install -g @google-cloud/functions-emulator >/dev/null'
   fi
+
+  mark_as_installed serverless
 }
 
 
@@ -557,7 +574,7 @@ install_kvm()
 bosh_deps_install()
 {
   echo ""
-  inf "Installing ubuntu dependencies for bosh CLI..."
+  hdr "Installing ubuntu dependencies for bosh CLI..."
   echo ""
 
   exec_cmd 'apt-get install -yq zlibc zlib1g-dev ruby ruby-dev openssl libxslt-dev \
