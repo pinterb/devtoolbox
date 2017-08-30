@@ -103,6 +103,12 @@ uninstall_node()
   hdr "Uninstalling Node.js..."
   echo ""
 
+  if command_exists serverless; then
+    error "the serverless framework appears to be installed"
+    error "...uninstall serverless before uninstalling node"
+    exit 1
+  fi
+
   if command_exists yarn; then
     exec_cmd 'npm uninstall -g yarn >/dev/null'
   else

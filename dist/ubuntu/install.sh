@@ -322,6 +322,18 @@ install_serverless()
   hdr "Installing serverless utilities..."
   echo ""
 
+  if ! command_exists node; then
+    error "node is required to install some of the serverless utilities"
+    error "...install node and then re-try."
+    exit 1
+  fi
+
+  if ! command_exists yarn; then
+    error "yarn is required to install some of the serverless utilities"
+    error "...install node and then re-try."
+    exit 1
+  fi
+
   if command_exists serverless; then
     inf "serverless client is already installed. Will attempt to upgrade..."
     exec_cmd 'yarn global upgrade serverless >/dev/null'
