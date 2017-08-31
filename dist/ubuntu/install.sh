@@ -364,11 +364,19 @@ install_serverless()
   fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
-    chown "$DEV_USER":"$DEV_USER" -R "/home/$DEV_USER/.config/yarn/global/"
-    chown "$DEV_USER":"$DEV_USER" -R "/home/$DEV_USER/.cache"
+    if [ -d "/home/$DEV_USER/.config" ]; then
+      chown "$DEV_USER":"$DEV_USER" -R "/home/$DEV_USER/.config"
+    fi
+    if [ -d "/home/$DEV_USER/.cache" ]; then
+      chown "$DEV_USER":"$DEV_USER" -R "/home/$DEV_USER/.cache"
+    fi
   else
-    sudo chown "$DEFAULT_USER":"$DEFAULT_USER" -R "/home/$DEFAULT_USER/.config/yarn/global/"
-    sudo chown "$DEFAULT_USER":"$DEFAULT_USER" -R "/home/$DEFAULT_USER/.cache"
+    if [ -d "/home/$DEV_USER/.config" ]; then
+      sudo chown "$DEFAULT_USER":"$DEFAULT_USER" -R "/home/$DEFAULT_USER/.config"
+    fi
+    if [ -d "/home/$DEV_USER/.cache" ]; then
+      sudo chown "$DEFAULT_USER":"$DEFAULT_USER" -R "/home/$DEFAULT_USER/.cache"
+    fi
   fi
 
   if command_exists functions; then
