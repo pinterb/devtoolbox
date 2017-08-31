@@ -55,6 +55,12 @@ uninstall_kubectl()
   hdr "Uninstalling kubectl CLI..."
   echo ""
 
+  if command_exists minikube; then
+    error "minikube is currently installed"
+    error "...uninstall minikube before uninstalling kubectl"
+    exit 1
+  fi
+
   if command_exists kubectl; then
     exec_cmd "rm /home/$DEV_USER/bin/kube*"
 

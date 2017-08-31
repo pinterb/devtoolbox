@@ -25,7 +25,6 @@ INSTALL_TLS=
 INSTALL_ANSIBLE=
 INSTALL_AWS=
 INSTALL_KOPS=
-INSTALL_KUBE_AWS=
 INSTALL_DOCKER=
 INSTALL_GOLANG=
 INSTALL_GCLOUD=
@@ -52,7 +51,7 @@ SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 # based on user, determine how commands will be executed
 # ### DEPRECATE THIS???
@@ -151,7 +150,6 @@ usage() {
     --helm                 helm
     --draft                opinionated local development workflow for applications deployed to Kubernetes (github.com/Azure/draft)
     --kops                 kops (a kubernetes provisioning tool)
-    --kube-aws             kube-aws (a kubernetes provisioning tool)
 
     --ngrok                create secure tunnels to localhost (ngrok.com)
     --jfrog                the universial cli to JFrog products (e.g. Artifactory, Bintray)
@@ -267,9 +265,6 @@ cmdline() {
         ;;
       kubectl)
         readonly INSTALL_KUBECTL=1
-        ;;
-      kube-aws)
-        readonly INSTALL_KUBE_AWS=1
         ;;
       minikube)
         readonly INSTALL_MINIKUBE=1
@@ -555,68 +550,6 @@ install_git_subrepo()
 }
 
 
-### Habitat
-# https://www.habitat.sh/docs/get-habitat/
-###
-install_habitat()
-{
-  echo ""
-  inf "Installing Habitat..."
-  echo ""
-
-  local install=0
-
-  if command_exists hab; then
-    if [ $(hab --version | awk '{ print $2; exit }') == "${HABITAT_VER}/${HABITAT_VER_TS}" ]; then
-      warn "habitat is already installed."
-      install=2
-    else
-      inf "habitat is already installed...but versions don't match"
-      exec_cmd 'rm /usr/local/bin/hab'
-      install=1
-    fi
-  fi
-
-  if [ $install -le 1 ]; then
-    wget -O /tmp/habitat.tar.gz \
-      "https://bintray.com/habitat/stable/download_file?file_path=linux%2Fx86_64%2Fhab-${HABITAT_VER}-${HABITAT_VER_TS}-x86_64-linux.tar.gz"
-    tar zxvf /tmp/habitat.tar.gz -C /tmp
-
-    chmod +x "/tmp/hab-${HABITAT_VER}-${HABITAT_VER_TS}-x86_64-linux/hab"
-    exec_cmd "mv /tmp/hab-${HABITAT_VER}-${HABITAT_VER_TS}-x86_64-linux/hab /usr/local/bin/hab"
-
-    rm -rf "/tmp/hab-${HABITAT_VER}-${HABITAT_VER_TS}-x86_64-linux"
-    rm /tmp/habitat.tar.gz
-
-    # set up hab group and user.
-    # also add non-privileged user to hab group
-    if [ $install -eq 0 ]; then
-      exec_cmd 'groupadd -f hab'
-      inf "added hab group"
-      echo ""
-      exec_cmd "useradd -g hab hab"
-
-      if [ "$DEFAULT_USER" == 'root' ]; then
-        chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
-        usermod -a -G hab "$DEV_USER"
-      else
-        exec_cmd "usermod -aG hab $DEV_USER"
-        inf "added $DEV_USER to group hab"
-      fi
-
-      # User must log off for these changes to take effect
-      LOGOFF_REQ=1
-    fi
-  fi
-
-  if [ "$DEFAULT_USER" == 'root' ]; then
-    chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
-  else
-    exec_cmd "chown root:root /usr/local/bin/hab"
-  fi
-}
-
-
 ### Azure cli
 # https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
 ###
@@ -649,174 +582,6 @@ install_habitat()
 #    chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
 #  fi
 #}
-
-
-### kops
-# https://github.com/kubernetes/kops#linux
-###
-install_kops()
-{
-  echo ""
-  inf "Installing Kubernetes Kops..."
-  echo ""
-
-  local inst_dir="/usr/local/bin"
-
-  if command_exists kops; then
-    warn "kops is already installed...will re-install"
-    exec_cmd 'rm /usr/local/bin/kops'
-  fi
-
-  wget -O /tmp/kops "https://github.com/kubernetes/kops/releases/download/${KOPS_VER}/kops-linux-amd64"
-  chmod +x /tmp/kops
-  exec_cmd 'mv /tmp/kops /usr/local/bin/kops'
-}
-
-
-### hyper.sh
-# https://www.hyper.sh/
-###
-install_hyper()
-{
-  echo ""
-  inf "Installing Hyper.sh..."
-  echo ""
-
-  local inst_dir="/usr/local/bin"
-
-  if command_exists hyper; then
-    warn "hyper is already installed...will re-install"
-    exec_cmd 'rm /usr/local/bin/hyper'
-  fi
-
-  wget -O /tmp/hyper-linux.tar.gz \
-    "https://hyper-install.s3.amazonaws.com/hyper-linux-x86_64.tar.gz"
-  tar zxvf /tmp/hyper-linux.tar.gz -C /tmp
-
-  chmod +x /tmp/hyper
-  exec_cmd 'mv /tmp/hyper /usr/local/bin/hyper'
-  rm /tmp/hyper-linux.tar.gz
-}
-
-
-### CoreOS kube-aws
-# https://coreos.com/kubernetes/docs/latest/kubernetes-on-aws.html#download-kube-aws
-###
-install_kube_aws()
-{
-  echo ""
-  inf "Installing CoreOS kube-aws..."
-  echo ""
-
-  local inst_dir="/usr/local/bin"
-
-  # Import the CoreOS Application Signing Public Key
-  gpg2 --keyserver pgp.mit.edu --recv-key FC8A365E
-
-  # Validated imported key
-  #gpg2 --fingerprint FC8A365E | grep -i "18AD 5014 C99E F7E3 BA5F 6CE9 50BD D3E0 FC8A 365E"
-
-  if command_exists kube-aws; then
-    warn "kube-aws is already installed...will re-install"
-    exec_cmd 'rm /usr/local/bin/kube-aws'
-  fi
-
-  wget -O /tmp/kube-aws.tar.gz "https://github.com/kubernetes-incubator/kube-aws/releases/download/v${KUBE_AWS_VER}/kube-aws-linux-amd64.tar.gz"
-  tar zxvf /tmp/kube-aws.tar.gz -C /tmp
-
-  chmod +x /tmp/linux-amd64/kube-aws
-  exec_cmd 'mv /tmp/linux-amd64/kube-aws /usr/local/bin/kube-aws'
-  rm /tmp/kube-aws.tar.gz
-  rm -rf /tmp/linux-amd64
-}
-
-
-### draft
-# https://github.com/kubernetes/helm
-###
-install_draft()
-{
-  echo ""
-  inf "Installing draft..."
-  echo ""
-
-  local install=0
-
-  if ! command_exists minikube; then
-    error "draft requires minikube. First install minikube and then re-try the installation of draft."
-    exit 1
-  fi
-
-  if command_exists draft; then
-    if [ $(draft version | awk -F: '{ print $3; exit }' | awk -F, '{ print $1; exit }' 2>/dev/null | grep "v${DRAFT_VER}") ]; then
-      warn "draft is already downloaded."
-      install=1
-    else
-      inf "draft is already downloaded...but versions don't match"
-      exec_cmd 'rm /usr/local/bin/draft'
-    fi
-  fi
-
-  if [ $install -eq 0 ]; then
-    wget -O /tmp/draft.tar.gz \
-      "https://github.com/Azure/draft/releases/download/v${DRAFT_VER}/draft-v${DRAFT_VER}-linux-amd64.tar.gz"
-    tar -zxvf /tmp/draft.tar.gz -C /tmp
-    exec_cmd 'cp /tmp/linux-amd64/draft /usr/local/bin/'
-    rm /tmp/draft.tar.gz
-    rm -rf "/tmp/linux-amd64"
-
-    warn "draft has been (re-)downloaded and extracted into your path."
-    warn "  However, draft has not been installed. And installation is a bit more complicated than just dowloading."
-    warn "  Go to https://github.com/Azure/draft/blob/v${DRAFT_VER}/docs/install.md to learn how to complete the installation."
-  else
-    warn "While draft has already been downloaded, it may not have been fully installed."
-    warn "  And installation is a bit more complicated than just dowloading."
-    warn "  Go to https://github.com/Azure/draft/blob/v${DRAFT_VER}/docs/install.md to learn how to complete the installation."
-  fi
-}
-
-
-### minikube
-# https://github.com/kubernetes/minikube
-###
-install_minikube()
-{
-  echo ""
-  inf "Installing minikube..."
-  echo ""
-
-  local install=0
-
-  if ! command_exists kubectl; then
-    error "minikube requires kubectl. First install kubectl and then re-try the installation of minikube."
-    exit 1
-  fi
-
-  if function_exists install_kvm; then
-    install_kvm
-  else
-    error "attempting to install kvm as part of this minikube install. But the expected kvm install script was not found."
-  fi
-
-  if command_exists minikube; then
-    if [ $(minikube version | awk -F: '{ print $3; exit }' | awk -F, '{ print $1; exit }' 2>/dev/null | grep "v${MINIKUBE_VER}") ]; then
-      warn "minikube is already installed."
-      install=1
-    else
-      inf "minikube is already installed...but versions don't match"
-      exec_cmd 'rm /usr/local/bin/helm'
-      exec_cmd 'rm /usr/local/bin/tiller'
-    fi
-  fi
-
-  if [ $install -eq 0 ]; then
-    wget -O /tmp/minikube \
-      "https://storage.googleapis.com/minikube/releases/v${MINIKUBE_VER}/minikube-linux-amd64"
-    chmod +x /tmp/minikube
-    exec_cmd 'mv /tmp/minikube /usr/local/bin/'
-  fi
-}
-
 
 ### ssh key generation for gce
 # https://cloud.google.com/compute/docs/instances/adding-removing-ssh-keys#project-wide
@@ -1044,35 +809,50 @@ main() {
     fi
   fi
 
-
-
-
   # kops handler
   if [ -n "$INSTALL_KOPS" ]; then
-    install_terraform
-    install_kops
-  fi
-
-  # kube-aws handler
-  if [ -n "$INSTALL_KUBE_AWS" ]; then
-    install_aws
-    install_kube_aws
+    source "${PROGDIR}/k8s/kops.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_kops
+    else
+      install_kops
+    fi
   fi
 
   if [ -n "$INSTALL_HYPER" ]; then
-    install_hyper
+    source "${PROGDIR}/cloud/hyper.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_hyper
+    else
+      install_hyper
+    fi
   fi
 
   if [ -n "$INSTALL_HABITAT" ]; then
-    install_habitat
+    source "${PROGDIR}/misc/habitat.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_habitat
+    else
+      install_habitat
+    fi
   fi
 
   if [ -n "$INSTALL_MINIKUBE" ]; then
-    install_minikube
+    source "${PROGDIR}/k8s/minikube.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_minikube
+    else
+      install_minikube
+    fi
   fi
 
   if [ -n "$INSTALL_DRAFT" ]; then
-    install_draft
+    source "${PROGDIR}/k8s/draft.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_draft
+    else
+      install_draft
+    fi
   fi
 
 

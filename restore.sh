@@ -467,6 +467,26 @@ uninstall_deltas()
           source "${PROGDIR}/misc/bosh.sh"
           uninstall_bosh
           ;;
+        kops)
+          source "${PROGDIR}/k8s/kops.sh"
+          uninstall_kops
+          ;;
+        hyper)
+          source "${PROGDIR}/cloud/hyper.sh"
+          uninstall_hyper
+          ;;
+        habitat)
+          source "${PROGDIR}/misc/habitat.sh"
+          uninstall_habitat
+          ;;
+        minikube)
+          source "${PROGDIR}/k8s/minikube.sh"
+          uninstall_minikube
+          ;;
+        draft)
+          source "${PROGDIR}/k8s/draft.sh"
+          uninstall_draft
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;
