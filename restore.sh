@@ -397,6 +397,7 @@ uninstall_deltas()
           uninstall_golang
           ;;
         node)
+          uninstall_serverless
           uninstall_node
           ;;
         ngrok)

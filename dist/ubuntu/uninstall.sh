@@ -234,7 +234,7 @@ uninstall_serverless()
 
   if command_exists up; then
     inf "up client is installed. Will attempt to remove..."
-    if [ -f "rm /usr/local/bin/up" ]; then
+    if [ -f "/usr/local/bin/up" ]; then
       exec_cmd 'rm /usr/local/bin/up'
     else
       error "expecting up command to be located under /usr/local/bin"
@@ -244,7 +244,7 @@ uninstall_serverless()
 
   if command_exists apex; then
     inf "apex client is installed. Will attempt to remove..."
-    if [ -f "rm /usr/local/bin/apex" ]; then
+    if [ -f "/usr/local/bin/apex" ]; then
       exec_cmd 'rm /usr/local/bin/apex'
     else
       error "expecting apex command to be located under /usr/local/bin"
