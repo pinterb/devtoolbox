@@ -22,7 +22,7 @@ install_helm()
       inf "helm is already installed...but versions don't match"
       exec_cmd 'rm /usr/local/bin/helm'
 
-      if [ -f "rm /usr/local/bin/tiller" ]; then
+      if [ -f "/usr/local/bin/tiller" ]; then
         exec_cmd 'rm /usr/local/bin/tiller'
       fi
     fi
@@ -52,7 +52,7 @@ uninstall_helm()
   if command_exists helm; then
     exec_cmd 'rm /usr/local/bin/helm'
 
-    if [ -f "rm /usr/local/bin/tiller" ]; then
+    if [ -f "/usr/local/bin/tiller" ]; then
       exec_cmd 'rm /usr/local/bin/tiller'
     fi
 

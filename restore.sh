@@ -488,6 +488,9 @@ uninstall_deltas()
           source "${PROGDIR}/k8s/draft.sh"
           uninstall_draft
           ;;
+        vscode)
+          uninstall_vscode
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

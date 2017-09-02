@@ -45,28 +45,14 @@ INSTALL_DRAFT=
 INSTALL_BOSH=
 INSTALL_XFCE=
 INSTALL_JFROG=
+INSTALL_VSCODE=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
-
-# based on user, determine how commands will be executed
-# ### DEPRECATE THIS???
-#SH_C='bash -c'
-#if [ "$DEFAULT_USER" != 'root' ]; then
-#  if command_exists sudo; then
-#    SH_C='sudo -E bash -c'
-#  elif command_exists su; then
-#    SH_C='su -c'
-#  else
-#    error "This installer needs the ability to run commands as root."
-#    error "We are unable to find either "sudo" or "su" available to make this happen."
-#    exit 1
-#  fi
-#fi
+UNINST_SUPPORT="vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -154,7 +140,9 @@ usage() {
     --ngrok                create secure tunnels to localhost (ngrok.com)
     --jfrog                the universial cli to JFrog products (e.g. Artifactory, Bintray)
     --tls-utils            utilities for managing TLS certificates (e.g. letsencrypt, cfssl)
+
     --vim                  vim-plug & choice plugins (e.g. vim-go)
+    --vscode               Microsoft Visual Studio Code IDE
 
     --xfce                 XFCE window manager on Windows WSL
 
@@ -295,6 +283,9 @@ cmdline() {
         ;;
       jfrog)
         readonly INSTALL_JFROG=1
+        ;;
+      vscode)
+        readonly INSTALL_VSCODE=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -852,6 +843,14 @@ main() {
       uninstall_draft
     else
       install_draft
+    fi
+  fi
+
+  if [ -n "$INSTALL_VSCODE" ]; then
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_vscode
+    else
+      install_vscode
     fi
   fi
 

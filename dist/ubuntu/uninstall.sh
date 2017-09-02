@@ -126,7 +126,7 @@ uninstall_node()
     exec_cmd 'rm /etc/apt/sources.list.d/nodesource.list'
   fi
 
-  if [ -f "rm /etc/apt/sources.list.d/nodesource.save" ]; then
+  if [ -f "/etc/apt/sources.list.d/nodesource.save" ]; then
     exec_cmd 'rm /etc/apt/sources.list.d/nodesource.save'
   fi
 }
@@ -149,7 +149,7 @@ uninstall_azure()
     exec_cmd 'rm /etc/apt/sources.list.d/azure-cli.list'
   fi
 
-  if [ -f "rm /etc/apt/sources.list.d/azure-cli.save" ]; then
+  if [ -f "/etc/apt/sources.list.d/azure-cli.save" ]; then
     exec_cmd 'rm /etc/apt/sources.list.d/azure-cli.save'
   fi
 }
@@ -258,5 +258,31 @@ uninstall_serverless()
   fi
 
   mark_as_uninstalled serverless
+}
+
+
+###
+# https://code.visualstudio.com/docs/setup/linux
+###
+uninstall_vscode()
+{
+  echo ""
+  hdr "Uninstalling Visual Studio Code IDE..."
+  echo ""
+
+  if command_exists code; then
+    exec_cmd 'apt-get purge -y code >/dev/null'
+    mark_as_uninstalled vscode
+  else
+    warn "Visual Studio Code is not installed."
+  fi
+
+  if [ -f "/etc/apt/sources.list.d/vscode.list" ]; then
+    exec_cmd 'rm /etc/apt/sources.list.d/vscode.list'
+  fi
+
+  if [ -f "/etc/apt/trusted.gpg.d/microsoft.gpg" ]; then
+    exec_cmd 'rm /etc/apt/trusted.gpg.d/microsoft.gpg'
+  fi
 }
 

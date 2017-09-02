@@ -601,3 +601,29 @@ bosh_deps_install()
     libxml2-dev libreadline6 libreadline6-dev libyaml-dev libsqlite3-dev sqlite3 >/dev/null 2>&1'
   exec_cmd 'apt-get -y update >/dev/null 2>&1'
 }
+
+
+###
+# https://code.visualstudio.com/docs/setup/linux
+###
+install_vscode()
+{
+  echo ""
+  hdr "Installing Visual Studio Code IDE..."
+  echo ""
+
+  if command_exists code; then
+    error "Visual Studio Code appears to be installed."
+    error "...if you're looking to upgrade, you should be able to that from the Visual Studio Code GUI."
+    exit 1
+  fi
+
+  curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg
+  exec_cmd "mv /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg"
+  exec_cmd 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
+  exec_cmd "apt-get -y update >/dev/null 2>&1"
+  exec_cmd "apt-get install -yq --allow-unauthenticated code >/dev/null 2>&1"
+
+  mark_as_installed vscode
+}
+
