@@ -47,5 +47,10 @@ uninstall_terraform()
   else
     warn "terraform is not installed."
   fi
+
+  if [ -d "/home/$DEV_USER/.terraform.d" ]; then
+    warn "/home/$DEV_USER/terraform.d was removed"
+    exec_cmd "rm -rf /home/$DEV_USER/.terraform.d"
+  fi
 }
 
