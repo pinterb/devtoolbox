@@ -18,25 +18,25 @@ fi
 
 # set PATH so it includes user's private bin directories
 PATH="$HOME/bin:$HOME/.local/bin:$PATH"
-
-# Load the shell dotfiles, and then some:
-# * ~/.path can be used to extend `$PATH`.
-# * ~/.extra can be used for other settings you don’t want to commit.
-for file in ~/.{path,exports,aliases,functions,extra}; do
-    [ -r "$file" ] && [ -f "$file" ] && source "$file"
-done
-unset file
-
-# Source anything bootstrap installed:
-#  exported environment variables (e.g. GOPATH)
-#  additions to PATH (e.g. GOPATH/bin)
-if [ -d ~/.bootstrap/profile.d ]; then
-  for i in ~/.bootstrap/profile.d/*.sh; do
-    if [ -r $i ]; then
-      . $i
-    fi
-  done
-  unset i
-fi
-
-~
+# MOVED TO bash_profile
+## Load the shell dotfiles, and then some:
+## * ~/.path can be used to extend `$PATH`.
+## * ~/.extra can be used for other settings you don’t want to commit.
+#for file in ~/.{path,exports,aliases,functions,extra}; do
+#    [ -r "$file" ] && [ -f "$file" ] && source "$file"
+#done
+#unset file
+#
+## Source anything bootstrap installed:
+##  exported environment variables (e.g. GOPATH)
+##  additions to PATH (e.g. GOPATH/bin)
+#if [ -d ~/.bootstrap/profile.d ]; then
+#  for i in ~/.bootstrap/profile.d/*.sh; do
+#    if [ -r $i ]; then
+#      . $i
+#    fi
+#  done
+#  unset i
+#fi
+#
+#~

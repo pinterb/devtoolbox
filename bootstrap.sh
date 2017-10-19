@@ -467,6 +467,22 @@ dotfiles()
     echo ""
   fi
 
+  # handle .bash_profile
+  if [ -f "/home/$DEV_USER/.bash_profile" ]; then
+    if [ ! -f "/home/$DEV_USER/.bash_profile-orig" ]; then
+      inf "Backing up .bash_profile file"
+      exec_nonprv_cmd "cp /home/$DEV_USER/.bash_profile /home/$DEV_USER/.bash_profile-orig"
+
+      if [ -f "$PROGDIR/dotfiles/bash_profile" ]; then
+        inf "Copying new Debian-based .bash_profile file"
+        exec_nonprv_cmd "cp $PROGDIR/dotfiles/bash_profile /home/$DEV_USER/.bash_profile"
+      fi
+    else
+      exec_nonprv_cmd "cp /home/$DEV_USER/.bash_profile /home/$DEV_USER/.bash_profile-$TODAY"
+    fi
+    echo ""
+  fi
+
   # handle .profile
   if [ -f "/home/$DEV_USER/.profile" ]; then
     if [ ! -f "/home/$DEV_USER/.profile-orig" ]; then

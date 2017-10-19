@@ -29,6 +29,17 @@ install_golang()
     fi
   fi
 
+  local wslgopath=$(echo "/home/$DEV_USER/go")
+  if microsoft_wsl; then
+    info "This appears to be a Windows WSL distribution of Ubuntu. "
+    wslgopath=$(powershell.exe $PROGDIR/lang/golang.ps1)
+    if [ ! -d "$wslgopath/bin" ]; then
+      error "The GOPATH on windows doesn't appear to be set up correctly."
+      error "  Run powershell.exe $PROGDIR/lang/golang.ps1 -debug 1"
+      exit 1
+    fi
+  fi
+
   if [ $install -le 1 ]; then
     git clone https://github.com/pinterb/install-golang.sh /tmp/install-golang
     source /tmp/install-golang/utils.sh
@@ -46,9 +57,13 @@ install_golang()
       warn "the non-privileged user will need to create & set their own GOPATH"
     else
       local gopath=$(go env GOPATH 2> /dev/null || echo "/home/$DEV_USER/go")
-      mkdir -p "$gopath/bin"
-      mkdir -p "$gopath/src"
-      mkdir -p "$gopath/pkg"
+      if microsoft_wsl; then
+        gopath=$wslgopath
+      else
+        mkdir -p "$gopath/bin"
+        mkdir -p "$gopath/src"
+        mkdir -p "$gopath/pkg"
+      fi
 
       inf "updating ~/.bootstrap/profile.d/ with GOPATH..."
       echo "# The following GOPATH was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"

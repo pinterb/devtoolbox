@@ -345,6 +345,19 @@ uninstall_dotfiles()
     echo ""
   fi
 
+  # handle .bash_profile
+  if [ -f "/home/$DEV_USER/.bash_profile" ]; then
+    if [ -f "/home/$DEV_USER/.bash_profile-orig" ]; then
+      inf "Restoring .bash_profile file"
+      exec_nonprv_cmd "cp /home/$DEV_USER/.bash_profile-orig /home/$DEV_USER/.bash_profile"
+      exec_nonprv_cmd "rm /home/$DEV_USER/.bash_profile-orig"
+
+    else
+      warn ".bash_profile backup file doesn't exist"
+    fi
+    echo ""
+  fi
+
   # handle .profile
   if [ -f "/home/$DEV_USER/.profile" ]; then
     if [ -f "/home/$DEV_USER/.profile-orig" ]; then

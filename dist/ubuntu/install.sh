@@ -275,6 +275,10 @@ install_node()
   else
     exec_cmd 'npm install -g yarn >/dev/null'
   fi
+
+  # A hack for now, install 'codename'...
+  #  codename can be used to come up with random github repository names
+  exec_cmd 'npm install --global intel-codenames-picker >/dev/null'
 }
 
 
