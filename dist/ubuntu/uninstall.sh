@@ -134,6 +134,10 @@ uninstall_node()
   if [ -f "/etc/apt/sources.list.d/nodesource.save" ]; then
     exec_cmd 'rm /etc/apt/sources.list.d/nodesource.save'
   fi
+
+  if [ -d "/home/$DEV_USER/.npm" ]; then
+    exec_cmd 'rm -rf /home/$DEV_USER/.npm'
+  fi
 }
 
 
