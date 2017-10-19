@@ -152,6 +152,10 @@ _backup()
     exec_cmd "cp /home/$DEV_USER/.profile /home/$DEV_USER/.bootstrap/backup/$bkup/dotprofile"
   fi
 
+  if [ -f "/home/$DEV_USER/.bash_profile" ]; then
+    exec_cmd "cp /home/$DEV_USER/.bash_profile /home/$DEV_USER/.bootstrap/backup/$bkup/dotbash_profile"
+  fi
+
   if [ -f "/home/$DEV_USER/.bashrc" ]; then
     exec_cmd "cp /home/$DEV_USER/.bashrc /home/$DEV_USER/.bootstrap/backup/$bkup/dotbashrc"
   fi

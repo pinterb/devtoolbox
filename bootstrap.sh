@@ -483,6 +483,11 @@ dotfiles()
     echo ""
   fi
 
+  if [ -f "$PROGDIR/dotfiles/bash_profile" ]; then
+    inf "Copying new .bash_profile file"
+    exec_nonprv_cmd "cp $PROGDIR/dotfiles/bash_profile /home/$DEV_USER/.bash_profile"
+  fi
+
   # handle .profile
   if [ -f "/home/$DEV_USER/.profile" ]; then
     if [ ! -f "/home/$DEV_USER/.profile-orig" ]; then

@@ -13,6 +13,11 @@ base_restore()
     exec_cmd "chown $DEV_USER:$DEV_USER /home/$DEV_USER/.profile"
   fi
 
+  if [ -f "/home/$DEV_USER/.bootstrap/backup/$1/dotbash_profile" ]; then
+    exec_cmd "cp /home/$DEV_USER/.bootstrap/backup/$1/dotbash_profile /home/$DEV_USER/.bash_profile"
+    exec_cmd "chown $DEV_USER:$DEV_USER /home/$DEV_USER/.bash_profile"
+  fi
+
   if [ -f "/home/$DEV_USER/.bootstrap/backup/$1/dotbashrc" ]; then
     exec_cmd "cp /home/$DEV_USER/.bootstrap/backup/$1/dotbashrc /home/$DEV_USER/.bashrc"
     exec_cmd "chown $DEV_USER:$DEV_USER /home/$DEV_USER/.bashrc"
