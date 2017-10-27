@@ -173,6 +173,9 @@ enable_pathogen_bundles()
   ## gotests
   git clone https://github.com/buoto/gotests-vim
 
+  ## protobuf
+  git clone https://github.com/uarun/vim-protobuf
+
   if [ $MEM_TOTAL_KB -ge 1500000 ]; then
     enable_vim_ycm
     cd "$inst_dir"
