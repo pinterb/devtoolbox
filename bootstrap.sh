@@ -46,13 +46,14 @@ INSTALL_BOSH=
 INSTALL_XFCE=
 INSTALL_JFROG=
 INSTALL_VSCODE=
+INSTALL_KEYBASE=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -140,6 +141,7 @@ usage() {
     --ngrok                create secure tunnels to localhost (ngrok.com)
     --jfrog                the universial cli to JFrog products (e.g. Artifactory, Bintray)
     --tls-utils            utilities for managing TLS certificates (e.g. letsencrypt, cfssl)
+    --keybase              Keybase
 
     --vim                  vim-plug & choice plugins (e.g. vim-go)
     --vscode               Microsoft Visual Studio Code IDE
@@ -286,6 +288,9 @@ cmdline() {
         ;;
       vscode)
         readonly INSTALL_VSCODE=1
+        ;;
+      keybase)
+        readonly INSTALL_KEYBASE=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -875,6 +880,13 @@ main() {
     fi
   fi
 
+  if [ -n "$INSTALL_KEYBASE" ]; then
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_keybase
+    else
+      install_keybase
+    fi
+  fi
 
   # always the last step, notify use to logoff for changes to take affect
   if [ $LOGOFF_REQ -eq 1 ]; then
