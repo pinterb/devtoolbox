@@ -413,7 +413,6 @@ install_docker()
     warn "This appears to be a Windows WSL distribution of Ubuntu. "
     warn "Will attempt to install Docker without enabling & starting the Docker service."
     warn "  And instead, the DOCKER_HOST environment variable will point to native Windows Docker."
-    exit 1
   fi
 
   inf "removing any old Docker packages"
@@ -462,7 +461,9 @@ install_docker()
     # note namespace won't work in all scenerios, like --net=host,
     # but its tighter security so it's recommended to try using first
     # this now uses the daemon.json method rather that the old way of modifying systemd
-    exec_cmd "printf '{ \"userns-remap\" : \"default\" , \"storage-driver\" : \"overlay2\" }' > /etc/docker/daemon.json"
+    if ! microsoft_wsl; then
+      exec_cmd "printf '{ \"storage-driver\" : \"overlay2\" }' > /etc/docker/daemon.json"
+    fi
 
     exec_cmd 'groupadd -f docker'
     inf "added docker group"
@@ -530,8 +531,12 @@ install_docker_deps()
   exec_cmd 'apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D >/dev/null'
   exec_cmd 'apt-get -y update >/dev/null'
 
-  exec_cmd 'apt-get install -y "linux-image-extra-$(uname -r)" >/dev/null'
-  exec_cmd 'echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list'
+  if microsoft_wsl; then
+    exec_cmd 'echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable" > /etc/apt/sources.list.d/docker.list'
+  else
+    exec_cmd 'apt-get install -y "linux-image-extra-$(uname -r)" >/dev/null'
+    exec_cmd 'echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list'
+  fi
 
   if [ "$DISTRO_VER" == "14.04" ]; then
     exec_cmd 'apt-get install -y "linux-image-extra-$(uname -r)" linux-image-extra-virtual >/dev/null'

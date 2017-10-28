@@ -31,11 +31,12 @@ install_golang()
 
   local wslgopath=$(echo "/home/$DEV_USER/go")
   if microsoft_wsl; then
-    info "This appears to be a Windows WSL distribution of Ubuntu. "
-    wslgopath=$(powershell.exe $PROGDIR/lang/golang.ps1)
+    inf "This appears to be a Windows WSL distribution of Ubuntu. "
+    #wslgopath=$(powershell.exe $PROGDIR/lang/golang.ps1)
+    wslgopath="/mnt/c/projects/go"
     if [ ! -d "$wslgopath/bin" ]; then
-      error "The GOPATH on windows doesn't appear to be set up correctly."
-      error "  Run powershell.exe $PROGDIR/lang/golang.ps1 -debug 1"
+      error "The GOPATH on windows (i.e. $wslgopath) doesn't appear to be set up correctly."
+      #error "  Run powershell.exe $PROGDIR/lang/golang.ps1 -debug 1"
       exit 1
     fi
   fi
