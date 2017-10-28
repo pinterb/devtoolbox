@@ -295,3 +295,21 @@ uninstall_vscode()
   fi
 }
 
+
+###
+# https://keybase.io/docs/the_app/install_linux
+###
+uninstall_keybase()
+{
+  echo ""
+  hdr "Uninstalling keybase..."
+  echo ""
+
+  if command_exists run_keybase; then
+    exec_cmd 'apt-get purge -y keybase >/dev/null'
+    mark_as_uninstalled keybase
+  else
+    warn "Keybase is not installed."
+  fi
+}
+

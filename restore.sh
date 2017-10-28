@@ -504,6 +504,9 @@ uninstall_deltas()
         vscode)
           uninstall_vscode
           ;;
+        keybase)
+          uninstall_keybase
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

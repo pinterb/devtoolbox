@@ -635,3 +635,35 @@ install_vscode()
   mark_as_installed vscode
 }
 
+
+###
+# https://keybase.io/docs/the_app/install_linux
+###
+install_keybase()
+{
+  echo ""
+  hdr "Installing keybase..."
+  echo ""
+
+  local install=0
+
+  if command_exists run_keybase; then
+    warn "Keybase appears to be installed.  Will attempt a package upgrade..."
+    exec_cmd "apt-get install --only-upgrade keybase"
+    exec_nonprv_cmd "run_keybase"
+    install=1
+  fi
+
+  if [ $install -eq 0 ]; then
+    exec_cmd "apt-get install -yq --allow-unauthenticated libappindicator1 libgconf-2-4 >/dev/null 2>&1"
+
+    exec_cmd "rm -rf /tmp/keybase_amd64.deb"
+    exec_nonprv_cmd "wget -O /tmp/keybase_amd64.deb https://prerelease.keybase.io/keybase_amd64.deb"
+    exec_cmd "dpkg -i /tmp/keybase_amd64.deb"
+    exec_cmd "apt-get install -f"
+    exec_nonprv_cmd "run_keybase"
+  fi
+
+  mark_as_installed keybase
+}
+
