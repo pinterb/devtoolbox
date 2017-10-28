@@ -23,6 +23,10 @@ if [[ -d "keybase-cloudcreds" ]]; then
   fi
 else
   git clone keybase://private/pinterb/cloudcreds keybase-cloudcreds
+  if [[ ! -d "keybase-cloudcreds" ]]; then
+    error "git clone of keybase cloud creds repo failed"
+    exit 1
+  fi
   cd keybase-cloudcreds
   if [ "$git_url" == 'keybase://private/pinterb/cloudcreds' ]; then
     inf "Looks like we're in the correct directory"
