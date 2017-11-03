@@ -425,8 +425,11 @@ binfiles()
   exec_cmd "cp -R $PROGDIR/binfiles/. /home/$DEV_USER/bin"
   exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER/bin"
 
-  mark_as_installed binfiles
+  inf "updating ~/.bootstrap/profile.d/ with /home/$DEV_USER/bin ..."
+  echo "# The following PATH was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/binfiles.sh"
+  echo 'export PATH=$PATH:/home/$DEV_USER/bin' >> "/home/$DEV_USER/.bootstrap/profile.d/binfiles.sh"
 
+  mark_as_installed binfiles
 }
 
 
