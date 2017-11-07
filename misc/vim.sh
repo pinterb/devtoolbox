@@ -176,6 +176,9 @@ enable_pathogen_bundles()
   ## protobuf
   git clone https://github.com/uarun/vim-protobuf
 
+  ## wakatime
+  git clone git://github.com/wakatime/vim-wakatime.git
+
   if [ $MEM_TOTAL_KB -ge 1500000 ]; then
     enable_vim_ycm
     cd "$inst_dir"
