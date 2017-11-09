@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# vim: filetype=sh:tabstop=2:shiftwidth=2:expandtab
+
+## https://kubesec.io
+ksec() {
+  local FILE="${1:-}";
+  [[ ! -f "${FILE}" ]] && {
+    echo "kubesec: ${FILE}: No such file" >&2;
+    return 1
+  };
+  curl --silent \
+    --compressed \
+    --connect-timeout 5 \
+    -F file=@"${FILE}" \
+    https://kubesec.io/
+}
+
+## https://medium.com/@pczarkowski/kubernetes-tip-run-an-interactive-pod-d701766a12
+kdebug() {
+  kubectl run -i --tty debug --image=busybox --restart=Never -- sh
+  kubectl delete pod debug
+}
+
+## https://github.com/jessfraz/dotfiles/blob/master/.functions
+# go to a folder easily in your gopath
+gogo() {
+  local d=$1
+
+  if [[ -z $d ]]; then
+    echo "You need to specify a project name."
+    return 1
+  fi
+
+  if [[ "$d" == github* ]]; then
+    d=$(echo "$d" | sed 's/.*\///')
+  fi
+  d=${d%/}
+
+  # search for the project dir in the GOPATH
+  local path=( $(find "${GOPATH}/src" \( -type d -o -type l \) -iname "$d"  | awk '{print length, $0;}' | sort -n | awk '{print $2}') )
+
+  if [ "${path[0]}" == "" ] || [ "${path[*]}" == "" ]; then
+    echo "Could not find a directory named $d in $GOPATH"
+    echo "Maybe you need to 'go get' it ;)"
+    return 1
+  fi
+
+  # enter the first path found
+  cd "${path[0]}" || return 1
+}
+
+## https://github.com/jessfraz/dotfiles/blob/master/.functions
+# `tre` is a shorthand for `tree` with hidden files and color enabled, ignoring
+# the `.git` directory, listing directories first. The output gets piped into
+# `less` with options to preserve color and line numbers, unless the output is
+# small enough for one screen.
+tre() {
+    tree -aC -I '.git' --dirsfirst "$@" | less -FRNX
+  }
+
