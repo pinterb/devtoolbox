@@ -539,6 +539,36 @@ dotfiles()
     exec_nonprv_cmd "cp $PROGDIR/dotfiles/gitconfig /home/$DEV_USER/.gitconfig"
   fi
 
+  # handle .aliases
+  if [ -f "/home/$DEV_USER/.aliases" ]; then
+    if [ ! -f "/home/$DEV_USER/.bootstrap/backup/orig/dotaliases" ]; then
+      inf "Backing up .aliases file"
+      exec_nonprv_cmd "cp /home/$DEV_USER/.aliases /home/$DEV_USER/.bootstrap/backup/orig/dotaliases"
+    else
+      exec_nonprv_cmd "cp /home/$DEV_USER/.aliases /home/$DEV_USER/.aliases-$TODAY"
+    fi
+  fi
+
+  if [ -f "$PROGDIR/dotfiles/aliases" ]; then
+    inf "Copying new .aliases file"
+    exec_nonprv_cmd "cp $PROGDIR/dotfiles/aliases /home/$DEV_USER/.aliases"
+  fi
+
+  # handle .functions
+  if [ -f "/home/$DEV_USER/.functions" ]; then
+    if [ ! -f "/home/$DEV_USER/.bootstrap/backup/orig/dotfunctions" ]; then
+      inf "Backing up .functions file"
+      exec_nonprv_cmd "cp /home/$DEV_USER/.functions /home/$DEV_USER/.bootstrap/backup/orig/dotfunctions"
+    else
+      exec_nonprv_cmd "cp /home/$DEV_USER/.functions /home/$DEV_USER/.functions-$TODAY"
+    fi
+  fi
+
+  if [ -f "$PROGDIR/dotfiles/functions" ]; then
+    inf "Copying new .functions file"
+    exec_nonprv_cmd "cp $PROGDIR/dotfiles/functions /home/$DEV_USER/.functions"
+  fi
+
   if [ "$DEFAULT_USER" == 'root' ]; then
     exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
   fi

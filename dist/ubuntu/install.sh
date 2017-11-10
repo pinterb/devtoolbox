@@ -61,7 +61,7 @@ base_packages()
 
   local pkgs="software-properties-common jq unzip gnupg2 build-essential make autoconf automake"
   pkgs="$pkgs libtool g++ ctags cmake gcc openssh-client python-dev python3-dev libssl-dev libffi-dev"
-  pkgs="$pkgs tree"
+  pkgs="$pkgs tree direnv"
 
   # ncurses is required for building kris-nova/kubicorn
   pkgs="$pkgs libncurses-dev"

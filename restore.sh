@@ -380,6 +380,20 @@ uninstall_dotfiles()
     exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
   fi
 
+  # handle .aliases
+  if [ -f "/home/$DEV_USER/.bootstrap/backup/orig/dotaliases" ]; then
+    exec_cmd "cp /home/$DEV_USER/.bootstrap/backup/orig/dotaliases /home/$DEV_USER/.aliases"
+  fi
+
+  # handle .functions
+  if [ -f "/home/$DEV_USER/.bootstrap/backup/orig/dotfunctions" ]; then
+    exec_cmd "cp /home/$DEV_USER/.bootstrap/backup/orig/dotfunctions /home/$DEV_USER/.functions"
+  fi
+
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
+  fi
+
   mark_as_uninstalled dotfiles
 }
 
