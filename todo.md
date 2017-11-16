@@ -6,3 +6,4 @@ sudo apt-get install redis-tools
 
 ## Docker Install
 On Windows WSL, checking for old docker packages fails
+
