@@ -39,6 +39,12 @@ install_gcloud()
     exec_nonprv_cmd "/home/$DEV_USER/bin/google-cloud-sdk/install.sh --quiet --rc-path /home/$DEV_USER/.profile --usage-reporting true --command-completion true --path-update true"
     exec_nonprv_cmd "rm /tmp/gcloud.tar.gz"
 
+    inf "updating ~/.bootstrap/profile.d/ with gcloud..."
+    echo "# The following PATH was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/gcloud.sh"
+    echo "export GCLOUDPATH=/home/$DEV_USER/bin/google-cloud-sdk" >> "/home/$DEV_USER/.bootstrap/profile.d/gcloud.sh"
+    echo 'export PATH=$PATH:$GCLOUDPATH/bin' >> "/home/$DEV_USER/.bootstrap/profile.d/gcloud.sh"
+
+
     # we don't want to overlay dot files after we modify .profile with gcloud
     mark_dotprofile_as_touched gcloud
     mark_as_installed gcloud
