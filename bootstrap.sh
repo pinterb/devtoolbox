@@ -425,6 +425,10 @@ binfiles()
   exec_cmd "cp -R $PROGDIR/binfiles/. /home/$DEV_USER/bin"
   exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER/bin"
 
+  if [[ -f "/home/$DEV_USER/bin/ks-linux-amd64" ]]; then
+    mv "/home/$DEV_USER/bin/ks-linux-amd64" "/home/$DEV_USER/bin/ks"
+  fi
+
   inf "updating ~/.bootstrap/profile.d/ with /home/$DEV_USER/bin ..."
   echo "# The following PATH was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/binfiles.sh"
   echo 'export PATH=$PATH:/home/$DEV_USER/bin' >> "/home/$DEV_USER/.bootstrap/profile.d/binfiles.sh"
