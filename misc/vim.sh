@@ -90,6 +90,17 @@ install_vim_mods()
     exec_cmd "cp /home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim $inst_dir/colors/molokai.vim"
   fi
 
+  # some vim colors #2
+  if [ -d "/home/$DEV_USER/projects/colibri.vim" ]; then
+    exec_cmd "cd /home/$DEV_USER/projects/colibri.vim; git pull"
+  else
+    exec_cmd "git clone https://github.com/archSeer/colibri.vim /home/$DEV_USER/projects/colibri.vim"
+  fi
+
+  if [ -f "/home/$DEV_USER/projects/colibri.vim/colors/colibri.vim" ]; then
+    exec_cmd "cp /home/$DEV_USER/projects/colibri.vim/colors/colibri.vim $inst_dir/colors/colibri.vim"
+  fi
+
   exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
   mark_as_installed vimmods
 }
