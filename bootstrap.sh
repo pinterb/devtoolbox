@@ -47,13 +47,14 @@ INSTALL_XFCE=
 INSTALL_JFROG=
 INSTALL_VSCODE=
 INSTALL_KEYBASE=
+INSTALL_INSPEC=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -142,6 +143,7 @@ usage() {
     --jfrog                the universial cli to JFrog products (e.g. Artifactory, Bintray)
     --tls-utils            utilities for managing TLS certificates (e.g. letsencrypt, cfssl)
     --keybase              Keybase
+    --inspec               InSpec by Chef
 
     --vim                  vim-plug & choice plugins (e.g. vim-go)
     --vscode               Microsoft Visual Studio Code IDE
@@ -291,6 +293,9 @@ cmdline() {
         ;;
       keybase)
         readonly INSTALL_KEYBASE=1
+        ;;
+      inspec)
+        readonly INSTALL_INSPEC=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -922,6 +927,14 @@ main() {
       uninstall_keybase
     else
       install_keybase
+    fi
+  fi
+
+  if [ -n "$INSTALL_INSPEC" ]; then
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_inspec
+    else
+      install_inspec
     fi
   fi
 

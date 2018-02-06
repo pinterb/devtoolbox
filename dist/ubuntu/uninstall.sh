@@ -205,6 +205,41 @@ uninstall_docker()
 }
 
 
+### inspec
+# https://www.inspec.io/downloads/
+###
+uninstall_inspec()
+{
+  echo ""
+  hdr "Uninstalling InSpec..."
+  echo ""
+
+  if command_exists inspec; then
+    exec_cmd 'apt-get purge -yq inspec >/dev/null 2>&1'
+    exec_cmd 'apt-get autoremove -yq >/dev/null 2>&1'
+    mark_as_uninstalled inspec
+  else
+    warn "InSpec is not installed"
+  fi
+
+  if [ -f "/etc/apt/sources.list.d/inspec.list" ]; then
+    exec_cmd 'rm /etc/apt/sources.list.d/inspec.list'
+  fi
+
+  if [ -f "/etc/apt/sources.list.d/inspec.save" ]; then
+    exec_cmd 'rm /etc/apt/sources.list.d/inspec.save'
+  fi
+
+  if [ -f "/etc/apt/sources.list.d/chef-stable.list" ]; then
+    exec_cmd 'rm /etc/apt/sources.list.d/chef-stable.list'
+  fi
+
+  if [ -f "/home/$DEV_USER/.bootstrap/profile.d/inspec.sh" ]; then
+    exec_cmd "rm /home/$DEV_USER/.bootstrap/profile.d/inspec.sh"
+  fi
+}
+
+
 ### Uninstall the XFCE window manager
 # https://xfce.org/
 #

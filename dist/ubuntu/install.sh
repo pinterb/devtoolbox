@@ -525,7 +525,7 @@ install_docker()
 install_docker_deps()
 {
   echo ""
-  inf "adding ppa key and other prerequisites"
+  inf "adding docker ppa key and other prerequisites"
   echo ""
   exec_cmd 'apt-get install -y apt-transport-https ca-certificates curl software-properties-common >/dev/null'
   exec_cmd 'apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D >/dev/null'
@@ -541,6 +541,75 @@ install_docker_deps()
   if [ "$DISTRO_VER" == "14.04" ]; then
     exec_cmd 'apt-get install -y "linux-image-extra-$(uname -r)" linux-image-extra-virtual >/dev/null'
   fi
+}
+
+
+### inspec
+# https://www.inspec.io/downloads/
+###
+install_inspec()
+{
+  echo ""
+  hdr "Installing InSpec..."
+  echo ""
+
+  local install=0
+  local inspec_ver="$INSPEC_VER"
+
+  if command_exists inspec; then
+    if [ $(inspec -v | awk -F '[ ,]+' '{ print $3 }') == "$inspec_ver" ]; then
+      warn "InSpec is already installed...skipping installation"
+      echo ""
+      install=2
+    else
+      inf "InSpec is already installed. But versions don't match, so will attempt to upgrade..."
+      echo ""
+      install=1
+    fi
+  fi
+
+  # Only need to install inspec ppa for new installs
+  if [ $install -eq 0 ]; then
+    install_inspec_deps
+  fi
+
+  # Either Inspec isn't installed or installed version doesn't match desired
+  # version
+  if [ $install -le 1 ]; then
+    # Note: You can run "sudo apt-cache madison inspec" to see what versions
+    # are available
+    local target_ver="$INSPEC_VER"
+
+    echo ""
+    inf "installing / upgrading InSpec"
+    echo ""
+
+    exec_cmd 'apt-get -y update >/dev/null'
+    exec_cmd "apt-get install -yq --allow-unauthenticated docker-ce=$target_ver"
+
+    mark_as_installed docker
+  fi
+
+}
+
+
+install_inspec_deps()
+{
+  echo ""
+  inf "adding inspec ppa key and other prerequisites"
+  echo ""
+  exec_cmd 'apt-get install -y apt-transport-https >/dev/null'
+  exec_cmd 'wget -qO - https://packages.chef.io/chef.asc > /tmp/inspec-key'
+  exec_cmd 'apt-key add /tmp/inspec-key'
+  exec_cmd 'rm /tmp/inspec-key'
+
+  if microsoft_wsl; then
+    exec_cmd 'echo "deb https://packages.chef.io/repos/apt/stable xenial main" > /etc/apt/sources.list.d/chef-stable.list'
+  else
+    exec_cmd 'echo "deb https://packages.chef.io/repos/apt/stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/chef-stable.list'
+  fi
+
+  exec_cmd 'apt-get -y update >/dev/null'
 }
 
 

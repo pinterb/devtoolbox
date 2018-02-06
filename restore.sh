@@ -521,6 +521,9 @@ uninstall_deltas()
         keybase)
           uninstall_keybase
           ;;
+        inspec)
+          uninstall_inspec
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;
