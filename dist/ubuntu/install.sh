@@ -557,7 +557,7 @@ install_inspec()
   local inspec_ver="$INSPEC_VER"
 
   if command_exists inspec; then
-    if [ $(inspec -v | awk -F '[ ,]+' '{ print $3 }') == "$inspec_ver" ]; then
+    if [ $(inspec version | awk '{ print $1; exit }') == "$inspec_ver" ]; then
       warn "InSpec is already installed...skipping installation"
       echo ""
       install=2
@@ -578,16 +578,16 @@ install_inspec()
   if [ $install -le 1 ]; then
     # Note: You can run "sudo apt-cache madison inspec" to see what versions
     # are available
-    local target_ver="$INSPEC_VER"
+    local target_ver="$INSPEC_VER-1"
 
     echo ""
     inf "installing / upgrading InSpec"
     echo ""
 
     exec_cmd 'apt-get -y update >/dev/null'
-    exec_cmd "apt-get install -yq --allow-unauthenticated docker-ce=$target_ver"
+    exec_cmd "apt-get install -yq --allow-unauthenticated inspec=$target_ver"
 
-    mark_as_installed docker
+    mark_as_installed inspec
   fi
 
 }

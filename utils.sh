@@ -19,7 +19,7 @@ ANSIBLE_VER="2.4.0"
 AZURE_VER="2.0.12"
 NGROK_VER="2.2.6"
 JFROG_VER="1.10.1"
-INSPEC_VER="1.49.2-1"
+INSPEC_VER="1.49.2"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="174.0.0"
