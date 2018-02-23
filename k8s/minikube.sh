@@ -38,6 +38,9 @@ install_minikube()
       "https://storage.googleapis.com/minikube/releases/v${MINIKUBE_VER}/minikube-linux-amd64"
     chmod +x /tmp/minikube
     exec_cmd 'mv /tmp/minikube /usr/local/bin/'
+    inf " "
+    inf "starting minikube..."
+    minikube start --vm-driver=kvm2
   fi
   mark_as_installed minikube
 }
@@ -60,5 +63,4 @@ install_minikube()
     exec_cmd 'rm /usr/local/bin/minikube'
     mark_as_uninstalled minikube
   fi
-
 }

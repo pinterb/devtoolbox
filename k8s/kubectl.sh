@@ -22,7 +22,7 @@ install_kubectl()
       exit 1
     fi
 
-    if [ $(kubectl version | awk '{ print $5; exit }' | grep "v$KUBE_VER") ]; then
+    if [ $(kubectl version | awk '{ print $5; exit }' | grep "$KUBE_VER") ]; then
       warn "kubectl is already installed."
       install=1
     else
@@ -32,14 +32,16 @@ install_kubectl()
   fi
 
   if [ $install -eq 0 ]; then
-    wget -O "/tmp/kubernetes.tar.gz" \
-      "https://github.com/kubernetes/kubernetes/releases/download/v${KUBE_VER}/kubernetes.tar.gz"
-    tar -zxvf /tmp/kubernetes.tar.gz -C /tmp
-    "/tmp/kubernetes/cluster/get-kube-binaries.sh"
-    cp /tmp/kubernetes/client/bin/kube* "/home/$DEV_USER/bin/"
 
-    rm /tmp/kubernetes.tar.gz
-    rm -rf /tmp/kubernetes
+    curl -Lo "/tmp/kubectl" "https://storage.googleapis.com/kubernetes-release/release/${KUBE_VER}/bin/linux/amd64/kubectl"
+    if [ -f /tmp/kubectl ]; then
+      chmod +x /tmp/kubectl && \
+      exec_cmd "mv /tmp/kubectl /usr/local/bin/kubectl"
+    else
+      error "expecting /tmp/kubectl to have been downloaded..."
+      error "  but file was not found!"
+      exit 1
+    fi
 
     inf "updating ~/.bootstrap/profile.d/ with kubectl.."
     echo "# The following was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/kubectl.sh"
@@ -62,7 +64,7 @@ uninstall_kubectl()
   fi
 
   if command_exists kubectl; then
-    exec_cmd "rm /home/$DEV_USER/bin/kube*"
+    exec_cmd "rm -f /usr/local/bin/kubectl*"
 
     if [ -f "/home/$DEV_USER/.bootstrap/profile.d/kubectl.sh" ]; then
       exec_cmd "rm /home/$DEV_USER/.bootstrap/profile.d/kubectl.sh"

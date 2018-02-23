@@ -636,7 +636,7 @@ install_xfce()
 
 
 ### Install libvirt and qemu-kvm
-# https://???
+# https://github.com/kubernetes/minikube/blob/master/docs/drivers.md#kvm2-driver)
 ###
 install_kvm()
 {
@@ -649,7 +649,7 @@ install_kvm()
   fi
   kvm-ok > /dev/null || error "kvm is not supported on this machine" && exit 1
 
-  exec_cmd 'apt-get install -yq qemu-kvm libvirt-bin virtinst bridge-utils'
+  exec_cmd 'apt-get install -yq qemu-kvm libvirt-bin'
 
   # Add $DEV_USER to the libvirtd group (use libvirt group for rpm based
   # distros) so you don't need to sudo
@@ -667,6 +667,11 @@ install_kvm()
   else
     exec_cmd 'newgrp libvirtd'
   fi
+
+  # download and install the kvm docker machine driver
+  curl -Lo /tmp/docker-machine-driver-kvm2 https://storage.googleapis.com/minikube/releases/latest/docker-machine-driver-kvm2 && \
+    chmod +x /tmp/docker-machine-driver-kvm2 && \
+    exec_cmd "mv /tmp/docker-machine-driver-kvm2 /usr/bin/"
 }
 
 
