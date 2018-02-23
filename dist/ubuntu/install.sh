@@ -443,8 +443,8 @@ install_docker()
   if [ $install -le 1 ]; then
     # Note: You can run "sudo apt-cache madison docker-ce" to see what versions
     # are available
-    #local target_ver="$DOCKER_VER~ce-0~ubuntu-$(lsb_release -cs)" #NOTE: This was valid prior to 17.0.6
-    local target_ver="$DOCKER_VER~ce-0~ubuntu"
+    local target_ver="$DOCKER_VER~ce-0~ubuntu-$(lsb_release -cs)" #NOTE: This was valid prior to 17.0.6
+    #local target_ver="$DOCKER_VER~ce-0~ubuntu"
 
     echo ""
     inf "installing / upgrading docker-ce"
