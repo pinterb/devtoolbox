@@ -524,6 +524,9 @@ uninstall_deltas()
         inspec)
           uninstall_inspec
           ;;
+        bazel)
+          uninstall_bazel
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

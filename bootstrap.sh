@@ -48,13 +48,14 @@ INSTALL_JFROG=
 INSTALL_VSCODE=
 INSTALL_KEYBASE=
 INSTALL_INSPEC=
+INSTALL_BAZEL=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -149,6 +150,7 @@ usage() {
     --vscode               Microsoft Visual Studio Code IDE
 
     --xfce                 XFCE window manager on Windows WSL
+    --bazel                Bazel build tool
 
     --uninstall            uninstall specified package(s) or utilities (incl. $UNINST_SUPPORT)
 
@@ -297,6 +299,9 @@ cmdline() {
       inspec)
         readonly INSTALL_INSPEC=1
         ;;
+      bazel)
+        readonly INSTALL_BAZEL=1
+        ;;
       uninstall)
         readonly UNINSTALL=1
         ;;
@@ -436,7 +441,7 @@ binfiles()
 
   inf "updating ~/.bootstrap/profile.d/ with /home/$DEV_USER/bin ..."
   echo "# The following PATH was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/binfiles.sh"
-  echo 'export PATH=$PATH:/home/$DEV_USER/bin' >> "/home/$DEV_USER/.bootstrap/profile.d/binfiles.sh"
+  echo "export PATH=$PATH:/home/$DEV_USER/bin" >> "/home/$DEV_USER/.bootstrap/profile.d/binfiles.sh"
 
   mark_as_installed binfiles
 }
@@ -935,6 +940,14 @@ main() {
       uninstall_inspec
     else
       install_inspec
+    fi
+  fi
+
+  if [ -n "$INSTALL_BAZEL" ]; then
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_bazel
+    else
+      install_bazel
     fi
   fi
 

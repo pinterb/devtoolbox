@@ -22,6 +22,7 @@ install_minikube()
   else
     error "attempting to install kvm as part of this minikube install. But the expected kvm install script was not found."
   fi
+inf "hello"
 
   if command_exists minikube; then
     if [ $(minikube version | awk -F: '{ print $3; exit }' | awk -F, '{ print $1; exit }' 2>/dev/null | grep "v${MINIKUBE_VER}") ]; then
@@ -45,10 +46,10 @@ install_minikube()
   mark_as_installed minikube
 }
 
-install_minikube()
+uninstall_minikube()
 {
   echo ""
-  hdr "Installing minikube..."
+  hdr "Uninstalling minikube..."
   echo ""
 
   if command_exists draft; then
