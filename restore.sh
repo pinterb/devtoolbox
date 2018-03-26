@@ -527,6 +527,9 @@ uninstall_deltas()
         bazel)
           uninstall_bazel
           ;;
+        jenkinsx)
+          uninstall_jenkinsx
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

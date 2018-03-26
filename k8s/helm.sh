@@ -29,7 +29,7 @@ install_helm()
   fi
 
   if [ $install -eq 0 ]; then
-    local helm_tag=$(wget -q -O - $release_url | awk '/\/tag\//' | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}')
+    local helm_tag=$(wget -q -O - $release_url | awk '/\/tag\//' | grep -v no-underline | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
     local helm_dist="helm-$helm_tag-linux-amd64.tar.gz"
 
     wget -O /tmp/helm.tar.gz \
