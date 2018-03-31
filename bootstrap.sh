@@ -50,13 +50,14 @@ INSTALL_KEYBASE=
 INSTALL_INSPEC=
 INSTALL_BAZEL=
 INSTALL_JENKINSX=
+INSTALL_SKAFFOLD=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -140,6 +141,7 @@ usage() {
     --helm                 helm
     --draft                opinionated local development workflow for applications deployed to Kubernetes (github.com/Azure/draft)
     --kops                 kops (a kubernetes provisioning tool)
+    --skaffold             skaffold is a utility for streamlining local development of kubernetes-targeted workloads
     --jenkinsx             jenkins x is a ci/cd platform for Kubernetes
 
     --ngrok                create secure tunnels to localhost (ngrok.com)
@@ -306,6 +308,9 @@ cmdline() {
         ;;
       jenkinsx)
         readonly INSTALL_JENKINSX=1
+        ;;
+      skaffold)
+        readonly INSTALL_SKAFFOLD=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -962,6 +967,15 @@ main() {
       uninstall_jenkinsx
     else
       install_jenkinsx
+    fi
+  fi
+
+  if [ -n "$INSTALL_SKAFFOLD" ]; then
+    source "${PROGDIR}/k8s/skaffold.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_skaffold
+    else
+      install_skaffold
     fi
   fi
 
