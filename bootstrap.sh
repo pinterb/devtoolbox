@@ -51,13 +51,14 @@ INSTALL_INSPEC=
 INSTALL_BAZEL=
 INSTALL_JENKINSX=
 INSTALL_SKAFFOLD=
+INSTALL_GORELEASER=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -149,6 +150,7 @@ usage() {
     --tls-utils            utilities for managing TLS certificates (e.g. letsencrypt, cfssl)
     --keybase              Keybase
     --inspec               InSpec by Chef
+    --goreleaser           GoReleaser is a release automation tool for Go projects
 
     --vim                  vim-plug & choice plugins (e.g. vim-go)
     --vscode               Microsoft Visual Studio Code IDE
@@ -311,6 +313,9 @@ cmdline() {
         ;;
       skaffold)
         readonly INSTALL_SKAFFOLD=1
+        ;;
+      goreleaser)
+        readonly INSTALL_GORELEASER=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -976,6 +981,15 @@ main() {
       uninstall_skaffold
     else
       install_skaffold
+    fi
+  fi
+
+  if [ -n "$INSTALL_GORELEASER" ]; then
+    source "${PROGDIR}/misc/goreleaser.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_goreleaser
+    else
+      install_goreleaser
     fi
   fi
 

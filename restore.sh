@@ -535,6 +535,10 @@ uninstall_deltas()
           source "${PROGDIR}/k8s/skaffold.sh"
           uninstall_skaffold
           ;;
+        goreleaser)
+          source "${PROGDIR}/misc/goreleaser.sh"
+          uninstall_goreleaser
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

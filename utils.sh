@@ -23,6 +23,7 @@ INSPEC_VER="2.0.17"
 BAZEL_VER="0.11.0"
 JENKINSX_VER="1.1.30"
 SKAFFOLD_VER="0.3.0"
+GORELEASER_VER="0.63.1"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="190.0.1"
