@@ -528,7 +528,16 @@ uninstall_deltas()
           uninstall_bazel
           ;;
         jenkinsx)
+          source "${PROGDIR}/k8s/jenkinsx.sh"
           uninstall_jenkinsx
+          ;;
+        skaffold)
+          source "${PROGDIR}/k8s/skaffold.sh"
+          uninstall_skaffold
+          ;;
+        goreleaser)
+          source "${PROGDIR}/misc/goreleaser.sh"
+          uninstall_goreleaser
           ;;
         *)
           error "no uninstall handler found for \"$file\""

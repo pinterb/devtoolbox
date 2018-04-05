@@ -14,3 +14,6 @@ On Windows WSL, checking for old docker packages fails
 * https://github.com/bitnami-labs/sealed-secrets
 * https://www.cockroachlabs.com/docs/stable/install-cockroachdb.html
 
+## Cloudflare: Running a DNS over HTTPS Client
+* https://developers.cloudflare.com/1.1.1.1/dns-over-https/cloudflared-proxy/
+
