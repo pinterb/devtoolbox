@@ -8,6 +8,7 @@ sudo apt-get install redis-tools
 On Windows WSL, checking for old docker packages fails
 
 ## k8s utilities
+* https://github.com/istio/istio
 * https://github.com/garethr/kubetest  
 * https://github.com/garethr/kubeval  
 * https://github.com/ahmetb/kubectx  

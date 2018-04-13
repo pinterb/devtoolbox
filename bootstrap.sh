@@ -52,13 +52,14 @@ INSTALL_BAZEL=
 INSTALL_JENKINSX=
 INSTALL_SKAFFOLD=
 INSTALL_GORELEASER=
+INSTALL_PROTOTOOL=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -136,6 +137,7 @@ usage() {
     --node                 node.js
     --protobuf             protocol buffers (i.e. protoc)
     --serverless           various serverless utilities (e.g. serverless, apex, sparta)
+    --prototool            a swiss army knife for protocol buffers
 
     --minikube             opinionated local development workflow for applications deployed to Kubernetes (github.com/Azure/draft)
     --kubectl              kubectl
@@ -316,6 +318,9 @@ cmdline() {
         ;;
       goreleaser)
         readonly INSTALL_GORELEASER=1
+        ;;
+      prototool)
+        readonly INSTALL_PROTOTOOL=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -990,6 +995,15 @@ main() {
       uninstall_goreleaser
     else
       install_goreleaser
+    fi
+  fi
+
+  if [ -n "$INSTALL_PROTOTOOL" ]; then
+    source "${PROGDIR}/misc/prototool.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_prototool
+    else
+      install_prototool
     fi
   fi
 

@@ -539,6 +539,10 @@ uninstall_deltas()
           source "${PROGDIR}/misc/goreleaser.sh"
           uninstall_goreleaser
           ;;
+        prototool)
+          source "${PROGDIR}/misc/prototool.sh"
+          uninstall_prototool
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;
