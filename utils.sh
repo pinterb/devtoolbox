@@ -23,7 +23,7 @@ JFROG_VER="1.14.0"
 INSPEC_VER="2.0.17"
 BAZEL_VER="0.11.0"
 JENKINSX_VER="1.1.30"
-SKAFFOLD_VER="0.3.0"
+SKAFFOLD_VER="0.4.0"
 GORELEASER_VER="0.63.1"
 
 # https://cloud.google.com/sdk/downloads#versioned
