@@ -33,6 +33,13 @@ install_goreleaser()
     exec_cmd "mv /tmp/goreleaser /usr/local/bin"
 
     rm /tmp/goreleaser.tar.gz
+
+    if [ "$DEFAULT_USER" == 'root' ]; then
+      chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
+    else
+      exec_cmd "chown root:root /usr/local/bin/goreleaser"
+    fi
+
     mark_as_installed goreleaser
   fi
 }

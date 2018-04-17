@@ -46,6 +46,13 @@ install_kubectl()
     inf "updating ~/.bootstrap/profile.d/ with kubectl.."
     echo "# The following was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/kubectl.sh"
     echo "source <(kubectl completion bash)" >> "/home/$DEV_USER/.bootstrap/profile.d/kubectl.sh"
+
+    if [ "$DEFAULT_USER" == 'root' ]; then
+      chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
+    else
+      exec_cmd "chown root:root /usr/local/bin/kubectl"
+    fi
+
     mark_as_installed kubectl
   fi
 }

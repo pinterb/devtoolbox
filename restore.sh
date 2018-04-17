@@ -543,6 +543,10 @@ uninstall_deltas()
           source "${PROGDIR}/misc/prototool.sh"
           uninstall_prototool
           ;;
+        fish)
+          source "${PROGDIR}/misc/fish.sh"
+          uninstall_fish
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

@@ -42,7 +42,15 @@ inf "hello"
     inf " "
     inf "starting minikube..."
     minikube start --vm-driver=kvm2
+
+    if [ "$DEFAULT_USER" == 'root' ]; then
+      chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
+    else
+      exec_cmd "chown root:root /usr/local/bin/minikube"
+    fi
+
   fi
+
   mark_as_installed minikube
 }
 

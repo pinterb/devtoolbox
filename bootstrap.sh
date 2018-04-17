@@ -53,13 +53,14 @@ INSTALL_JENKINSX=
 INSTALL_SKAFFOLD=
 INSTALL_GORELEASER=
 INSTALL_PROTOTOOL=
+INSTALL_FISH=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -159,6 +160,7 @@ usage() {
 
     --xfce                 XFCE window manager on Windows WSL
     --bazel                Bazel build tool
+    --fish                 Fish is a cross-platform systems package manager, bringing the ease of use of Homebrew to Linux and Windows.
 
     --uninstall            uninstall specified package(s) or utilities (incl. $UNINST_SUPPORT)
 
@@ -321,6 +323,9 @@ cmdline() {
         ;;
       prototool)
         readonly INSTALL_PROTOTOOL=1
+        ;;
+      fish)
+        readonly INSTALL_FISH=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -1004,6 +1009,15 @@ main() {
       uninstall_prototool
     else
       install_prototool
+    fi
+  fi
+
+  if [ -n "$INSTALL_FISH" ]; then
+    source "${PROGDIR}/misc/fish.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_fish
+    else
+      install_fish
     fi
   fi
 
