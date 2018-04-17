@@ -18,3 +18,5 @@ On Windows WSL, checking for old docker packages fails
 ## Cloudflare: Running a DNS over HTTPS Client
 * https://developers.cloudflare.com/1.1.1.1/dns-over-https/cloudflared-proxy/
 
+## Serverless
+* https://fission.io

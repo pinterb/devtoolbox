@@ -14,11 +14,11 @@ install_fish()
   local install=0
   local durl="https://raw.githubusercontent.com/fishworks/fish/master/scripts/install.sh"
 
-  if command_exists fish; then
+  if command_exists gofish; then
       install=2
       warn "fish is already installed."
-      exec_cmd 'gofish install gofish'
-      exec_cmd 'gofish upgrade gofish'
+      exec_nonprv_cmd 'gofish install gofish'
+      exec_nonprv_cmd 'gofish upgrade gofish'
   else
       install=1
   fi
@@ -30,7 +30,7 @@ install_fish()
   if [ $install -le 1 ]; then
     wget -O /tmp/fish.sh "$durl"
 
-    exec_cmd "bash /tmp/fish.sh"
+    sudo bash /tmp/fish.sh
 
     if [ "$DEFAULT_USER" == 'root' ]; then
       chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
