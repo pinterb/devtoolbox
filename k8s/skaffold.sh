@@ -31,6 +31,12 @@ install_skaffold()
     chmod +x "/tmp/skaffold"
     exec_cmd "mv /tmp/skaffold /usr/local/bin"
 
+    if [ "$DEFAULT_USER" == 'root' ]; then
+      chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
+    else
+      exec_cmd "chown root:root /usr/local/bin/skaffold"
+    fi
+
     mark_as_installed skaffold
   fi
 }
