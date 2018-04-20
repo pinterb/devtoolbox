@@ -29,7 +29,7 @@ install_draft()
 
   if [ $install -eq 0 ]; then
     wget -O /tmp/draft.tar.gz \
-      "https://azuredraft.blob.core.windows.net/draft/draft-v${DRAFT_VER}-linux-amd64.tar.gz"
+      "https://azuredraft.blob.core.windows.net/draft/draft-${DRAFT_VER}-linux-amd64.tar.gz"
     tar -zxvf /tmp/draft.tar.gz -C /tmp
     exec_cmd 'cp /tmp/linux-amd64/draft /usr/local/bin/'
     rm /tmp/draft.tar.gz

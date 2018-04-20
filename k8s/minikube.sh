@@ -36,7 +36,7 @@ inf "hello"
 
   if [ $install -eq 0 ]; then
     wget -O /tmp/minikube \
-      "https://storage.googleapis.com/minikube/releases/v${MINIKUBE_VER}/minikube-linux-amd64"
+      "https://storage.googleapis.com/minikube/releases/${MINIKUBE_VER}/minikube-linux-amd64"
     chmod +x /tmp/minikube
     exec_cmd 'mv /tmp/minikube /usr/local/bin/'
     inf " "

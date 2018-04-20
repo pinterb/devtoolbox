@@ -26,7 +26,7 @@ install_jenkinsx()
 
   if [ $install -le 1 ]; then
     wget -O /tmp/jenkinsx.tar.gz \
-      "https://github.com/jenkins-x/jx/releases/download/v${JENKINSX_VER}/jx-linux-amd64.tar.gz"
+      "https://github.com/jenkins-x/jx/releases/download/${JENKINSX_VER}/jx-linux-amd64.tar.gz"
     tar zxvf /tmp/jenkinsx.tar.gz -C /tmp
 
     chmod +x "/tmp/jx"

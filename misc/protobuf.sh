@@ -22,7 +22,7 @@ install_protobuf()
   fi
 
   if [ $install_proto -eq 0 ]; then
-    wget -O /tmp/protoc.tar.gz "https://github.com/google/protobuf/archive/v${PROTOBUF_VER}.tar.gz"
+    wget -O /tmp/protoc.tar.gz "https://github.com/google/protobuf/archive/${PROTOBUF_VER}.tar.gz"
     tar -zxvf /tmp/protoc.tar.gz -C /tmp
     rm /tmp/protoc.tar.gz
     cd "/tmp/protobuf-${PROTOBUF_VER}" || exit 1

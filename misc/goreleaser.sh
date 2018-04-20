@@ -12,9 +12,10 @@ install_goreleaser()
   echo ""
 
   local install=0
+  local dver=$(echo $GORELEASER_VER | awk -Fv '{print $2}')
 
   if command_exists goreleaser; then
-    if [ $(goreleaser --version | awk 'FNR == 2 { print $1; exit }') == "${GORELEASER_VER}*" ]; then
+    if [ $(goreleaser --version | awk 'FNR == 2 { print $1; exit }') == "${dver}*" ]; then
       warn "goreleaser is already installed."
       install=2
     else
@@ -26,7 +27,7 @@ install_goreleaser()
 
   if [ $install -le 1 ]; then
     wget -O /tmp/goreleaser.tar.gz \
-      "https://github.com/goreleaser/goreleaser/releases/download/v${GORELEASER_VER}/goreleaser_Linux_x86_64.tar.gz"
+      "https://github.com/goreleaser/goreleaser/releases/download/${GORELEASER_VER}/goreleaser_Linux_x86_64.tar.gz"
     tar zxvf /tmp/goreleaser.tar.gz -C /tmp
 
     chmod +x "/tmp/goreleaser"

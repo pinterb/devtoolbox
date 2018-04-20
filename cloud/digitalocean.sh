@@ -12,6 +12,8 @@ install_doctl()
   echo ""
 
   local install=0
+  local dver=$(echo $DOCTL_VER | awk -Fv '{print $2}')
+  local durl="https://github.com/digitalocean/doctl/releases/download/${DOCTL_VER}/doctl-${dver}-linux-amd64.tar.gz"
 
   if command_exists doctl; then
     if [ $(doctl version | awk '{ print $3; exit }') == "${DOCTL_VER}-release" ]; then
@@ -24,7 +26,7 @@ install_doctl()
   fi
 
   if [ $install -eq 0 ]; then
-    exec_nonprv_cmd "wget -O /tmp/doctl-linux.tar.gz https://github.com/digitalocean/doctl/releases/download/v${DOCTL_VER}/doctl-${DOCTL_VER}-linux-amd64.tar.gz"
+    exec_nonprv_cmd "wget -O /tmp/doctl-linux.tar.gz ${durl}"
     exec_nonprv_cmd "tar zxvf /tmp/doctl-linux.tar.gz -C /tmp"
     exec_nonprv_cmd "chmod +x /tmp/doctl"
     exec_cmd 'mv /tmp/doctl /usr/local/bin/doctl'
