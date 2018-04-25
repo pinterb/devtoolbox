@@ -12,6 +12,7 @@ On Windows WSL, checking for old docker packages fails
 * https://github.com/garethr/kubetest  
 * https://github.com/garethr/kubeval  
 * https://github.com/ahmetb/kubectx  
+* https://github.com/jonmosco/kube-ps1  
 * https://github.com/bitnami-labs/sealed-secrets
 * https://www.cockroachlabs.com/docs/stable/install-cockroachdb.html
 
