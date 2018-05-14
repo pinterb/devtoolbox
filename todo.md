@@ -21,3 +21,6 @@ On Windows WSL, checking for old docker packages fails
 
 ## Serverless
 * https://fission.io
+
+## Fish (migrate CLI's to fish???
+* https://github.com/pinterb/fish-food
