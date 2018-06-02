@@ -524,6 +524,29 @@ uninstall_deltas()
         inspec)
           uninstall_inspec
           ;;
+        bazel)
+          uninstall_bazel
+          ;;
+        jenkinsx)
+          source "${PROGDIR}/k8s/jenkinsx.sh"
+          uninstall_jenkinsx
+          ;;
+        skaffold)
+          source "${PROGDIR}/k8s/skaffold.sh"
+          uninstall_skaffold
+          ;;
+        goreleaser)
+          source "${PROGDIR}/misc/goreleaser.sh"
+          uninstall_goreleaser
+          ;;
+        prototool)
+          source "${PROGDIR}/misc/prototool.sh"
+          uninstall_prototool
+          ;;
+        fish)
+          source "${PROGDIR}/misc/fish.sh"
+          uninstall_fish
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

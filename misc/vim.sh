@@ -101,7 +101,7 @@ install_vim_mods()
     exec_cmd "cp /home/$DEV_USER/projects/colibri.vim/colors/colibri.vim $inst_dir/colors/colibri.vim"
   fi
 
-  exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
+  exec_cmd "chown -R $DEV_USER:$DEV_USER $inst_dir"
   mark_as_installed vimmods
 }
 
@@ -214,7 +214,7 @@ enable_pathogen_bundles()
 #    chown -R "$DEV_USER:$DEV_USER" "$inst_dir"
 #  fi
 
-  exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
+  exec_cmd "chown -R $DEV_USER:$DEV_USER $inst_dir"
   mark_as_installed vimbundles
 }
 

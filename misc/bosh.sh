@@ -42,6 +42,12 @@ install_bosh()
     chmod +x /tmp/bosh
     exec_cmd 'mv /tmp/bosh /usr/local/bin/'
 
+    if [ "$DEFAULT_USER" == 'root' ]; then
+      chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
+    else
+      exec_cmd "chown root:root /usr/local/bin/bosh"
+    fi
+
     # install 'create-env' dependencies
     bosh_deps_install
 

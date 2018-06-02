@@ -443,8 +443,8 @@ install_docker()
   if [ $install -le 1 ]; then
     # Note: You can run "sudo apt-cache madison docker-ce" to see what versions
     # are available
-    #local target_ver="$DOCKER_VER~ce-0~ubuntu-$(lsb_release -cs)" #NOTE: This was valid prior to 17.0.6
-    local target_ver="$DOCKER_VER~ce-0~ubuntu"
+    local target_ver="$DOCKER_VER~ce-0~ubuntu-$(lsb_release -cs)" #NOTE: This was valid prior to 17.0.6
+    #local target_ver="$DOCKER_VER~ce-0~ubuntu"
 
     echo ""
     inf "installing / upgrading docker-ce"
@@ -647,14 +647,23 @@ install_kvm()
   if ! command_exists kvm-ok; then
     exec_cmd 'apt-get install -yq cpu-checker'
   fi
-  kvm-ok > /dev/null || error "kvm is not supported on this machine" && exit 1
+  kvm-ok > /dev/null
+  if [ $? -eq 0 ]; then
+    inf "Okay...I think we can install kvm"
+  else
+    error "kvm is not supported on this machine"
+    exit 1
+  fi
 
+  inf "what?"
   exec_cmd 'apt-get install -yq qemu-kvm libvirt-bin'
 
   # Add $DEV_USER to the libvirtd group (use libvirt group for rpm based
   # distros) so you don't need to sudo
   # Debian/Ubuntu (NOTE: For Ubuntu 17.04 change the group to `libvirt`)
-  if [ "$DISTRO_VER" > "16.10" ]; then
+  inf "$DISTRO_VER"
+  if [[ "$DISTRO_VER" > "16.10" ]]; then
+    inf "bleh"
     exec_cmd "usermod -a -G libvirt $DEV_USER"
   else
     exec_cmd "usermod -a -G libvirtd $DEV_USER"
@@ -662,7 +671,7 @@ install_kvm()
 
   # Update your current session for the group change to take effect
   # Debian/Ubuntu (NOTE: For Ubuntu 17.04 change the group to `libvirt`)
-  if [ "$DISTRO_VER" > "16.10" ]; then
+  if [[ "$DISTRO_VER" > "16.10" ]]; then
     exec_cmd 'newgrp libvirt'
   else
     exec_cmd 'newgrp libvirtd'
@@ -744,5 +753,65 @@ install_keybase()
   fi
 
   mark_as_installed keybase
+}
+
+
+### Bazel
+# https://docs.bazel.build/versions/master/install-ubuntu.html#install-on-ubuntu
+###
+install_bazel()
+{
+  echo ""
+  hdr "Installing Bazel..."
+  echo ""
+
+  local install=0
+
+  if command_exists bazel; then
+    if [ $(bazel version | awk '{ print $3; exit }') == "$BAZEL_VER" ]; then
+      warn "bazel is already installed"
+      install=2
+    else
+      inf "bazel is already installed...but versions don't match"
+      install=1
+      exec_cmd 'apt-get upgrade -yq bazel >/dev/null 2>&1'
+      mark_as_installed bazel
+    fi
+  fi
+
+  # Only need to install java & bazel sources for new installs
+  if [ $install -eq 0 ]; then
+    install_bazel_deps
+  fi
+
+  # Bazel isn't installed
+  if [ $install -le 1 ]; then
+    exec_cmd 'apt-get install -yq --allow-unauthenticated bazel >/dev/null 2>&1'
+    mark_as_installed bazel
+  fi
+}
+
+
+install_bazel_deps()
+{
+  echo ""
+  inf "adding bazel prerequisites"
+  echo ""
+
+  if [ "$DISTRO_VER" == "14.04" ]; then
+    exec_cmd 'add-apt-repository -yq ppa:webupd8team/java'
+    exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    exec_cmd 'apt-get install -yq --allow-unauthenticated oracle-java8-installer >/dev/null 2>&1'
+  else
+    exec_cmd 'apt-get install -y openjdk-8-jdk >/dev/null'
+  fi
+
+  exec_cmd 'echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" > /etc/apt/sources.list.d/bazel.list'
+
+  exec_cmd 'wget -qO - https://bazel.build/bazel-release.pub.gpg > /tmp/bazel-key'
+  exec_cmd 'apt-key add /tmp/bazel-key'
+  exec_cmd 'rm /tmp/bazel-key'
+  exec_cmd 'apt-get -y update >/dev/null 2>&1'
+
 }
 

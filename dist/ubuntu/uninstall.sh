@@ -348,3 +348,29 @@ uninstall_keybase()
   fi
 }
 
+
+###
+# https://docs.bazel.build/versions/master/install-ubuntu.html#install-on-ubuntu
+###
+uninstall_bazel()
+{
+  echo ""
+  hdr "Uninstalling Bazel..."
+  echo ""
+
+  if command_exists bazel; then
+    exec_cmd 'apt-get purge -y bazel >/dev/null'
+    mark_as_uninstalled bazel
+  else
+    warn "Bazel is not installed."
+  fi
+
+  if [ -f "/etc/apt/sources.list.d/bazel.list" ]; then
+    exec_cmd 'rm /etc/apt/sources.list.d/bazel.list'
+  fi
+
+  if [ -f "/etc/apt/trusted.gpg.d/bazel-release.pub.gpg" ]; then
+    exec_cmd 'rm /etc/apt/trusted.gpg.d/bazel-release.pub.gpg'
+  fi
+}
+

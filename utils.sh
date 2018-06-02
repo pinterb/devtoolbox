@@ -1,25 +1,32 @@
 
 # SOFTWARE VERSIONS
 # (Last Checked On: 2018-02-23)
-DRAFT_VER="0.10.1"
-PROTOBUF_VER="3.5.1"
-UP_VER="0.5.3"
-GOLANG_VER="1.10"
-HELM_VER="2.8.1"
-MINIKUBE_VER="0.25.0"
-TERRAFORM_VER="0.11.7"
-CFSSL_VER="1.3"
-KOPS_VER="1.7.0"
-KUBE_VER="v1.9.3"
-DOCTL_VER="1.7.1"
+DRAFT_VER="v0.13.0"  ## Draft is in fish. Candidate for removal?
+PROTOBUF_VER="v3.5.1"
+PROTOTOOL_VER="0.1.0"
+UP_VER="v0.6.1"
+GOLANG_VER="1.10.1" ## Golang is in fish. Candidate for removal?
+HELM_VER="v2.9.0" ## Helm is in fish. Candidate for removal?
+MINIKUBE_VER="v0.26.1" ## Minikube is in fish. Candidate for removal?
+TERRAFORM_VER="v0.11.7"
+CFSSL_VER="1.3.1"
+KOPS_VER="1.9.0"
+KUBE_VER="v1.9.7"
+DOCTL_VER="v1.8.0"
 DOCKER_VER="17.03.2" # this version is compatiable w/k8s v1.9
 HABITAT_VER="0.54.0"
 HABITAT_VER_TS="20180221022026"
 ANSIBLE_VER="2.4.0"
-AZURE_VER="2.0.27"
+AZURE_VER="2.0.31"
 NGROK_VER="2.2.6"
 JFROG_VER="1.14.0"
-INSPEC_VER="2.0.17"
+INSPEC_VER="2.1.54"
+BAZEL_VER="0.12.0"
+JENKINSX_VER="v1.2.51"
+SKAFFOLD_VER="0.5.0" ## Skaffold is in my fish. Candidate for removal?
+GORELEASER_VER="v0.70.0"
+FISSION_VER="0.7.1"
+K8S_SEALED_SECRETS_VER="v0.7.0"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="190.0.1"

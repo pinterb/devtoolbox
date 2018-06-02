@@ -22,6 +22,7 @@ install_minikube()
   else
     error "attempting to install kvm as part of this minikube install. But the expected kvm install script was not found."
   fi
+inf "hello"
 
   if command_exists minikube; then
     if [ $(minikube version | awk -F: '{ print $3; exit }' | awk -F, '{ print $1; exit }' 2>/dev/null | grep "v${MINIKUBE_VER}") ]; then
@@ -35,20 +36,28 @@ install_minikube()
 
   if [ $install -eq 0 ]; then
     wget -O /tmp/minikube \
-      "https://storage.googleapis.com/minikube/releases/v${MINIKUBE_VER}/minikube-linux-amd64"
+      "https://storage.googleapis.com/minikube/releases/${MINIKUBE_VER}/minikube-linux-amd64"
     chmod +x /tmp/minikube
     exec_cmd 'mv /tmp/minikube /usr/local/bin/'
     inf " "
     inf "starting minikube..."
     minikube start --vm-driver=kvm2
+
+    if [ "$DEFAULT_USER" == 'root' ]; then
+      chown -R "$DEV_USER:$DEV_USER" /usr/local/bin
+    else
+      exec_cmd "chown root:root /usr/local/bin/minikube"
+    fi
+
   fi
+
   mark_as_installed minikube
 }
 
-install_minikube()
+uninstall_minikube()
 {
   echo ""
-  hdr "Installing minikube..."
+  hdr "Uninstalling minikube..."
   echo ""
 
   if command_exists draft; then

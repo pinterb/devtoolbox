@@ -48,13 +48,19 @@ INSTALL_JFROG=
 INSTALL_VSCODE=
 INSTALL_KEYBASE=
 INSTALL_INSPEC=
+INSTALL_BAZEL=
+INSTALL_JENKINSX=
+INSTALL_SKAFFOLD=
+INSTALL_GORELEASER=
+INSTALL_PROTOTOOL=
+INSTALL_FISH=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -132,23 +138,29 @@ usage() {
     --node                 node.js
     --protobuf             protocol buffers (i.e. protoc)
     --serverless           various serverless utilities (e.g. serverless, apex, sparta)
+    --prototool            a swiss army knife for protocol buffers
 
     --minikube             opinionated local development workflow for applications deployed to Kubernetes (github.com/Azure/draft)
     --kubectl              kubectl
     --helm                 helm
     --draft                opinionated local development workflow for applications deployed to Kubernetes (github.com/Azure/draft)
     --kops                 kops (a kubernetes provisioning tool)
+    --skaffold             skaffold is a utility for streamlining local development of kubernetes-targeted workloads
+    --jenkinsx             jenkins x is a ci/cd platform for Kubernetes
 
     --ngrok                create secure tunnels to localhost (ngrok.com)
     --jfrog                the universial cli to JFrog products (e.g. Artifactory, Bintray)
     --tls-utils            utilities for managing TLS certificates (e.g. letsencrypt, cfssl)
     --keybase              Keybase
     --inspec               InSpec by Chef
+    --goreleaser           GoReleaser is a release automation tool for Go projects
 
     --vim                  vim-plug & choice plugins (e.g. vim-go)
     --vscode               Microsoft Visual Studio Code IDE
 
     --xfce                 XFCE window manager on Windows WSL
+    --bazel                Bazel build tool
+    --fish                 Fish is a cross-platform systems package manager, bringing the ease of use of Homebrew to Linux and Windows.
 
     --uninstall            uninstall specified package(s) or utilities (incl. $UNINST_SUPPORT)
 
@@ -297,6 +309,24 @@ cmdline() {
       inspec)
         readonly INSTALL_INSPEC=1
         ;;
+      bazel)
+        readonly INSTALL_BAZEL=1
+        ;;
+      jenkinsx)
+        readonly INSTALL_JENKINSX=1
+        ;;
+      skaffold)
+        readonly INSTALL_SKAFFOLD=1
+        ;;
+      goreleaser)
+        readonly INSTALL_GORELEASER=1
+        ;;
+      prototool)
+        readonly INSTALL_PROTOTOOL=1
+        ;;
+      fish)
+        readonly INSTALL_FISH=1
+        ;;
       uninstall)
         readonly UNINSTALL=1
         ;;
@@ -436,7 +466,7 @@ binfiles()
 
   inf "updating ~/.bootstrap/profile.d/ with /home/$DEV_USER/bin ..."
   echo "# The following PATH was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/binfiles.sh"
-  echo 'export PATH=$PATH:/home/$DEV_USER/bin' >> "/home/$DEV_USER/.bootstrap/profile.d/binfiles.sh"
+  echo "export PATH=$PATH:/home/$DEV_USER/bin" >> "/home/$DEV_USER/.bootstrap/profile.d/binfiles.sh"
 
   mark_as_installed binfiles
 }
@@ -935,6 +965,59 @@ main() {
       uninstall_inspec
     else
       install_inspec
+    fi
+  fi
+
+  if [ -n "$INSTALL_BAZEL" ]; then
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_bazel
+    else
+      install_bazel
+    fi
+  fi
+
+  if [ -n "$INSTALL_JENKINSX" ]; then
+    source "${PROGDIR}/k8s/jenkinsx.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_jenkinsx
+    else
+      install_jenkinsx
+    fi
+  fi
+
+  if [ -n "$INSTALL_SKAFFOLD" ]; then
+    source "${PROGDIR}/k8s/skaffold.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_skaffold
+    else
+      install_skaffold
+    fi
+  fi
+
+  if [ -n "$INSTALL_GORELEASER" ]; then
+    source "${PROGDIR}/misc/goreleaser.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_goreleaser
+    else
+      install_goreleaser
+    fi
+  fi
+
+  if [ -n "$INSTALL_PROTOTOOL" ]; then
+    source "${PROGDIR}/misc/prototool.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_prototool
+    else
+      install_prototool
+    fi
+  fi
+
+  if [ -n "$INSTALL_FISH" ]; then
+    source "${PROGDIR}/misc/fish.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_fish
+    else
+      install_fish
     fi
   fi
 
