@@ -5,7 +5,7 @@ DRAFT_VER="v0.13.0"  ## Draft is in fish. Candidate for removal?
 PROTOBUF_VER="v3.5.1"
 PROTOTOOL_VER="0.1.0"
 UP_VER="v0.6.1"
-GOLANG_VER="1.10.1" ## Golang is in fish. Candidate for removal?
+GOLANG_VER="1.10.3" ## Golang is in fish. Candidate for removal?
 HELM_VER="v2.9.0" ## Helm is in fish. Candidate for removal?
 MINIKUBE_VER="v0.26.1" ## Minikube is in fish. Candidate for removal?
 TERRAFORM_VER="v0.11.7"
@@ -14,8 +14,8 @@ KOPS_VER="1.9.0"
 KUBE_VER="v1.9.7"
 DOCTL_VER="v1.8.0"
 DOCKER_VER="17.03.2" # this version is compatiable w/k8s v1.9
-HABITAT_VER="0.54.0"
-HABITAT_VER_TS="20180221022026"
+HABITAT_VER="0.56.0"
+HABITAT_VER_TS="20180530234036"
 ANSIBLE_VER="2.4.0"
 AZURE_VER="2.0.31"
 NGROK_VER="2.2.6"
@@ -27,6 +27,7 @@ SKAFFOLD_VER="0.5.0" ## Skaffold is in my fish. Candidate for removal?
 GORELEASER_VER="v0.70.0"
 FISSION_VER="0.7.1"
 K8S_SEALED_SECRETS_VER="v0.7.0"
+KUSTOMIZE_VER="1.0.3"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="190.0.1"
