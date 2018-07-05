@@ -815,3 +815,54 @@ install_bazel_deps()
 
 }
 
+
+### Ballerina
+# https://ballerina.io/downloads/
+###
+install_ballerina()
+{
+  echo ""
+  hdr "Installing Ballerina..."
+  echo ""
+
+  local install=0
+
+  if command_exists ballerina; then
+    if [ $(ballerina version | awk '{ print $2; exit }') == "$BALLERINA_VER" ]; then
+      warn "ballerina is already installed"
+      install=2
+    else
+      inf "ballerina is already installed...but versions don't match"
+      install=1
+      exec_cmd 'apt-get upgrade -yq ballerina >/dev/null 2>&1'
+      mark_as_installed ballerina
+    fi
+  fi
+
+  # Only need to install ballerina sources for new installs
+  if [ $install -eq 0 ]; then
+    install_ballerina_deps
+  fi
+
+  # Ballerina isn't installed
+  if [ $install -le 1 ]; then
+    exec_cmd 'apt-get install -yq --allow-unauthenticated ballerina >/dev/null 2>&1'
+    mark_as_installed ballerina
+  fi
+}
+
+
+install_ballerina_deps()
+{
+  echo ""
+  inf "adding ballerina prerequisites"
+  echo ""
+
+  exec_cmd 'apt-get -y update >/dev/null 2>&1'
+
+  exec_cmd "rm -rf /tmp/ballerina_amd64.deb"
+  exec_nonprv_cmd "wget -O /tmp/ballerina_amd64.deb https://product-dist.ballerina.io/downloads/${BALLERINA_VER}/ballerina-platform-linux-installer-x64-${BALLERINA_VER}.deb"
+  exec_cmd "dpkg -i /tmp/ballerina_amd64.deb"
+  exec_cmd "apt-get install -f"
+}
+

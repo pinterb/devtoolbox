@@ -374,3 +374,21 @@ uninstall_bazel()
   fi
 }
 
+
+### Ballerina
+# https://ballerina.io/downloads/
+###
+uninstall_ballerina()
+{
+  echo ""
+  hdr "Uninstalling Ballerina..."
+  echo ""
+
+  if command_exists ballerina; then
+    exec_cmd 'apt-get purge -y ballerina >/dev/null'
+    mark_as_uninstalled ballerina
+  else
+    warn "Ballerina is not installed."
+  fi
+}
+

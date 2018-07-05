@@ -547,6 +547,9 @@ uninstall_deltas()
           source "${PROGDIR}/misc/fish.sh"
           uninstall_fish
           ;;
+        ballerina)
+          uninstall_ballerina
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

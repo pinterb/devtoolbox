@@ -54,13 +54,14 @@ INSTALL_SKAFFOLD=
 INSTALL_GORELEASER=
 INSTALL_PROTOTOOL=
 INSTALL_FISH=
+INSTALL_BALLERINA=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="ballerina, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -136,6 +137,7 @@ usage() {
     --golang               golang (incl. third-party utilities)
     --habitat              habitat.sh (Habitat enables you to build and run your applications in a Cloud Native manner.)
     --node                 node.js
+    --ballerina            Ballerina programming language
     --protobuf             protocol buffers (i.e. protoc)
     --serverless           various serverless utilities (e.g. serverless, apex, sparta)
     --prototool            a swiss army knife for protocol buffers
@@ -326,6 +328,9 @@ cmdline() {
         ;;
       fish)
         readonly INSTALL_FISH=1
+        ;;
+      ballerina)
+        readonly INSTALL_BALLERINA=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -606,6 +611,21 @@ dotfiles()
   if [ -f "$PROGDIR/dotfiles/functions" ]; then
     inf "Copying new .functions file"
     exec_nonprv_cmd "cp $PROGDIR/dotfiles/functions /home/$DEV_USER/.functions"
+  fi
+
+  # handle .tmux.conf
+  if [ -f "/home/$DEV_USER/.tmux.conf" ]; then
+    if [ ! -f "/home/$DEV_USER/.bootstrap/backup/orig/dottmux" ]; then
+      inf "Backing up .tmux.conf file"
+      exec_nonprv_cmd "cp /home/$DEV_USER/.tmux.conf /home/$DEV_USER/.bootstrap/backup/orig/dottmux"
+    else
+      exec_nonprv_cmd "cp /home/$DEV_USER/.tmux.conf /home/$DEV_USER/.tmux.conf-$TODAY"
+    fi
+  fi
+
+  if [ -f "$PROGDIR/dotfiles/tmux.conf" ]; then
+    inf "Copying new .tmux.conf file"
+    exec_nonprv_cmd "cp $PROGDIR/dotfiles/tmux.conf /home/$DEV_USER/.tmux.conf"
   fi
 
   if [ "$DEFAULT_USER" == 'root' ]; then
@@ -1018,6 +1038,14 @@ main() {
       uninstall_fish
     else
       install_fish
+    fi
+  fi
+
+  if [ -n "$INSTALL_BALLERINA" ]; then
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_ballerina
+    else
+      install_ballerina
     fi
   fi
 
