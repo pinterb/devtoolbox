@@ -1,14 +1,13 @@
 
 # SOFTWARE VERSIONS
 # (Last Checked On: 2018-02-23)
-DRAFT_VER="v0.13.0"
+DRAFT_VER="v0.13.0"  ## Draft is in fish. Candidate for removal?
 PROTOBUF_VER="v3.5.1"
 PROTOTOOL_VER="0.1.0"
 UP_VER="v0.6.1"
-GOLANG_VER="1.10.1"
-HELM_VER="v2.9.0"
-#HELM_VER="2.8.2"
-MINIKUBE_VER="v0.26.1"
+GOLANG_VER="1.10.1" ## Golang is in fish. Candidate for removal?
+HELM_VER="v2.9.0" ## Helm is in fish. Candidate for removal?
+MINIKUBE_VER="v0.26.1" ## Minikube is in fish. Candidate for removal?
 TERRAFORM_VER="v0.11.7"
 CFSSL_VER="1.2"
 KOPS_VER="1.9.0"
@@ -23,16 +22,16 @@ NGROK_VER="2.2.6"
 JFROG_VER="1.14.0"
 INSPEC_VER="2.1.54"
 BAZEL_VER="0.12.0"
-JENKINSX_VER="v1.2.59"
-SKAFFOLD_VER="0.5.0"
+JENKINSX_VER="v1.3.49"
+SKAFFOLD_VER="0.9.0" ## Skaffold is in my fish. Candidate for removal?
 GORELEASER_VER="v0.70.0"
 FISSION_VER="0.7.1"
 K8S_SEALED_SECRETS_VER="v0.7.0"
 BALLERINA_VER="0.970.0"
 
 # https://cloud.google.com/sdk/downloads#versioned
-GCLOUD_VER="190.0.1"
-GCLOUD_CHECKSUM="771dfc7dfb0e35be25f7f87d2b6deba1d72e10f9ac01aa502cf9373e15587465"
+GCLOUD_VER="200.0.0"
+GCLOUD_CHECKSUM="5b934c9b12b6da652de50e0a2c163af09d9eb9e67fe707f17a5c6e09b829226b"
 
 # https://bosh.io/docs/cli-v2#install
 BOSH_VER="2.0.48"

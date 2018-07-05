@@ -190,6 +190,9 @@ enable_pathogen_bundles()
   ## wakatime
   git clone git://github.com/wakatime/vim-wakatime.git
 
+  ## rust
+  git clone --depth=1 https://github.com/rust-lang/rust.vim.git
+
   if [ $MEM_TOTAL_KB -ge 1500000 ]; then
     enable_vim_ycm
     cd "$inst_dir"
@@ -264,11 +267,19 @@ enable_vim_ycm()
   local ycm_opts=
 
   if command_exists go; then
-    ycm_opts="${ycm_opts} --gocode-completer"
+    ycm_opts="${ycm_opts} --go-completer"
   fi
 
   if command_exists node; then
-    ycm_opts="${ycm_opts} --tern-completer"
+    ycm_opts="${ycm_opts} --js-completer"
+  fi
+
+  if command_exists rustc; then
+    ycm_opts="${ycm_opts} --rust-completer"
+  fi
+
+  if command_exists java; then
+    ycm_opts="${ycm_opts} --java-completer"
   fi
 
   #ycm_opts="--all"
