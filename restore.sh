@@ -547,8 +547,9 @@ uninstall_deltas()
           source "${PROGDIR}/misc/fish.sh"
           uninstall_fish
           ;;
-        ballerina)
-          uninstall_ballerina
+        kustomize)
+          source "${PROGDIR}/k8s/kustomize.sh"
+          uninstall_kustomize
           ;;
         *)
           error "no uninstall handler found for \"$file\""

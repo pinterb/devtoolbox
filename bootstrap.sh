@@ -54,14 +54,14 @@ INSTALL_SKAFFOLD=
 INSTALL_GORELEASER=
 INSTALL_PROTOTOOL=
 INSTALL_FISH=
-INSTALL_BALLERINA=
+INSTALL_KUSTOMIZE=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="ballerina, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -148,6 +148,7 @@ usage() {
     --draft                opinionated local development workflow for applications deployed to Kubernetes (github.com/Azure/draft)
     --kops                 kops (a kubernetes provisioning tool)
     --skaffold             skaffold is a utility for streamlining local development of kubernetes-targeted workloads
+    --kustomize            kustomize lets you customize raw, template-free YAML files for multiple purposes, leaving the original YAML untouched and usable as is
     --jenkinsx             jenkins x is a ci/cd platform for Kubernetes
 
     --ngrok                create secure tunnels to localhost (ngrok.com)
@@ -329,8 +330,8 @@ cmdline() {
       fish)
         readonly INSTALL_FISH=1
         ;;
-      ballerina)
-        readonly INSTALL_BALLERINA=1
+      kustomize)
+        readonly INSTALL_KUSTOMIZE=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -1041,11 +1042,12 @@ main() {
     fi
   fi
 
-  if [ -n "$INSTALL_BALLERINA" ]; then
+  if [ -n "$INSTALL_KUSTOMIZE" ]; then
+    source "${PROGDIR}/k8s/kustomize.sh"
     if [ -n "$UNINSTALL" ]; then
-      uninstall_ballerina
+      uninstall_kustomize
     else
-      install_ballerina
+      install_kustomize
     fi
   fi
 
