@@ -26,7 +26,7 @@ JENKINSX_VER="v1.3.92"
 GORELEASER_VER="v0.70.0"
 FISSION_VER="0.7.1"
 K8S_SEALED_SECRETS_VER="v0.7.0"
-KUSTOMIZE_VER="1.0.3"
+KUSTOMIZE_VER="1.0.5"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="200.0.0"
