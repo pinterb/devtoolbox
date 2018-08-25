@@ -13,7 +13,7 @@ install_protobuf()
   local install_proto=0
 
   if command_exists protoc; then
-    if [ $(protoc --version | awk '{ print $2; exit }') == "$PROTOBUF_VER" ]; then
+    if [ $(protoc --version | awk '{ print $2; exit }') == "v$PROTOBUF_VER" ]; then
       warn "protoc is already installed."
       install_proto=1
     else
@@ -22,14 +22,15 @@ install_protobuf()
   fi
 
   if [ $install_proto -eq 0 ]; then
-    wget -O /tmp/protoc.tar.gz "https://github.com/google/protobuf/archive/${PROTOBUF_VER}.tar.gz"
+    exec_cmd 'apt-get install -y autoconf automake libtool curl make g++ unzip >/dev/null'
+    wget -O /tmp/protoc.tar.gz "https://github.com/google/protobuf/archive/v${PROTOBUF_VER}.tar.gz"
     tar -zxvf /tmp/protoc.tar.gz -C /tmp
     rm /tmp/protoc.tar.gz
     cd "/tmp/protobuf-${PROTOBUF_VER}" || exit 1
     ./autogen.sh
     ./configure
     make
-    make check
+#    make check
 
     if [ "$DEFAULT_USER" != 'root' ]; then
       exec_cmd 'make install'

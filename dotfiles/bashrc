@@ -115,12 +115,50 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
-for file in /etc/bash_completion.d/* ; do
-  # shellcheck source=/dev/null
-  source "$file"
-done
 
-if [[ -f "${HOME}/.bash_profile" ]]; then
+# Add tab completion for SSH hostnames based on ~/.ssh/config
+# ignoring wildcards
+[[ -e "$HOME/.ssh/config" ]] && complete -o "default" \
+  -o "nospace" \
+  -W "$(grep "^Host" ~/.ssh/config | \
+	grep -v "[?*]" | cut -d " " -f2 | \
+	tr ' ' '\n')" scp sftp ssh
+
+#eval "$(direnv hook bash)"
+
+#for file in /etc/bash_completion.d/* ; do
+#  # shellcheck source=/dev/null
+#  source "$file"
+#done
+#unset file
+
+for file in ~/.{bash_prompt,aliases,functions,path,dockerfunc,extra,exports}; do
+  if [[ -r "$file" ]] && [[ -f "$file" ]]; then
+    # shellcheck source=/dev/null
+    source "$file"
+  fi
+done
+unset file
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/bin" ] ; then
+    PATH="$HOME/bin:$PATH"
+fi
+
+# Source anything bootstrap installed:
+#  exported environment variables (e.g. GOPATH)
+#  additions to PATH (e.g. GOPATH/bin)
+if [ -d ~/.bootstrap/profile.d ]; then
+  for i in ~/.bootstrap/profile.d/*.sh; do
+    if [ -r $i ]; then
+      source $i
+    fi
+  done
+  unset i
+fi
+
+# source kubectl bash completion
+if hash kubectl 2>/dev/null; then
   # shellcheck source=/dev/null
-  source "${HOME}/.bash_profile"
+  source <(kubectl completion bash)
 fi
