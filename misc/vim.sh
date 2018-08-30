@@ -73,32 +73,32 @@ install_vim_mods()
   echo ""
 
   local inst_dir="/home/$DEV_USER/.vim"
-  exec_cmd "mkdir -p $inst_dir/autoload $inst_dir/colors"
+  exec_nonprv_cmd "mkdir -p $inst_dir/autoload $inst_dir/colors"
 
   ## not quite sure yet which vim plugin manager to use
   #  exec_cmd "curl -fLo $inst_dir/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
-  exec_cmd "curl -LSso $inst_dir/autoload/pathogen.vim https://tpo.pe/pathogen.vim"
+  exec_nonprv_cmd "curl -LSso $inst_dir/autoload/pathogen.vim https://tpo.pe/pathogen.vim"
 
   # some vim colors
   if [ -d "/home/$DEV_USER/projects/vim-colors-molokai" ]; then
-    exec_cmd "cd /home/$DEV_USER/projects/vim-colors-molokai; git pull"
+    exec_nonprv_cmd "cd /home/$DEV_USER/projects/vim-colors-molokai; git pull"
   else
-    exec_cmd "git clone https://github.com/fatih/molokai /home/$DEV_USER/projects/vim-colors-molokai"
+    exec_nonprv_cmd "git clone https://github.com/fatih/molokai /home/$DEV_USER/projects/vim-colors-molokai"
   fi
 
   if [ -f "/home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim" ]; then
-    exec_cmd "cp /home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim $inst_dir/colors/molokai.vim"
+    exec_nonprv_cmd "cp /home/$DEV_USER/projects/vim-colors-molokai/colors/molokai.vim $inst_dir/colors/molokai.vim"
   fi
 
   # some vim colors #2
   if [ -d "/home/$DEV_USER/projects/colibri.vim" ]; then
-    exec_cmd "cd /home/$DEV_USER/projects/colibri.vim; git pull"
+    exec_nonprv_cmd "cd /home/$DEV_USER/projects/colibri.vim; git pull"
   else
-    exec_cmd "git clone https://github.com/archSeer/colibri.vim /home/$DEV_USER/projects/colibri.vim"
+    exec_nonprv_cmd "git clone https://github.com/archSeer/colibri.vim /home/$DEV_USER/projects/colibri.vim"
   fi
 
   if [ -f "/home/$DEV_USER/projects/colibri.vim/colors/colibri.vim" ]; then
-    exec_cmd "cp /home/$DEV_USER/projects/colibri.vim/colors/colibri.vim $inst_dir/colors/colibri.vim"
+    exec_nonprv_cmd "cp /home/$DEV_USER/projects/colibri.vim/colors/colibri.vim $inst_dir/colors/colibri.vim"
   fi
 
   exec_cmd "chown -R $DEV_USER:$DEV_USER $inst_dir"

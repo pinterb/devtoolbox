@@ -92,9 +92,15 @@ base_packages()
     echo ""
     inf "replacing python-pip with easy_install pip"
     echo ""
-    exec_cmd 'apt-get remove -y python-pip >/dev/null 2>&1'
+    #exec_cmd 'apt-get remove -y python-pip >/dev/null 2>&1'
     exec_cmd 'apt-get install -y python-setuptools >/dev/null 2>&1'
-    exec_cmd 'easy_install pip >/dev/null 2>&1'
+    exec_cmd 'apt-get install -y python-pip >/dev/null 2>&1'
+    #exec_cmd 'easy_install pip >/dev/null 2>&1'
+    echo ""
+  else
+    echo ""
+    exec_cmd 'apt-get install -y python-pip >/dev/null 2>&1'
+    exec_cmd 'apt-get install -y python-setuptools >/dev/null 2>&1'
     echo ""
   fi
 
@@ -103,7 +109,13 @@ base_packages()
     inf "replacing python3-pip with easy_install pip3"
     echo ""
     exec_cmd 'apt-get install -y python3-setuptools >/dev/null 2>&1'
-    exec_cmd 'easy_install3 pip >/dev/null 2>&1'
+    exec_cmd 'apt-get install -y python3-pip >/dev/null 2>&1'
+    #exec_cmd 'easy_install3 pip >/dev/null 2>&1'
+    echo ""
+  else
+    echo ""
+    exec_cmd 'apt-get install -y python3-pip >/dev/null 2>&1'
+    exec_cmd 'apt-get install -y python3-setuptools >/dev/null 2>&1'
     echo ""
   fi
 
@@ -263,13 +275,14 @@ install_node()
 
   # Only need to install packages, download files, etc. for new installs
   if [ $install -eq 0 ]; then
-    exec_cmd 'apt-get install -y python-software-properties apt-transport-https ca-certificates curl software-properties-common >/dev/null'
-    exec_nonprv_cmd "wget -O /tmp/node-install.sh https://deb.nodesource.com/setup_8.x"
-    exec_nonprv_cmd "chmod +x /tmp/node-install.sh"
-    exec_cmd "/tmp/node-install.sh"
+#    exec_cmd 'apt-get install -y apt-transport-https ca-certificates curl software-properties-common >/dev/null'
+#    exec_nonprv_cmd "wget -O /tmp/node-install.sh https://deb.nodesource.com/setup_8.x"
+#    exec_nonprv_cmd "chmod +x /tmp/node-install.sh"
+#    exec_cmd "/tmp/node-install.sh"
     exec_cmd 'apt-get install -y nodejs >/dev/null'
+    exec_cmd 'apt-get install -y npm >/dev/null'
     exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER/.config"
-    exec_cmd "rm /tmp/node-install.sh"
+#    exec_cmd "rm /tmp/node-install.sh"
     mark_as_installed node
   fi
 
@@ -443,8 +456,9 @@ install_docker()
   if [ $install -le 1 ]; then
     # Note: You can run "sudo apt-cache madison docker-ce" to see what versions
     # are available
-    local target_ver="$DOCKER_VER~ce-0~ubuntu-$(lsb_release -cs)" #NOTE: This was valid prior to 17.0.6
+    #local target_ver="$DOCKER_VER~ce-0~ubuntu-$(lsb_release -cs)" #NOTE: This was valid prior to 17.0.6
     #local target_ver="$DOCKER_VER~ce-0~ubuntu"
+    local target_ver="$DOCKER_VER~ce~3-0~ubuntu"
 
     echo ""
     inf "installing / upgrading docker-ce"
@@ -528,19 +542,22 @@ install_docker_deps()
   inf "adding docker ppa key and other prerequisites"
   echo ""
   exec_cmd 'apt-get install -y apt-transport-https ca-certificates curl software-properties-common >/dev/null'
-  exec_cmd 'apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D >/dev/null'
-  exec_cmd 'apt-get -y update >/dev/null'
+  exec_cmd 'wget -qO - https://download.docker.com/linux/ubuntu/gpg > /tmp/docker-key'
+  exec_cmd 'apt-key add /tmp/docker-key'
+  exec_cmd 'rm /tmp/docker-key'
 
   if microsoft_wsl; then
     exec_cmd 'echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable" > /etc/apt/sources.list.d/docker.list'
   else
-    exec_cmd 'apt-get install -y "linux-image-extra-$(uname -r)" >/dev/null'
     exec_cmd 'echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list'
   fi
 
   if [ "$DISTRO_VER" == "14.04" ]; then
     exec_cmd 'apt-get install -y "linux-image-extra-$(uname -r)" linux-image-extra-virtual >/dev/null'
   fi
+  
+  exec_cmd 'apt-get -y update >/dev/null'
+  exec_cmd 'apt-cache policy docker-ce >/dev/null'
 }
 
 
@@ -656,7 +673,7 @@ install_kvm()
   fi
 
   inf "what?"
-  exec_cmd 'apt-get install -yq qemu-kvm libvirt-bin'
+  exec_cmd 'apt-get install -yq apt-transport-https qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager'
 
   # Add $DEV_USER to the libvirtd group (use libvirt group for rpm based
   # distros) so you don't need to sudo
@@ -665,6 +682,7 @@ install_kvm()
   if [[ "$DISTRO_VER" > "16.10" ]]; then
     inf "bleh"
     exec_cmd "usermod -a -G libvirt $DEV_USER"
+    exec_cmd "usermod -a -G libvirt-qemu $DEV_USER"
   else
     exec_cmd "usermod -a -G libvirtd $DEV_USER"
   fi
@@ -673,6 +691,7 @@ install_kvm()
   # Debian/Ubuntu (NOTE: For Ubuntu 17.04 change the group to `libvirt`)
   if [[ "$DISTRO_VER" > "16.10" ]]; then
     exec_cmd 'newgrp libvirt'
+    exec_cmd 'newgrp libvirt-qemu'
   else
     exec_cmd 'newgrp libvirtd'
   fi
@@ -680,7 +699,7 @@ install_kvm()
   # download and install the kvm docker machine driver
   curl -Lo /tmp/docker-machine-driver-kvm2 https://storage.googleapis.com/minikube/releases/latest/docker-machine-driver-kvm2 && \
     chmod +x /tmp/docker-machine-driver-kvm2 && \
-    exec_cmd "mv /tmp/docker-machine-driver-kvm2 /usr/bin/"
+    exec_cmd "mv /tmp/docker-machine-driver-kvm2 /usr/local/bin/"
 }
 
 
