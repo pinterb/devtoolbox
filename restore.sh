@@ -551,6 +551,10 @@ uninstall_deltas()
           source "${PROGDIR}/k8s/kustomize.sh"
           uninstall_kustomize
           ;;
+        telepresence)
+          source "${PROGDIR}/k8s/telepresence.sh"
+          uninstall_telepresence
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;
