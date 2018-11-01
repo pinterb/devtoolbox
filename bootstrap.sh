@@ -634,6 +634,34 @@ dotfiles()
     exec_nonprv_cmd "cp $PROGDIR/dotfiles/tmux.conf /home/$DEV_USER/.tmux.conf"
   fi
 
+  # handle .config/terminator/config
+  local terminator_home="/home/$DEV_USER/.config/terminator"
+  if [ -f "$terminator_home/config" ]; then
+    if [ ! -f "/home/$DEV_USER/.bootstrap/backup/orig/dotconfigterminatorconfig" ]; then
+      inf "Backing up terminator/config file"
+      exec_nonprv_cmd "cp $terminator_home/config /home/$DEV_USER/.bootstrap/backup/orig/dotconfigterminatorconfig"
+    else
+      exec_nonprv_cmd "cp $terminator_home/config $terminator_home/config-$TODAY"
+    fi
+  fi
+
+  if [ -f "$PROGDIR/dotfiles/terminator.config" ]; then
+    inf "Copying new terminator/config file"
+    exec_nonprv_cmd "rm -rf $terminator_home/config"
+    exec_nonprv_cmd "cp $PROGDIR/dotfiles/terminator.config $terminator_home/config"
+  fi
+
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
+  fi
+
+  mark_as_installed dotfiles
+}
+
+
+install_git_subrepo()
+{
+
   if [ "$DEFAULT_USER" == 'root' ]; then
     exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
   fi

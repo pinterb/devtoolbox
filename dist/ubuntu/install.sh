@@ -678,7 +678,7 @@ install_inspec_deps()
 
   #exec_cmd 'apt-get -y update >/dev/null'
     if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
-   	echo "" 
+   	echo ""
     else
 	    err "apt-get update failed"
     fi
