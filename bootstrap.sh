@@ -58,13 +58,14 @@ INSTALL_KUSTOMIZE=
 INSTALL_RUSTUP=
 INSTALL_PULUMI=
 INSTALL_TERRAGRUNT=
+INSTALL_TELEPRESENCE=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -156,6 +157,7 @@ usage() {
     --skaffold             skaffold is a utility for streamlining local development of kubernetes-targeted workloads
     --kustomize            kustomize lets you customize raw, template-free YAML files for multiple purposes, leaving the original YAML untouched and usable as is
     --jenkinsx             jenkins x is a ci/cd platform for Kubernetes
+    --telepresence         telepresence is a kubernetes utility for remote debugging
 
     --ngrok                create secure tunnels to localhost (ngrok.com)
     --jfrog                the universial cli to JFrog products (e.g. Artifactory, Bintray)
@@ -347,6 +349,9 @@ cmdline() {
         ;;
       terragrunt)
         readonly INSTALL_TERRAGRUNT=1
+        ;;
+      telepresence)
+        readonly INSTALL_TELEPRESENCE=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -643,6 +648,34 @@ dotfiles()
     inf "Copying new .tmux.conf file"
     exec_nonprv_cmd "cp $PROGDIR/dotfiles/tmux.conf /home/$DEV_USER/.tmux.conf"
   fi
+
+  # handle .config/terminator/config
+  local terminator_home="/home/$DEV_USER/.config/terminator"
+  if [ -f "$terminator_home/config" ]; then
+    if [ ! -f "/home/$DEV_USER/.bootstrap/backup/orig/dotconfigterminatorconfig" ]; then
+      inf "Backing up terminator/config file"
+      exec_nonprv_cmd "cp $terminator_home/config /home/$DEV_USER/.bootstrap/backup/orig/dotconfigterminatorconfig"
+    else
+      exec_nonprv_cmd "cp $terminator_home/config $terminator_home/config-$TODAY"
+    fi
+  fi
+
+  if [ -f "$PROGDIR/dotfiles/terminator.config" ]; then
+    inf "Copying new terminator/config file"
+    exec_nonprv_cmd "rm -rf $terminator_home/config"
+    exec_nonprv_cmd "cp $PROGDIR/dotfiles/terminator.config $terminator_home/config"
+  fi
+
+  if [ "$DEFAULT_USER" == 'root' ]; then
+    exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
+  fi
+
+  mark_as_installed dotfiles
+}
+
+
+install_git_subrepo()
+{
 
   if [ "$DEFAULT_USER" == 'root' ]; then
     exec_cmd "chown -R $DEV_USER:$DEV_USER /home/$DEV_USER"
@@ -1090,6 +1123,13 @@ main() {
       uninstall_terragrunt
     else
       install_terragrunt
+
+  if [ -n "$INSTALL_TELEPRESENCE" ]; then
+    source "${PROGDIR}/k8s/telepresence.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_telepresence
+    else
+      install_telepresence
     fi
   fi
 

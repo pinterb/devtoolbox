@@ -12,7 +12,12 @@ base_setup()
 
   # For new bootstrap, start by updating...
   if ! is_backed_up; then
-    exec_cmd "apt-get -y update >/dev/null 2>&1"
+    #exec_cmd "apt-get -y update >/dev/null 2>&1"
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+	    base_backup
+    else
+	    err "apt-get update failed"
+    fi
     # ...and then backup
     # NOTE: base_backup should create .bootstrap directory
     base_backup
@@ -61,7 +66,7 @@ base_packages()
 
   local pkgs="software-properties-common jq unzip gnupg2 build-essential make autoconf automake"
   pkgs="$pkgs libtool g++ ctags cmake gcc openssh-client python-dev python3-dev libssl-dev libffi-dev"
-  pkgs="$pkgs tree direnv"
+  pkgs="$pkgs tree direnv xclip net-tools"
 
   # ncurses is required for building kris-nova/kubicorn
   pkgs="$pkgs libncurses-dev"
@@ -75,8 +80,18 @@ base_packages()
 
   # for asciinema support
   if ! command_exists asciinema; then
-    exec_cmd 'apt-add-repository -y ppa:zanchey/asciinema >/dev/null 2>&1'
-    exec_cmd 'apt-get -yq update >/dev/null 2>&1'
+    #exec_cmd 'apt-add-repository -y ppa:zanchey/asciinema >/dev/null 2>&1'
+    if ! { sudo apt-add-repository -y ppa:zanchey/asciinema 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+	   echo ""
+    else
+	    err "apt-add-repository failed"
+    fi
+    #exec_cmd 'apt-get -yq update >/dev/null 2>&1'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+	   echo ""
+    else
+	    err "apt-get update failed"
+    fi
     pkgs="$pkgs asciinema"
   fi
 
@@ -196,7 +211,12 @@ install_letsencrypt()
 
   if ! command_exists letsencrypt; then
     exec_cmd 'apt-get install -yq --allow-unauthenticated letsencrypt >/dev/null 2>&1'
-    exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    #exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+    	mark_as_installed letsencrypt
+    else
+	    err "apt-get update failed"
+    fi
     mark_as_installed letsencrypt
   else
     exec_cmd 'apt-get install --only-upgrade -yq letsencrypt >/dev/null'
@@ -222,8 +242,13 @@ install_certbot()
     install=1
   else
     exec_cmd 'apt-add-repository -y ppa:certbot/certbot >/dev/null 2>&1'
-    exec_cmd 'apt-get -y update >/dev/null 2>&1'
-    exec_cmd 'apt-get install -yq --allow-unauthenticated certbot >/dev/null 2>&1'
+    #exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+    	exec_cmd 'apt-get install -yq --allow-unauthenticated certbot >/dev/null 2>&1'
+    else
+	    err "apt-get update failed"
+    fi
+    #exec_cmd 'apt-get install -yq --allow-unauthenticated certbot >/dev/null 2>&1'
     mark_as_installed certbot
   fi
 
@@ -317,8 +342,13 @@ install_azure()
     else
       inf "azure cli is already installed...but versions don't match"
       install=1
-      exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    #  exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
       exec_cmd 'apt-get install -yq --allow-unauthenticated azure-cli >/dev/null 2>&1'
+    else
+	    err "apt-get update failed"
+    fi
+    #  exec_cmd 'apt-get install -yq --allow-unauthenticated azure-cli >/dev/null 2>&1'
       mark_as_installed azurecli
     fi
   fi
@@ -327,8 +357,13 @@ install_azure()
     #exec_cmd 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/azure-cli.list'
     exec_cmd 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ wheezy main" > /etc/apt/sources.list.d/azure-cli.list'
     exec_cmd 'apt-key adv --keyserver packages.microsoft.com --recv-keys 417A0893'
-    exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    #exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
     exec_cmd 'apt-get install -yq --allow-unauthenticated azure-cli >/dev/null 2>&1'
+    else
+	    err "apt-get update failed"
+    fi
+    #exec_cmd 'apt-get install -yq --allow-unauthenticated azure-cli >/dev/null 2>&1'
     mark_as_installed azurecli
   fi
 }
@@ -464,8 +499,13 @@ install_docker()
     inf "installing / upgrading docker-ce"
     echo ""
 
-    exec_cmd 'apt-get -y update >/dev/null'
-    exec_cmd "apt-get install -yq --allow-unauthenticated docker-ce=$target_ver"
+    #exec_cmd 'apt-get -y update >/dev/null'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+    	exec_cmd "apt-get install -yq --allow-unauthenticated docker-ce=$target_ver"
+    else
+	    err "apt-get update failed"
+    fi
+    #exec_cmd "apt-get install -yq --allow-unauthenticated docker-ce=$target_ver"
   fi
 
   # Finish configuring for new installations...
@@ -556,8 +596,13 @@ install_docker_deps()
     exec_cmd 'apt-get install -y "linux-image-extra-$(uname -r)" linux-image-extra-virtual >/dev/null'
   fi
   
-  exec_cmd 'apt-get -y update >/dev/null'
+  #exec_cmd 'apt-get -y update >/dev/null'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
   exec_cmd 'apt-cache policy docker-ce >/dev/null'
+    else
+	    err "apt-get update failed"
+    fi
+  #exec_cmd 'apt-cache policy docker-ce >/dev/null'
 }
 
 
@@ -601,8 +646,13 @@ install_inspec()
     inf "installing / upgrading InSpec"
     echo ""
 
-    exec_cmd 'apt-get -y update >/dev/null'
+    #exec_cmd 'apt-get -y update >/dev/null'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
     exec_cmd "apt-get install -yq --allow-unauthenticated inspec=$target_ver"
+    else
+	    err "apt-get update failed"
+    fi
+   # exec_cmd "apt-get install -yq --allow-unauthenticated inspec=$target_ver"
 
     mark_as_installed inspec
   fi
@@ -626,7 +676,12 @@ install_inspec_deps()
     exec_cmd 'echo "deb https://packages.chef.io/repos/apt/stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/chef-stable.list'
   fi
 
-  exec_cmd 'apt-get -y update >/dev/null'
+  #exec_cmd 'apt-get -y update >/dev/null'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+   	echo ""
+    else
+	    err "apt-get update failed"
+    fi
 }
 
 
@@ -714,7 +769,12 @@ bosh_deps_install()
 
   exec_cmd 'apt-get install -yq zlibc zlib1g-dev ruby ruby-dev openssl libxslt-dev \
     libxml2-dev libreadline6 libreadline6-dev libyaml-dev libsqlite3-dev sqlite3 >/dev/null 2>&1'
-  exec_cmd 'apt-get -y update >/dev/null 2>&1'
+  #exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+	    echo ""
+    else
+	    err "apt-get update failed"
+    fi
 }
 
 
@@ -736,8 +796,13 @@ install_vscode()
   curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg
   exec_cmd "mv /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg"
   exec_cmd 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
-  exec_cmd "apt-get -y update >/dev/null 2>&1"
+  #exec_cmd "apt-get -y update >/dev/null 2>&1"
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
   exec_cmd "apt-get install -yq --allow-unauthenticated code >/dev/null 2>&1"
+    else
+	    err "apt-get update failed"
+    fi
+  #exec_cmd "apt-get install -yq --allow-unauthenticated code >/dev/null 2>&1"
 
   mark_as_installed vscode
 }
@@ -819,8 +884,13 @@ install_bazel_deps()
 
   if [ "$DISTRO_VER" == "14.04" ]; then
     exec_cmd 'add-apt-repository -yq ppa:webupd8team/java'
-    exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    #exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
     exec_cmd 'apt-get install -yq --allow-unauthenticated oracle-java8-installer >/dev/null 2>&1'
+    else
+	    err "apt-get update failed"
+    fi
+    #exec_cmd 'apt-get install -yq --allow-unauthenticated oracle-java8-installer >/dev/null 2>&1'
   else
     exec_cmd 'apt-get install -y openjdk-8-jdk >/dev/null'
   fi
@@ -830,7 +900,12 @@ install_bazel_deps()
   exec_cmd 'wget -qO - https://bazel.build/bazel-release.pub.gpg > /tmp/bazel-key'
   exec_cmd 'apt-key add /tmp/bazel-key'
   exec_cmd 'rm /tmp/bazel-key'
-  exec_cmd 'apt-get -y update >/dev/null 2>&1'
+  #exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+	    echo ""
+    else
+	    err "apt-get update failed"
+    fi
 
 }
 
@@ -877,7 +952,12 @@ install_ballerina_deps()
   inf "adding ballerina prerequisites"
   echo ""
 
-  exec_cmd 'apt-get -y update >/dev/null 2>&1'
+  #exec_cmd 'apt-get -y update >/dev/null 2>&1'
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+	    echo ""
+    else
+	    err "apt-get update failed"
+    fi
 
   exec_cmd "rm -rf /tmp/ballerina_amd64.deb"
   exec_nonprv_cmd "wget -O /tmp/ballerina_amd64.deb https://product-dist.ballerina.io/downloads/${BALLERINA_VER}/ballerina-platform-linux-installer-x64-${BALLERINA_VER}.deb"

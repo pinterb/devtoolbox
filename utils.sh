@@ -5,10 +5,10 @@ DRAFT_VER="v0.15.0"  ## Draft is in fish. Candidate for removal?
 PROTOBUF_VER="3.6.0"
 PROTOTOOL_VER="0.1.0"
 UP_VER="v0.7.2"
-GOLANG_VER="1.11" ## Golang is in fish. Candidate for removal?
+GOLANG_VER="1.11.1" ## Golang is in fish. Candidate for removal?
 HELM_VER="v2.9.0" ## Helm is in fish. Candidate for removal?
 MINIKUBE_VER="v0.30.0" ## Minikube is in fish. Candidate for removal?
-TERRAFORM_VER="v0.11.7"
+TERRAFORM_VER="v0.11.8"
 TERRAGRUNT_VER="v0.17.2"
 CFSSL_VER="1.3.2"
 KOPS_VER="1.9.0"
@@ -32,10 +32,12 @@ KUSTOMIZE_VER="1.0.6"
 RUSTUP_VER="1.14.0"
 RUSTC_VER="1.29.2"
 PULUMI_VER="0.16.4"
+SKAFFOLD_VER="0.15.1"
+TELEPRESENCE_VER="0.93"
 
 # https://cloud.google.com/sdk/downloads#versioned
-GCLOUD_VER="200.0.0"
-GCLOUD_CHECKSUM="5b934c9b12b6da652de50e0a2c163af09d9eb9e67fe707f17a5c6e09b829226b"
+GCLOUD_VER="219.0.1"
+GCLOUD_CHECKSUM="ba914c0ab0d7196d1f5d29a99fff4c6411072609ae42790b42739109b1c73300"
 
 # https://bosh.io/docs/cli-v2#install
 BOSH_VER="2.0.48"
@@ -229,3 +231,13 @@ semverParse() {
   patch="${1#$major.$minor.}"
   patch="${patch%%[-.]*}"
 }
+
+is_minikube_stopped() {
+  return $(test minikube status | awk 'FNR == 1 {print}' | awk -Fminikube: '{print $2}' | grep -q Stopped)
+}
+
+is_minikube_running() {
+  return $(test minikube status | awk 'FNR == 1 {print}' | awk -Fminikube: '{print $2}' | grep -q Stopped)
+}
+
+

@@ -24,3 +24,8 @@ On Windows WSL, checking for old docker packages fails
 
 ## Fish (migrate CLI's to fish???
 * https://github.com/pinterb/fish-food
+
+## https://github.com/ahmetb/kubectx
+sudo git clone https://github.com/ahmetb/kubectx /opt/kubectx
+sudo ln -s /opt/kubectx/kubectx /usr/local/bin/kubectx
+sudo ln -s /opt/kubectx/kubens /usr/local/bin/kubens

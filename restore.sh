@@ -562,6 +562,9 @@ uninstall_deltas()
         terragrunt)
           source "${PROGDIR}/misc/terragrunt.sh"
           uninstall_terragrunt
+        telepresence)
+          source "${PROGDIR}/k8s/telepresence.sh"
+          uninstall_telepresence
           ;;
         *)
           error "no uninstall handler found for \"$file\""
