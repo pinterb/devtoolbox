@@ -9,6 +9,7 @@ GOLANG_VER="1.11.1" ## Golang is in fish. Candidate for removal?
 HELM_VER="v2.10.0" ## Helm is in fish. Candidate for removal?
 MINIKUBE_VER="v0.30.0" ## Minikube is in fish. Candidate for removal?
 TERRAFORM_VER="v0.11.8"
+TERRAGRUNT_VER="v0.17.2"
 CFSSL_VER="1.3.2"
 KOPS_VER="1.9.0"
 KUBE_VER="v1.11.1"
@@ -28,6 +29,9 @@ GORELEASER_VER="v0.70.0"
 FISSION_VER="0.7.1"
 K8S_SEALED_SECRETS_VER="v0.7.0"
 KUSTOMIZE_VER="1.0.6"
+RUSTUP_VER="1.14.0"
+RUSTC_VER="1.29.2"
+PULUMI_VER="0.16.4"
 SKAFFOLD_VER="0.15.1"
 TELEPRESENCE_VER="0.93"
 

@@ -55,6 +55,9 @@ INSTALL_GORELEASER=
 INSTALL_PROTOTOOL=
 INSTALL_FISH=
 INSTALL_KUSTOMIZE=
+INSTALL_RUSTUP=
+INSTALL_PULUMI=
+INSTALL_TERRAGRUNT=
 INSTALL_TELEPRESENCE=
 
 # misc. flags
@@ -62,7 +65,7 @@ SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="telepresence, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -129,10 +132,12 @@ usage() {
     --digitalocean         digitalocean cli
     --gcloud               gcloud cli
     --hyper                hyper.sh (Hyper.sh is a hypervisor-agnostic Docker runtime)
+    --pulumi               pulumi is a Cloud Native Development Platform
 
     --ansible              ansible
     --docker               docker
     --terraform            terraform
+    --terragrunt           terragrunt is a thin wrapper for Terraform that provides extra tools for working with multiple Terraform modules
     --bosh                 bosh cli
 
     --golang               golang (incl. third-party utilities)
@@ -142,6 +147,7 @@ usage() {
     --protobuf             protocol buffers (i.e. protoc)
     --serverless           various serverless utilities (e.g. serverless, apex, sparta)
     --prototool            a swiss army knife for protocol buffers
+    --rustup               rustup is an installer for the systems programming language Rust
 
     --minikube             opinionated local development workflow for applications deployed to Kubernetes (github.com/Azure/draft)
     --kubectl              kubectl
@@ -334,6 +340,15 @@ cmdline() {
         ;;
       kustomize)
         readonly INSTALL_KUSTOMIZE=1
+        ;;
+      rustup)
+        readonly INSTALL_RUSTUP=1
+        ;;
+      pulumi)
+        readonly INSTALL_PULUMI=1
+        ;;
+      terragrunt)
+        readonly INSTALL_TERRAGRUNT=1
         ;;
       telepresence)
         readonly INSTALL_TELEPRESENCE=1
@@ -1081,6 +1096,33 @@ main() {
       uninstall_kustomize
     else
       install_kustomize
+    fi
+  fi
+
+  if [ -n "$INSTALL_RUSTUP" ]; then
+    source "${PROGDIR}/lang/rustup.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_rustup
+    else
+      install_rustup
+    fi
+  fi
+
+  if [ -n "$INSTALL_PULUMI" ]; then
+    source "${PROGDIR}/cloud/pulumi.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_pulumi
+    else
+      install_pulumi
+    fi
+  fi
+
+  if [ -n "$INSTALL_TERRAGRUNT" ]; then
+    source "${PROGDIR}/misc/terragrunt.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_terragrunt
+    else
+      install_terragrunt
     fi
   fi
 

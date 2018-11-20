@@ -162,3 +162,9 @@ compare "sealed-secrets" \
   "https://api.github.com/repos/bitnami-labs/sealed-secrets/releases/latest" \
   "$K8S_SEALED_SECRETS_VER"
 
+## https://github.com/rust-lang-nursery/rustup.rs
+compare "rustup" \
+  "https://api.github.com/repos/rust-lang-nursery/rustup.rs/releases/latest" \
+  "RUSTUP_VER"
+
+

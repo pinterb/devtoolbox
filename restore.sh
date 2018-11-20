@@ -551,6 +551,17 @@ uninstall_deltas()
           source "${PROGDIR}/k8s/kustomize.sh"
           uninstall_kustomize
           ;;
+        rustup)
+          source "${PROGDIR}/lang/rustup.sh"
+          uninstall_rustup
+          ;;
+        pulumi)
+          source "${PROGDIR}/cloud/pulumi.sh"
+          uninstall_pulumi
+          ;;
+        terragrunt)
+          source "${PROGDIR}/misc/terragrunt.sh"
+          uninstall_terragrunt
         telepresence)
           source "${PROGDIR}/k8s/telepresence.sh"
           uninstall_telepresence
