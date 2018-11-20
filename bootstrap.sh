@@ -1123,6 +1123,8 @@ main() {
       uninstall_terragrunt
     else
       install_terragrunt
+    fi
+  fi
 
   if [ -n "$INSTALL_TELEPRESENCE" ]; then
     source "${PROGDIR}/k8s/telepresence.sh"
