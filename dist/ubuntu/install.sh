@@ -595,7 +595,7 @@ install_docker_deps()
   if [ "$DISTRO_VER" == "14.04" ]; then
     exec_cmd 'apt-get install -y "linux-image-extra-$(uname -r)" linux-image-extra-virtual >/dev/null'
   fi
-  
+
   #exec_cmd 'apt-get -y update >/dev/null'
     if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
   exec_cmd 'apt-cache policy docker-ce >/dev/null'
@@ -953,15 +953,99 @@ install_ballerina_deps()
   echo ""
 
   #exec_cmd 'apt-get -y update >/dev/null 2>&1'
-    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
-	    echo ""
-    else
-	    err "apt-get update failed"
-    fi
+  if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+	  echo ""
+  else
+	  err "apt-get update failed"
+  fi
 
   exec_cmd "rm -rf /tmp/ballerina_amd64.deb"
   exec_nonprv_cmd "wget -O /tmp/ballerina_amd64.deb https://product-dist.ballerina.io/downloads/${BALLERINA_VER}/ballerina-platform-linux-installer-x64-${BALLERINA_VER}.deb"
   exec_cmd "dpkg -i /tmp/ballerina_amd64.deb"
   exec_cmd "apt-get install -f"
+}
+
+### rbenv
+# https://www.digitalocean.com/community/tutorials/how-to-install-ruby-on-rails-with-rbenv-on-ubuntu-18-04
+# https://github.com/rbenv/rbenv
+###
+install_rbenv()
+{
+  echo ""
+  hdr "Installing rbenv..."
+  echo ""
+
+  local install=0
+
+  if command_exists rbenv; then
+    if [ $(rbenv --version | awk '{ print $2; exit }') == "$RBENV_VER" ]; then
+      warn "rbenv is already installed...skipping installation"
+      echo ""
+      install=2
+    else
+      inf "rbenv is already installed. But versions don't match, so will attempt to upgrade..."
+      echo ""
+      install=1
+    fi
+  fi
+
+  # Only need to install rbenv dependencies for new installs
+  if [ $install -eq 0 ]; then
+    install_rbenv_deps
+  fi
+
+  # Either rbenv isn't installed or installed version doesn't match desired
+  # version
+  if [ $install -le 1 ]; then
+    echo ""
+    inf "installing / upgrading rbenv"
+    echo ""
+
+    if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+      if [ -d "/home/$DEV_USER/.rbenv" ]; then
+        exec_nonprv_cmd "cd /home/$DEV_USER/.rbenv && git pull"
+      else
+        exec_nonprv_cmd "git clone https://github.com/rbenv/rbenv.git /home/$DEV_USER/.rbenv"
+      fi
+    fi
+  fi
+
+  # Finish configuring for new installations...
+  if [ $install -eq 0 ]; then
+
+    # Add .rbenv/bin to your $PATH so that you can use the rbenv command line
+    # utility
+    echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+
+    # Add the rbenv init to .bashrc so rbenv loads automatically
+    echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+
+    # Add the ruby-build plugin
+    exec_nonprv_cmd "mkdir -p /home/$DEV_USER/.rbenv/plugins"
+    exec_nonprv_cmd "git clone https://github.com/rbenv/ruby-build.git /home/$DEV_USER/.rbenv/plugins/ruby-build"
+
+    mark_as_installed rbenv
+  fi
+}
+
+
+install_rbenv_deps()
+{
+  echo ""
+  inf "adding rbenv prerequisites"
+  echo ""
+
+  if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+	  echo ""
+  else
+	  err "apt-get update failed"
+  fi
+
+  local pkgs="autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm5 libgdbm-dev"
+  if ! { sudo apt-get install -yq --allow-unauthenticated $pkgs 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
+	  echo ""
+  else
+	  err "apt-get install of rbenv dependencies failed"
+  fi
 }
 

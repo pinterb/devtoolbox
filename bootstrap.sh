@@ -59,13 +59,15 @@ INSTALL_RUSTUP=
 INSTALL_PULUMI=
 INSTALL_TERRAGRUNT=
 INSTALL_TELEPRESENCE=
+INSTALL_RBENV=
+INSTALL_SDKMAN=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -148,6 +150,8 @@ usage() {
     --serverless           various serverless utilities (e.g. serverless, apex, sparta)
     --prototool            a swiss army knife for protocol buffers
     --rustup               rustup is an installer for the systems programming language Rust
+    --rbenv                rbenv is used to pick a Ruby version for your application and guarantee that your development environment matches production
+    --sdkman               sdkman is a tool for managing parallel versions of multiple Java-based sdks on most Unix based systems
 
     --minikube             opinionated local development workflow for applications deployed to Kubernetes (github.com/Azure/draft)
     --kubectl              kubectl
@@ -352,6 +356,12 @@ cmdline() {
         ;;
       telepresence)
         readonly INSTALL_TELEPRESENCE=1
+        ;;
+      rbenv)
+        readonly INSTALL_RBENV=1
+        ;;
+      sdkman)
+        readonly INSTALL_SDKMAN=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -1132,6 +1142,23 @@ main() {
       uninstall_telepresence
     else
       install_telepresence
+    fi
+  fi
+
+  if [ -n "$INSTALL_RBENV" ]; then
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_rbenv
+    else
+      install_rbenv
+    fi
+  fi
+
+  if [ -n "$INSTALL_SDKMAN" ]; then
+    source "${PROGDIR}/misc/sdkman.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_sdkman
+    else
+      install_sdkman
     fi
   fi
 

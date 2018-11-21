@@ -392,3 +392,22 @@ uninstall_ballerina()
   fi
 }
 
+
+uninstall_rbenv()
+{
+  echo ""
+  hdr "Uninstalling rbenv..."
+  echo ""
+
+  local install=0
+
+  if ! command_exists rbenv; then
+    warn "rbenv is not installed."
+  else
+    exec_nonprv_cmd "rm -rf $HOME/.rbenv"
+    sed -i".bak" '/rbenv/d' ~/.bashrc
+  fi
+
+  mark_as_uninstalled rbenv
+}
+

@@ -34,6 +34,8 @@ RUSTC_VER="1.29.2"
 PULUMI_VER="0.16.4"
 SKAFFOLD_VER="0.15.1"
 TELEPRESENCE_VER="0.93"
+RBENV_VER="1.1.1-39-g59785f6"
+SDKMAN_VER="5.7.3+337"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="219.0.1"
