@@ -14,8 +14,9 @@ install_sdkman()
 
   local install=0
 
-  if command_exists sdk; then
-    if [ $(sdk version | awk 'FNR==2 { print $2; exit }') == "$SDKMAN_VER" ]; then
+  if [ -f "$HOME/.sdkman/var/version" ]; then
+    local ver=$(cat "$HOME/.sdkman/var/version")
+    if [ "$ver" == "$SDKMAN_VER" ]; then
       warn "sdkman is already installed."
       install=2
     else
@@ -26,7 +27,7 @@ install_sdkman()
 
   if [ $install -eq 1 ]; then
     inf "will attempt a sdkman upgrade"
-    exec_nonprv_cmd "sdk selfupdate"
+    exec_nonprv_cmd "source $HOME/.sdkman/bin/sdkman-init.sh && sdk selfupdate"
   fi
 
   if [ $install -eq 0 ]; then
@@ -35,7 +36,7 @@ install_sdkman()
       "https://get.sdkman.io"
 
     chmod +x "/tmp/sdkman.sh"
-    /tmp/sdkman.sh
+    exec_nonprv_cmd "/tmp/sdkman.sh"
 
     mark_as_installed sdkman
 
