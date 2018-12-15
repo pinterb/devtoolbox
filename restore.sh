@@ -574,6 +574,10 @@ uninstall_deltas()
           source "${PROGDIR}/misc/sdkman.sh"
           uninstall_sdkman
           ;;
+        kubebuilder)
+          source "${PROGDIR}/k8s/kubebuilder.sh"
+          uninstall_kubebuilder
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

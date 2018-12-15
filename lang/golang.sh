@@ -12,12 +12,10 @@ install_golang()
   echo ""
 
   local install=0
-
-  if ! is_installed dotfiles ; then
-    error "this installation requires the customized version of dot files"
-    error "  run this script with the --dofiles option first"
-    exit 1
-  fi
+  local GOLANG_INSTALL_DIR="/usr/local"
+  local GOLANG_DOWNLOAD_DIR="/tmp"
+  local GOLANG_DOWNLOAD_URL="https://storage.googleapis.com/golang/go$GOLANG_VER.linux-amd64.tar.gz"
+  local GOLANG_DOWNLOADED_FILE="$GOLANG_DOWNLOAD_DIR/go$GOLANG_VER.linux-amd64.tar.gz"
 
   if command_exists go; then
     if [ $(go version | awk '{ print $3; exit }') == "go$GOLANG_VER" ]; then
@@ -42,17 +40,16 @@ install_golang()
   fi
 
   if [ $install -le 1 ]; then
-    git clone https://github.com/pinterb/install-golang.sh /tmp/install-golang
-    source /tmp/install-golang/utils.sh
 
-    if [ "$GOLANG_VER" == "$GOLANG_VERSION" ]; then
-      exec_cmd '/tmp/install-golang/install-golang.sh'
-    else
-      error "expected golang version (i.e. $GOLANG_VER) doesn't match github.com/pinterb/install-golang.sh version (i.e. $GOLANG_VERSION)"
+    if [ -d "$GOLANG_INSTALL_DIR/go" ]; then
+      exec_cmd "rm -rf $GOLANG_INSTALL_DIR/go"
     fi
 
+    curl -o "$GOLANG_DOWNLOADED_FILE" "$GOLANG_DOWNLOAD_URL"
+    exec_cmd "tar -C /usr/local -xzf $GOLANG_DOWNLOADED_FILE"
+
     # clean-up
-    rm -rf /tmp/install-golang
+    rm "$GOLANG_DOWNLOADED_FILE"
 
     if [ "$DEFAULT_USER" == 'root' ]; then
       warn "the non-privileged user will need to create & set their own GOPATH"
@@ -68,8 +65,13 @@ install_golang()
 
       inf "updating ~/.bootstrap/profile.d/ with GOPATH..."
       echo "# The following GOPATH was automatically added by $PROGDIR/$PROGNAME" > "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
-      echo "export GOPATH=$gopath" >> "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
-      echo 'export PATH=$PATH:$GOPATH/bin' >> "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
+      echo "" >> "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
+      echo 'goinst=$(which go)' >> "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
+      echo 'if [ -z "$goinst" ]; then' >> "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
+      echo '  export PATH=$PATH:/usr/local/go/bin' >> "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
+      echo "  export GOPATH=$gopath" >> "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
+      echo '  export PATH=$PATH:$GOPATH/bin' >> "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
+      echo 'fi' >> "/home/$DEV_USER/.bootstrap/profile.d/golang.sh"
 
       # User must log off for these changes to take effect
       LOGOFF_REQ=1
@@ -87,12 +89,15 @@ uninstall_golang()
   hdr "Uninstalling Golang.."
   echo ""
 
+  local GOLANG_INSTALL_DIR="/usr/local"
+
   if command_exists go; then
     local gopath=$(go env GOPATH)
 
-    git clone https://github.com/pinterb/install-golang.sh /tmp/install-golang
-    exec_cmd '/tmp/install-golang/uninstall-golang.sh'
-    rm -rf /tmp/install-golang
+    if [ -d "$GOLANG_INSTALL_DIR/go" ]; then
+      echo ""
+      exec_cmd "rm -rf $GOLANG_INSTALL_DIR/go"
+    fi
 
     if [ -f "/home/$DEV_USER/.bootstrap/profile.d/golang.sh" ]; then
       exec_cmd "rm /home/$DEV_USER/.bootstrap/profile.d/golang.sh"

@@ -5,7 +5,8 @@
 # http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/
 
 readonly PROGNAME=$(basename $0)
-readonly PROGDIR="$( cd "$(dirname "$0")" ; pwd -P )"
+#readonly PROGDIR="$( cd "$(dirname "$0")" ; pwd -P )"
+readonly PROGDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly ARGS="$@"
 readonly TODAY=$(date +%Y%m%d%H%M%S)
 
@@ -61,13 +62,14 @@ INSTALL_TERRAGRUNT=
 INSTALL_TELEPRESENCE=
 INSTALL_RBENV=
 INSTALL_SDKMAN=
+INSTALL_KUBEBUILDER=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="kubebuilder, sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -162,6 +164,7 @@ usage() {
     --kustomize            kustomize lets you customize raw, template-free YAML files for multiple purposes, leaving the original YAML untouched and usable as is
     --jenkinsx             jenkins x is a ci/cd platform for Kubernetes
     --telepresence         telepresence is a kubernetes utility for remote debugging
+    --kubebuilder          kubebuilder is an SDK for rapidly building and publishing Kubernetes APIs in Go
 
     --ngrok                create secure tunnels to localhost (ngrok.com)
     --jfrog                the universial cli to JFrog products (e.g. Artifactory, Bintray)
@@ -362,6 +365,9 @@ cmdline() {
         ;;
       sdkman)
         readonly INSTALL_SDKMAN=1
+        ;;
+      kubebuilder)
+        readonly INSTALL_KUBEBUILDER=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -1159,6 +1165,15 @@ main() {
       uninstall_sdkman
     else
       install_sdkman
+    fi
+  fi
+
+  if [ -n "$INSTALL_KUBEBUILDER" ]; then
+    source "${PROGDIR}/k8s/kubebuilder.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_kubebuilder
+    else
+      install_kubebuilder
     fi
   fi
 
