@@ -37,6 +37,7 @@ TELEPRESENCE_VER="0.93"
 RBENV_VER="1.1.1-39-g59785f6"
 SDKMAN_VER="5.7.3+337"
 KUBEBUILDER_VER="1.0.6"
+KREW_VER="0.2.1"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="219.0.1"

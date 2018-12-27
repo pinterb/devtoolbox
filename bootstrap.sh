@@ -63,13 +63,14 @@ INSTALL_TELEPRESENCE=
 INSTALL_RBENV=
 INSTALL_SDKMAN=
 INSTALL_KUBEBUILDER=
+INSTALL_KREW=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="kubebuilder, sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="krew, kubebuilder, sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -165,6 +166,7 @@ usage() {
     --jenkinsx             jenkins x is a ci/cd platform for Kubernetes
     --telepresence         telepresence is a kubernetes utility for remote debugging
     --kubebuilder          kubebuilder is an SDK for rapidly building and publishing Kubernetes APIs in Go
+    --krew                 krew is the package manager for kubectl plugins
 
     --ngrok                create secure tunnels to localhost (ngrok.com)
     --jfrog                the universial cli to JFrog products (e.g. Artifactory, Bintray)
@@ -368,6 +370,9 @@ cmdline() {
         ;;
       kubebuilder)
         readonly INSTALL_KUBEBUILDER=1
+        ;;
+      krew)
+        readonly INSTALL_KREW=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -1174,6 +1179,15 @@ main() {
       uninstall_kubebuilder
     else
       install_kubebuilder
+    fi
+  fi
+
+  if [ -n "$INSTALL_KREW" ]; then
+    source "${PROGDIR}/k8s/krew.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_krew
+    else
+      install_krew
     fi
   fi
 
