@@ -578,6 +578,10 @@ uninstall_deltas()
           source "${PROGDIR}/k8s/kubebuilder.sh"
           uninstall_kubebuilder
           ;;
+        krew)
+          source "${PROGDIR}/k8s/krew.sh"
+          uninstall_krew
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;
