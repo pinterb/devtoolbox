@@ -6,7 +6,7 @@ PROTOBUF_VER="3.6.1"
 PROTOTOOL_VER="0.1.0"
 UP_VER="v0.7.2"
 GOLANG_VER="1.11.4" ## Golang is in fish. Candidate for removal?
-HELM_VER="v2.12.0" ## Helm is in fish. Candidate for removal?
+HELM_VER="v2.12.2" ## Helm is in fish. Candidate for removal?
 MINIKUBE_VER="v0.31.0" ## Minikube is in fish. Candidate for removal?
 TERRAFORM_VER="v0.11.8"
 TERRAGRUNT_VER="v0.17.2"
@@ -38,6 +38,7 @@ RBENV_VER="1.1.1-39-g59785f6"
 SDKMAN_VER="5.7.3+337"
 KUBEBUILDER_VER="1.0.6"
 KREW_VER="0.2.1"
+OPA_VER="0.10.3"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="219.0.1"
@@ -95,6 +96,9 @@ sys_arch() {
     i386) ARCH="386";;
   esac
 }
+
+# Set the host's OS. Only linux supported for now
+HOSTOS=$(uname -s | tr '[:upper:]' '[:lower:]')
 
 ##
 # determine if this script is running on a Microsoft WSL version of Linux
