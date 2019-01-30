@@ -582,6 +582,14 @@ uninstall_deltas()
           source "${PROGDIR}/k8s/krew.sh"
           uninstall_krew
           ;;
+        opa)
+          source "${PROGDIR}/misc/opa.sh"
+          uninstall_opa
+          ;;
+        tilt)
+          source "${PROGDIR}/k8s/tilt.sh"
+          uninstall_tilt
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

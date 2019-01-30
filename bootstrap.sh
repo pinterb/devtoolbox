@@ -13,9 +13,8 @@ readonly TODAY=$(date +%Y%m%d%H%M%S)
 # pull in utils
 source "${PROGDIR}/utils.sh"
 
-## pull in distro-specific install / uninstall functions
-#source "${PROGDIR}/dist/$(echo $DISTRO_ID | tr '[:upper:]' '[:lower:]')/install.sh"
-#source "${PROGDIR}/dist/$(echo $DISTRO_ID | tr '[:upper:]' '[:lower:]')/uninstall.sh"
+# sys_arch discovers the architecture for this system.
+sys_arch
 
 # cli arguments
 DEV_USER=
@@ -64,13 +63,15 @@ INSTALL_RBENV=
 INSTALL_SDKMAN=
 INSTALL_KUBEBUILDER=
 INSTALL_KREW=
+INSTALL_OPA=
+INSTALL_TILT=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="krew, kubebuilder, sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="tilt, opa, krew, kubebuilder, sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -167,6 +168,7 @@ usage() {
     --telepresence         telepresence is a kubernetes utility for remote debugging
     --kubebuilder          kubebuilder is an SDK for rapidly building and publishing Kubernetes APIs in Go
     --krew                 krew is the package manager for kubectl plugins
+    --tilt                 tilt is a workflow framework for local Kubernetes development
 
     --ngrok                create secure tunnels to localhost (ngrok.com)
     --jfrog                the universial cli to JFrog products (e.g. Artifactory, Bintray)
@@ -174,6 +176,7 @@ usage() {
     --keybase              Keybase
     --inspec               InSpec by Chef
     --goreleaser           GoReleaser is a release automation tool for Go projects
+    --opa                  Open Policy Agent is policy-based control for cloud native environments
 
     --vim                  vim-plug & choice plugins (e.g. vim-go)
     --vscode               Microsoft Visual Studio Code IDE
@@ -373,6 +376,12 @@ cmdline() {
         ;;
       krew)
         readonly INSTALL_KREW=1
+        ;;
+      opa)
+        readonly INSTALL_OPA=1
+        ;;
+      tilt)
+        readonly INSTALL_TILT=1
         ;;
       uninstall)
         readonly UNINSTALL=1
@@ -1188,6 +1197,24 @@ main() {
       uninstall_krew
     else
       install_krew
+    fi
+  fi
+
+  if [ -n "$INSTALL_OPA" ]; then
+    source "${PROGDIR}/misc/opa.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_opa
+    else
+      install_opa
+    fi
+  fi
+
+  if [ -n "$INSTALL_TILT" ]; then
+    source "${PROGDIR}/k8s/tilt.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_tilt
+    else
+      install_tilt
     fi
   fi
 
