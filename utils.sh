@@ -39,6 +39,7 @@ SDKMAN_VER="5.7.3+337"
 KUBEBUILDER_VER="1.0.6"
 KREW_VER="0.2.1"
 OPA_VER="0.10.3"
+TILT_VER="0.5.1"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="219.0.1"

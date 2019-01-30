@@ -37,6 +37,10 @@ install_opa()
       exec_cmd "rm -rf ${OPA_INSTALL_DIR}/opa"
     fi
 
+    if [ -f "${OPA_DOWNLOADED_FILE}" ]; then
+      exec_cmd "rm -rf ${OPA_DOWNLOADED_FILE}"
+    fi
+
     exec_cmd "rm -rf ${OPA_DOWNLOADED_FILE}"
     curl -L -o "${OPA_DOWNLOADED_FILE}" "${OPA_DOWNLOAD_URL}"
     exec_cmd "chmod +x ${OPA_DOWNLOADED_FILE}"
@@ -55,6 +59,11 @@ uninstall_opa()
   echo ""
 
   local OPA_INSTALL_DIR="/usr/local/bin"
+  local OPA_DOWNLOAD_DIR="/tmp"
+  local OPA_DOWNLOAD_URL="https://github.com/open-policy-agent/opa/releases/download/v${OPA_VER}/opa_${HOSTOS}_${ARCH}"
+  local OPA_DOWNLOADED_FILE="${OPA_DOWNLOAD_DIR}/opa"
+  local TEST_GO_DIR="$GOPATH/src/github.com/pinterb"
+
 
   if command_exists opa; then
 
