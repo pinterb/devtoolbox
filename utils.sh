@@ -5,7 +5,7 @@ DRAFT_VER="v0.15.0"  ## Draft is in fish. Candidate for removal?
 PROTOBUF_VER="3.6.1"
 PROTOTOOL_VER="0.1.0"
 UP_VER="v0.7.2"
-GOLANG_VER="1.11.4" ## Golang is in fish. Candidate for removal?
+GOLANG_VER="1.11.5" ## Golang is in fish. Candidate for removal?
 HELM_VER="v2.12.0" ## Helm is in fish. Candidate for removal?
 MINIKUBE_VER="v0.31.0" ## Minikube is in fish. Candidate for removal?
 TERRAFORM_VER="v0.11.8"
@@ -36,7 +36,7 @@ SKAFFOLD_VER="0.15.1"
 TELEPRESENCE_VER="0.93"
 RBENV_VER="1.1.1-39-g59785f6"
 SDKMAN_VER="5.7.3+337"
-KUBEBUILDER_VER="1.0.6"
+KUBEBUILDER_VER="1.0.7"
 KREW_VER="0.2.1"
 
 # https://cloud.google.com/sdk/downloads#versioned
