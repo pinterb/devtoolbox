@@ -13,9 +13,14 @@ install_jfrog()
   echo ""
 
   local install=0
+  local JFROG_INSTALL_DIR="/usr/local/bin"
+  local JFROG_DOWNLOAD_DIR="/tmp"
+  local JFROG_DOWNLOAD_URL="https://api.bintray.com/content/jfrog/jfrog-cli-go/${JFROG_VER}/jfrog-cli-${HOSTOS}-${ARCH}/jfrog?bt_package=jfrog-cli-${HOSTOS}-${ARCH}"
+  local JFROG_DOWNLOADED_FILE="${JFROG_DOWNLOAD_DIR}/jfrog"
+
 
   if command_exists jfrog; then
-    if [ $(jfrog version | awk '{ print $3; exit }') == "$JFROG_VER" ]; then
+    if [ $(jfrog --version | awk '{ print $3; exit }') == "$JFROG_VER" ]; then
       warn "jfrog is already installed"
       install=1
     else
@@ -26,10 +31,21 @@ install_jfrog()
   fi
 
   if [ $install -eq 0 ]; then
-    wget -O /tmp/jfrog \
-      "https://bintray.com/jfrog/jfrog-cli-go/jfrog-cli-linux-amd64/$JFROG_VER"
-    exec_cmd "chmod +x /tmp/jfrog"
-    exec_cmd "mv /tmp/jfrog $BOOTSTRAP_JFROG_INST_DIR/"
+
+    if [ -f "${JFROG_INSTALL_DIR}/jfrog" ]; then
+      exec_cmd "rm -rf ${JFROG_INSTALL_DIR}/jfrog"
+    fi
+
+    if [ -f "${JFROG_DOWNLOADED_FILE}" ]; then
+      exec_cmd "rm -rf ${JFROG_DOWNLOADED_FILE}"
+    fi
+
+    exec_cmd "rm -rf ${JFROG_DOWNLOADED_FILE}"
+    inf "downloading '${JFROG_DOWNLOAD_URL}'"
+    curl -L -o "${JFROG_DOWNLOADED_FILE}" "${JFROG_DOWNLOAD_URL}"
+    exec_cmd "chmod +x ${JFROG_DOWNLOADED_FILE}"
+    exec_cmd "cp ${JFROG_DOWNLOADED_FILE} ${JFROG_INSTALL_DIR}/"
+
     mark_as_installed jfrog
   fi
 }
@@ -41,8 +57,21 @@ uninstall_jfrog()
   hdr "Uninstalling JFrog cli..."
   echo ""
 
+  local JFROG_INSTALL_DIR="/usr/local/bin"
+  local JFROG_DOWNLOAD_DIR="/tmp"
+  local JFROG_DOWNLOAD_URL="https://api.bintray.com/content/jfrog/jfrog-cli-go/${JFROG_VER}/jfrog-cli-${HOSTOS}.${ARCH}/jfrog?bt_package=jfrog-cli-${HOSTOS}.${ARCH}"
+  local JFROG_DOWNLOADED_FILE="${JFROG_DOWNLOAD_DIR}/jfrog"
+
   if command_exists jfrog; then
-    exec_cmd "rm $BOOTSTRAP_JFROG_INST_DIR/jfrog"
+
+    if [ -f "${JFROG_INSTALL_DIR}/jfrog" ]; then
+      exec_cmd "rm -rf ${JFROG_INSTALL_DIR}/jfrog"
+    fi
+
+    if [ -f "${JFROG_DOWNLOADED_FILE}" ]; then
+      exec_cmd "rm -rf ${JFROG_DOWNLOADED_FILE}"
+    fi
+
     mark_as_uninstalled jfrog
   else
     warn "jfrog is not installed"
