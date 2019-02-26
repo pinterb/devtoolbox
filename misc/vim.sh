@@ -190,6 +190,9 @@ enable_pathogen_bundles()
   ## wakatime
   git clone git://github.com/wakatime/vim-wakatime.git
 
+  ## autoformat
+  git clone https://github.com/Chiel92/vim-autoformat.git
+
   ## rust
   git clone --depth=1 https://github.com/rust-lang/rust.vim.git
 
