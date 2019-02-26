@@ -41,9 +41,9 @@ install_gcloud()
 #    exec_nonprv_cmd "tar -zxvf /tmp/gcloud.tar.gz -C /home/$DEV_USER/bin/"
 #    exec_nonprv_cmd "/home/$DEV_USER/bin/google-cloud-sdk/install.sh --quiet --rc-path /home/$DEV_USER/.profile --usage-reporting true --command-completion true --path-update true"
 #    exec_nonprv_cmd "rm /tmp/gcloud.tar.gz"
-    
+
     if ! { sudo apt-get update 2>&1 ; } | grep -q 'Err:3 spacewalk.pg-dev.net'; then
-	   sudo apt-get install google-cloud-sdk 
+	   sudo apt-get install google-cloud-sdk
     else
 	    err "apt-get update failed"
     fi
