@@ -65,13 +65,14 @@ INSTALL_KUBEBUILDER=
 INSTALL_KREW=
 INSTALL_OPA=
 INSTALL_TILT=
+INSTALL_STEP=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="tilt, opa, krew, kubebuilder, sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="step, tilt, opa, krew, kubebuilder, sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -173,6 +174,7 @@ usage() {
     --ngrok                create secure tunnels to localhost (ngrok.com)
     --jfrog                the universial cli to JFrog products (e.g. Artifactory, Bintray)
     --tls-utils            utilities for managing TLS certificates (e.g. letsencrypt, cfssl)
+    --step                 step is a utility for building, operating, and automating systems that use zero trust technologies (e.g. TLS, OAuth, OTP, FIDO U2F)
     --keybase              Keybase
     --inspec               InSpec by Chef
     --goreleaser           GoReleaser is a release automation tool for Go projects
@@ -385,6 +387,9 @@ cmdline() {
         ;;
       uninstall)
         readonly UNINSTALL=1
+        ;;
+      step)
+        readonly INSTALL_STEP=1
         ;;
       h|help)
         usage
@@ -1215,6 +1220,15 @@ main() {
       uninstall_tilt
     else
       install_tilt
+    fi
+  fi
+
+  if [ -n "$INSTALL_STEP" ]; then
+    source "${PROGDIR}/security/step.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_step
+    else
+      install_step
     fi
   fi
 

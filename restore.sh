@@ -590,6 +590,10 @@ uninstall_deltas()
           source "${PROGDIR}/k8s/tilt.sh"
           uninstall_tilt
           ;;
+        step)
+          source "${PROGDIR}/security/step.sh"
+          uninstall_step
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;
