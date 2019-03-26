@@ -32,3 +32,7 @@ On Windows WSL, checking for old docker packages fails
 sudo git clone https://github.com/ahmetb/kubectx /opt/kubectx
 sudo ln -s /opt/kubectx/kubectx /usr/local/bin/kubectx
 sudo ln -s /opt/kubectx/kubens /usr/local/bin/kubens
+
+## Git commit message formatter
+* https://github.com/karantin2020/gitcomm
+* NOTE: use my fork @ https://github.com/pinterb/gitcomm
