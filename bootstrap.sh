@@ -66,13 +66,14 @@ INSTALL_KREW=
 INSTALL_OPA=
 INSTALL_TILT=
 INSTALL_STEP=
+INSTALL_GITCOMM=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="step, tilt, opa, krew, kubebuilder, sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="gitcomm, step, tilt, opa, krew, kubebuilder, sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -186,6 +187,7 @@ usage() {
     --xfce                 XFCE window manager on Windows WSL
     --bazel                Bazel build tool
     --fish                 Fish is a cross-platform systems package manager, bringing the ease of use of Homebrew to Linux and Windows.
+    --gitcomm              gitcomm is a git commit message formatter
 
     --uninstall            uninstall specified package(s) or utilities (incl. $UNINST_SUPPORT)
 
@@ -390,6 +392,9 @@ cmdline() {
         ;;
       step)
         readonly INSTALL_STEP=1
+        ;;
+      gitcomm)
+        readonly INSTALL_GITCOMM=1
         ;;
       h|help)
         usage
@@ -1229,6 +1234,15 @@ main() {
       uninstall_step
     else
       install_step
+    fi
+  fi
+
+  if [ -n "$INSTALL_GITCOMM" ]; then
+    source "${PROGDIR}/misc/gitcomm.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_gitcomm
+    else
+      install_gitcomm
     fi
   fi
 

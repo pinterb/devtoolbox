@@ -1,32 +1,32 @@
 
 # SOFTWARE VERSIONS
 # (Last Checked On: 2018-02-23)
-DRAFT_VER="v0.15.0"  ## Draft is in fish. Candidate for removal?
+DRAFT_VER="v0.16.0"  ## Draft is in fish. Candidate for removal?
 PROTOBUF_VER="3.6.1"
-PROTOTOOL_VER="0.1.0"
+PROTOTOOL_VER="1.4.0"
 UP_VER="v0.7.2"
 GOLANG_VER="1.12" ## Golang is in fish. Candidate for removal?
 HELM_VER="v2.12.2" ## Helm is in fish. Candidate for removal?
-MINIKUBE_VER="v0.34.1" ## Minikube is in fish. Candidate for removal?
-TERRAFORM_VER="v0.11.8"
-TERRAGRUNT_VER="v0.17.2"
+MINIKUBE_VER="v0.35.0" ## Minikube is in fish. Candidate for removal?
+TERRAFORM_VER="v0.11.13"
+TERRAGRUNT_VER="v0.18.3"
 CFSSL_VER="1.3.2"
 KOPS_VER="1.9.0"
 KUBE_VER="v1.11.1"
-DOCTL_VER="v1.13.0"
+DOCTL_VER="v1.14.0"
 #DOCKER_VER="17.03.2" # this version is compatiable w/k8s v1.9
 DOCKER_VER="18.03.1" # this version is compatiable w/k8s v1.9
 HABITAT_VER="0.56.0"
 HABITAT_VER_TS="20180530234036"
 ANSIBLE_VER="2.4.0"
-AZURE_VER="2.0.42"
+AZURE_VER="2.0.60"
 NGROK_VER="2.2.6"
 JFROG_VER="1.23.2"
 INSPEC_VER="3.0.52"
-BAZEL_VER="0.12.0"
-JENKINSX_VER="v1.3.92"
+BAZEL_VER="0.23.2"
+JENKINSX_VER="v1.3.1023"
 GORELEASER_VER="v0.70.0"
-FISSION_VER="0.7.1"
+FISSION_VER="1.1.0"
 K8S_SEALED_SECRETS_VER="v0.7.0"
 KUSTOMIZE_VER="1.0.11"
 RUSTUP_VER="1.14.0"
@@ -42,6 +42,7 @@ OPA_VER="0.10.3"
 TILT_VER="0.5.1"
 STEP_CLI_VER="0.8.6"
 STEP_CERT_VER="0.8.5"
+GITCOMM_VER="0.3.4"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="219.0.1"
