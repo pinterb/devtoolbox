@@ -594,6 +594,10 @@ uninstall_deltas()
           source "${PROGDIR}/security/step.sh"
           uninstall_step
           ;;
+        gitcomm)
+          source "${PROGDIR}/misc/gitcomm.sh"
+          uninstall_gitcomm
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;
