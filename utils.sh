@@ -2,7 +2,7 @@
 # SOFTWARE VERSIONS
 # (Last Checked On: 2018-02-23)
 DRAFT_VER="v0.16.0"  ## Draft is in fish. Candidate for removal?
-PROTOBUF_VER="3.6.1"
+PROTOBUF_VER="3.7.1"
 PROTOTOOL_VER="1.4.0"
 UP_VER="v0.7.2"
 GOLANG_VER="1.12.3" ## Golang is in fish. Candidate for removal?
