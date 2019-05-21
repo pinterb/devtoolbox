@@ -67,13 +67,14 @@ INSTALL_OPA=
 INSTALL_TILT=
 INSTALL_STEP=
 INSTALL_GITCOMM=
+INSTALL_GOSWAGGER=
 
 # misc. flags
 SHOULD_WARM=0
 LOGOFF_REQ=0
 
 # list of packages with "uninstall" support
-UNINST_SUPPORT="gitcomm, step, tilt, opa, krew, kubebuilder, sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
+UNINST_SUPPORT="go-swagger, gitcomm, step, tilt, opa, krew, kubebuilder, sdkman, rbenv, telepresence, terragrunt, pulumi, rustup, kustomize, fish, prototool, goreleaser, skaffold, jenkins x, bazel, inspec, keybase, vscode, minikube, hyper, kops, bosh, serverless, xfce, kubectl, azure, aws, gcloud, digitalocean, terraform, node.js, ngrok, tls, and golang"
 
 
 bail() {
@@ -180,6 +181,7 @@ usage() {
     --inspec               InSpec by Chef
     --goreleaser           GoReleaser is a release automation tool for Go projects
     --opa                  Open Policy Agent is policy-based control for cloud native environments
+    --go-swagger           Swagger 2.0 implementation for Golang
 
     --vim                  vim-plug & choice plugins (e.g. vim-go)
     --vscode               Microsoft Visual Studio Code IDE
@@ -395,6 +397,9 @@ cmdline() {
         ;;
       gitcomm)
         readonly INSTALL_GITCOMM=1
+        ;;
+      go-swagger)
+        readonly INSTALL_GOSWAGGER=1
         ;;
       h|help)
         usage
@@ -1243,6 +1248,15 @@ main() {
       uninstall_gitcomm
     else
       install_gitcomm
+    fi
+  fi
+
+  if [ -n "$INSTALL_GOSWAGGER" ]; then
+    source "${PROGDIR}/misc/go-swagger.sh"
+    if [ -n "$UNINSTALL" ]; then
+      uninstall_goswagger
+    else
+      install_goswagger
     fi
   fi
 

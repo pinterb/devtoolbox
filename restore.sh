@@ -598,6 +598,10 @@ uninstall_deltas()
           source "${PROGDIR}/misc/gitcomm.sh"
           uninstall_gitcomm
           ;;
+        go-swagger)
+          source "${PROGDIR}/misc/go-swagger.sh"
+          uninstall_goswagger
+          ;;
         *)
           error "no uninstall handler found for \"$file\""
           ;;

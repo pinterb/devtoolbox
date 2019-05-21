@@ -5,12 +5,12 @@ DRAFT_VER="v0.16.0"  ## Draft is in fish. Candidate for removal?
 PROTOBUF_VER="3.7.1"
 PROTOTOOL_VER="1.4.0"
 UP_VER="v0.7.2"
-GOLANG_VER="1.12.3" ## Golang is in fish. Candidate for removal?
+GOLANG_VER="1.12.5" ## Golang is in fish. Candidate for removal?
 HELM_VER="v2.12.2" ## Helm is in fish. Candidate for removal?
 MINIKUBE_VER="v0.35.0" ## Minikube is in fish. Candidate for removal?
 TERRAFORM_VER="v0.11.13"
 TERRAGRUNT_VER="v0.18.3"
-CFSSL_VER="1.3.2"
+CFSSL_VER="1.3.3"
 KOPS_VER="1.9.0"
 KUBE_VER="v1.11.1"
 DOCTL_VER="v1.14.0"
@@ -43,6 +43,7 @@ TILT_VER="0.5.1"
 STEP_CLI_VER="0.8.6"
 STEP_CERT_VER="0.8.5"
 GITCOMM_VER="0.3.4"
+GO_SWAGGER_VER="0.19.0"
 
 # https://cloud.google.com/sdk/downloads#versioned
 GCLOUD_VER="219.0.1"
